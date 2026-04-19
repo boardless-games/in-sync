@@ -24,7 +24,7 @@ public class MetadataService {
 
   public ResponseEntity<HealthDto> health() {
     logger.info("The server is healthy!");
-    return ResponseEntity.ok(new HealthDto(true, SERVER_START_DATE));
+    return ResponseEntity.ok(new HealthDto(SERVER_START_DATE));
   }
 
   public ResponseEntity<AboutDto> about() {
