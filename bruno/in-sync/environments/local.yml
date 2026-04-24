@@ -1,0 +1,10 @@
+name: local
+variables:
+  - name: SERVER_DOMAIN
+    value: localhost
+  - name: SERVER_PORT
+    value: "8080"
+  - name: SERVER_PROTOCOL
+    value: http
+  - name: WS_PROTOCOL
+    value: ws
