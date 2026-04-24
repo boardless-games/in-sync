@@ -1,43 +1,27 @@
 package games.boardless.in_sync.controllers;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import games.boardless.in_sync.dtos.AboutDto;
-import games.boardless.in_sync.dtos.HealthDto;
-import games.boardless.in_sync.services.MetadataService;
+import games.boardless.in_sync.services.InSyncService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
 @RestController
-@RequestMapping("")
+@RequestMapping
 public class MetadataController {
-
-  private final MetadataService metadataService;
-
-  @Autowired
-  public MetadataController(final MetadataService metadataService) {
-    this.metadataService = metadataService;
-  }
+  private static final Logger logger = LoggerFactory.getLogger(InSyncService.class);
 
   @Operation(summary = "Returns the server's health.")
-  @ApiResponse(responseCode = "200", description = "The server is healthy!", content = {
-      @Content(schema = @Schema(implementation = HealthDto.class), mediaType = "application/json") })
+  @ApiResponse(responseCode = "200", description = "The server is up!", content = @Content)
   @GetMapping("/health")
-  public ResponseEntity<HealthDto> health() {
-    return this.metadataService.health();
-  }
-
-  @Operation(summary = "Returns a brief description of this server.")
-  @ApiResponse(responseCode = "200", description = "A brief description of the server.", content = {
-      @Content(schema = @Schema(implementation = AboutDto.class), mediaType = "application/json") })
-  @GetMapping("/about")
-  public ResponseEntity<AboutDto> about() {
-    return this.metadataService.about();
+  public ResponseEntity<Void> health() {
+    logger.info("The server is up!");
+    return ResponseEntity.ok().build();
   }
 }

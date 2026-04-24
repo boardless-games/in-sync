@@ -1,29 +1,37 @@
 package games.boardless.in_sync.models;
 
+import java.io.IOException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.web.socket.TextMessage;
+import org.springframework.web.socket.WebSocketSession;
+
 public class Player {
+  private static final Logger logger = LoggerFactory.getLogger(Player.class);
   private final String name;
-  private boolean connected;
+  private WebSocketSession session;
 
   public Player(final String name) {
     this.name = name;
-    this.connected = false;
+    this.session = null;
   }
 
   public String getName() {
     return this.name;
   }
 
-  public void setConnected(boolean connected) {
-    this.connected = connected;
+  public void setSession(final WebSocketSession session) {
+    this.session = session;
   }
 
   public boolean isConnected() {
-    return this.connected;
+    return this.session != null;
   }
 
   @Override
   public String toString() {
-    return "Player [name=" + name + ", connected=" + connected + "]";
+    return "Player [name=" + name + ", sessionId=" + this.session != null ? this.session.getId() : null + "]";
   }
 
   @Override
@@ -49,5 +57,17 @@ public class Player {
     } else if (!name.equals(other.name))
       return false;
     return true;
+  }
+
+  public void sendMessage(final TextMessage message) {
+    if (this.session == null)
+      return;
+
+    try {
+      this.session.sendMessage(message);
+    } catch (IOException e) {
+      logger.error(
+          String.format("Failed to send message (%s) to %s.", message.getPayload(), this.toString()), e);
+    }
   }
 }

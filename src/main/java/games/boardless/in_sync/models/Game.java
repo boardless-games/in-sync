@@ -1,21 +1,30 @@
 package games.boardless.in_sync.models;
 
+import static games.boardless.in_sync.constants.Constants.GAME_CODE_LENGTH;
+import static games.boardless.in_sync.constants.Constants.GAME_CODE_MAX;
+import static games.boardless.in_sync.constants.Constants.GAME_CODE_MIN;
+import static games.boardless.in_sync.constants.Constants.MAX_NUM_PLAYERS;
+
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
+
+import org.springframework.web.socket.WebSocketSession;
+
+import games.boardless.in_sync.exceptions.BadRequestException;
+import games.boardless.in_sync.exceptions.ServiceUnavailableException;
 
 public class Game {
   private static final Random rand = new Random();
-  // Exclusive
-  private static final int MAX_GAME_CODE = 1_000_000;
-  // Inclusive
-  private static final int MIN_GAME_CODE = 100_000;
 
   private final String gameCode;
-  private final CopyOnWriteArraySet<Player> players;
+  private final Map<String, Player> players;
 
   public Game(final String gameCode) {
     this.gameCode = gameCode;
-    this.players = new CopyOnWriteArraySet<>();
+    this.players = new ConcurrentHashMap<>();
   }
 
   // Getters and setters
@@ -24,7 +33,7 @@ public class Game {
   }
 
   public String[] getPlayers() {
-    return this.players.toArray(new String[0]);
+    return this.players.keySet().toArray(new String[0]);
   }
 
   @Override
@@ -59,14 +68,29 @@ public class Game {
 
   // Service methods
   public static String generateGameCode() {
-    return String.valueOf(rand.nextInt(MAX_GAME_CODE - MIN_GAME_CODE) + MIN_GAME_CODE);
+    return String.valueOf(rand.nextInt(GAME_CODE_MAX - GAME_CODE_MIN) + GAME_CODE_MIN);
   }
 
-  public boolean addPlayer(final String name) {
-    return this.players.add(new Player(name));
+  public synchronized void addPlayer(final String name) throws ServiceUnavailableException, BadRequestException {
+    if (this.players.size() >= MAX_NUM_PLAYERS) {
+      throw new ServiceUnavailableException("The game is at max capacity.");
+    }
+    if (this.players.get(name) != null) {
+      throw new BadRequestException("That name is already taken.");
+    }
+    this.players.put(name, new Player(name));
   }
 
   public boolean hasConnectedPlayers() {
-    return this.players.stream().anyMatch((final Player player) -> player.isConnected());
+    return this.players.values().stream().anyMatch((final Player player) -> player.isConnected());
+  }
+
+  public boolean setPlayerSession(final String name, final WebSocketSession session) {
+    final Player player = this.players.get(name);
+    if (player == null) {
+      return false;
+    }
+    player.setSession(session);
+    return true;
   }
 }
