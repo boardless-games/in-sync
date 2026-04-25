@@ -1,0 +1,36 @@
+info:
+  name: Player
+  type: http
+  seq: 4
+
+http:
+  method: POST
+  url: "{{SERVER_PROTOCOL}}://{{SERVER_DOMAIN}}:{{SERVER_PORT}}/in-sync/game/:gameCode/player"
+  params:
+    - name: gameCode
+      value: "{{gameCode}}"
+      type: path
+  body:
+    type: json
+    data: |-
+      {
+        "name": "Craiglington"
+      }
+  auth: inherit
+
+runtime:
+  scripts:
+    - type: after-response
+      code: |-
+        let name = "";
+        if (res.status === 201) {
+          let data = req.getBody();
+          name = data.name;
+        }
+        bru.setVar("name", name);
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

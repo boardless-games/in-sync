@@ -1,0 +1,26 @@
+info:
+  name: Game
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: "{{SERVER_PROTOCOL}}://{{SERVER_DOMAIN}}:{{SERVER_PORT}}/in-sync/game"
+  auth: inherit
+
+runtime:
+  scripts:
+    - type: after-response
+      code: |-
+        let gameCode = "";
+        if (res.status === 201) {
+          let data = res.getBody();
+          gameCode = data.gameCode;
+        }
+        bru.setVar("gameCode", gameCode);
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
