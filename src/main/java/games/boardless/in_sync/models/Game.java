@@ -1,29 +1,40 @@
 package games.boardless.in_sync.models;
 
-import static games.boardless.in_sync.constants.Constants.GAME_CODE_LENGTH;
 import static games.boardless.in_sync.constants.Constants.GAME_CODE_MAX;
 import static games.boardless.in_sync.constants.Constants.GAME_CODE_MIN;
 import static games.boardless.in_sync.constants.Constants.MAX_NUM_PLAYERS;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.locks.ReentrantLock;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.socket.WebSocketSession;
 
 import games.boardless.in_sync.exceptions.BadRequestException;
 import games.boardless.in_sync.exceptions.ServiceUnavailableException;
 
 public class Game {
+  public enum GameStatus {
+    LOBBY,
+    INITIALIZING,
+    IN_GAME
+  }
+
+  private static final Logger logger = LoggerFactory.getLogger(Game.class);
   private static final Random rand = new Random();
 
   private final String gameCode;
+  private GameStatus status;
+  private final ReentrantLock playerLock;
   private final Map<String, Player> players;
 
   public Game(final String gameCode) {
     this.gameCode = gameCode;
+    this.status = GameStatus.LOBBY;
+    this.playerLock = new ReentrantLock(true);
     this.players = new ConcurrentHashMap<>();
   }
 
@@ -32,13 +43,21 @@ public class Game {
     return this.gameCode;
   }
 
+  public GameStatus getStatus() {
+    return this.status;
+  }
+
   public String[] getPlayers() {
     return this.players.keySet().toArray(new String[0]);
   }
 
+  public int numPlayers() {
+    return this.players.size();
+  }
+
   @Override
   public String toString() {
-    return "Game [gameCode=" + gameCode + ", players=" + players + "]";
+    return "Game [gameCode=" + gameCode + ", status=" + this.status + ", players=" + players + "]";
   }
 
   @Override
@@ -66,31 +85,119 @@ public class Game {
     return true;
   }
 
-  // Service methods
   public static String generateGameCode() {
     return String.valueOf(rand.nextInt(GAME_CODE_MAX - GAME_CODE_MIN) + GAME_CODE_MIN);
-  }
-
-  public synchronized void addPlayer(final String name) throws ServiceUnavailableException, BadRequestException {
-    if (this.players.size() >= MAX_NUM_PLAYERS) {
-      throw new ServiceUnavailableException("The game is at max capacity.");
-    }
-    if (this.players.get(name) != null) {
-      throw new BadRequestException("That name is already taken.");
-    }
-    this.players.put(name, new Player(name));
   }
 
   public boolean hasConnectedPlayers() {
     return this.players.values().stream().anyMatch((final Player player) -> player.isConnected());
   }
 
-  public boolean setPlayerSession(final String name, final WebSocketSession session) {
-    final Player player = this.players.get(name);
-    if (player == null) {
-      return false;
+  public boolean playersAreReady() {
+    return this.players.values().stream().allMatch((final Player player) -> player.isReady());
+  }
+
+  public void addPlayer(final String name) throws ServiceUnavailableException, BadRequestException {
+    this.playerLock.lock();
+    try {
+      if (this.status != GameStatus.LOBBY) {
+        throw new ServiceUnavailableException(String.format("Game %s has already started.", this.gameCode));
+      }
+      if (this.players.size() >= MAX_NUM_PLAYERS) {
+        throw new ServiceUnavailableException(String.format("Game %s is at max capacity.", this.gameCode));
+      }
+      if (this.players.get(name) != null) {
+        throw new BadRequestException(String.format("The name %s is already taken.", name));
+      }
+      this.players.put(name, new Player(name));
+      logger.info("{} was added to game {}.", name, this.gameCode);
+    } finally {
+      this.playerLock.unlock();
     }
-    player.setSession(session);
-    return true;
+  }
+
+  public void removePlayer(final String name) throws BadRequestException {
+    this.playerLock.lock();
+    try {
+      if (this.players.remove(name) == null) {
+        throw new BadRequestException(String.format("%s is not a player in game %s.", name, this.gameCode));
+      }
+      logger.info("{} was removed from game {}.", name, this.gameCode);
+    } finally {
+      this.playerLock.unlock();
+    }
+  }
+
+  public void connect(final String playerName, final WebSocketSession session) throws BadRequestException {
+    final Player player = this.players.get(playerName);
+    if (player == null) {
+      throw new BadRequestException(String.format("%s is not a player in game %s.", playerName, this.gameCode));
+    }
+    player.connect(session);
+    logger.info("{} connected to game {}.", playerName, this.gameCode);
+  }
+
+  public boolean isConnected(final String playerName) {
+    final Player player = this.players.get(playerName);
+    return player == null ? false : player.isConnected();
+  }
+
+  public void disconnect(final String playerName) throws BadRequestException {
+    final Player player = this.players.get(playerName);
+    if (player == null) {
+      throw new BadRequestException(String.format("%s is not a player in game %s.", playerName, this.gameCode));
+    }
+    player.disconnect();
+    logger.info("{} disconnected from game {}.", playerName, this.gameCode);
+  }
+
+  public void disconnectAll() {
+    for (final Player player : this.players.values()) {
+      if (player.isConnected()) {
+        player.disconnect();
+        logger.info("{} was disconnected from game {}.", player.getName(), this.gameCode);
+      }
+    }
+  }
+
+  public synchronized void pingPlayers() throws ServiceUnavailableException {
+    logger.info("Pinging {} in game {}.", this.getPlayers(), this.gameCode);
+    for (final Player player : this.players.values()) {
+      player.ping();
+    }
+  }
+
+  public void setReady(final String playerName) throws BadRequestException {
+    final Player player = this.players.get(playerName);
+    if (player == null) {
+      throw new BadRequestException(String.format("%s is not a player in game %s.", playerName, this.gameCode));
+    }
+    player.setReady();
+    logger.info("{} is ready in game {}.", playerName, this.gameCode);
+  }
+
+  public synchronized void initialize() throws ServiceUnavailableException {
+    if (this.status != GameStatus.LOBBY) {
+      throw new ServiceUnavailableException(String.format("Game %s has already started.", this.gameCode));
+    }
+
+    this.status = GameStatus.INITIALIZING;
+
+    this.pingPlayers();
+  }
+
+  public synchronized void start() throws ServiceUnavailableException {
+    if (this.status == GameStatus.LOBBY) {
+      throw new ServiceUnavailableException(String.format("Game %s has not been initialized.", this.gameCode));
+    }
+    if (this.status == GameStatus.IN_GAME) {
+      throw new ServiceUnavailableException(String.format("Game %s has already started.", this.gameCode));
+    }
+    if (!this.playersAreReady()) {
+      throw new ServiceUnavailableException(String.format("Players in game %s are not ready.", gameCode));
+    }
+
+    logger.info("Starting game {}.", gameCode);
+    this.status = GameStatus.IN_GAME;
   }
 }

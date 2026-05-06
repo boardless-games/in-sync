@@ -11,6 +11,7 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import games.boardless.in_sync.services.InSyncService;
+import games.boardless.in_sync.utils.ToString;
 
 @Component
 public class InSyncWebSocketHandler extends TextWebSocketHandler {
@@ -25,27 +26,27 @@ public class InSyncWebSocketHandler extends TextWebSocketHandler {
 
   @Override
   public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-    this.inSyncService.connectionEstablished(session);
+    this.inSyncService.connect(session);
   }
 
   @Override
   protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-
+    logger.info("{} sent {}.", ToString.toString(session), message.getPayload());
   }
 
   @Override
   protected void handlePongMessage(WebSocketSession session, PongMessage message) throws Exception {
-
+    this.inSyncService.handlePongMessage(session);
   }
 
   @Override
   public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
-    logger.error(String.format("Web socket transport error for session: %s.", session.getId()), exception);
+    logger.error("Web socket transport error on {}.", ToString.toString(session), exception);
   }
 
   @Override
   public void afterConnectionClosed(WebSocketSession session, CloseStatus closeStatus) throws Exception {
-
+    this.inSyncService.disconnect(session);
   }
 
   @Override

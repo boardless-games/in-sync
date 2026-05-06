@@ -24,12 +24,23 @@ public class Player {
     return this.name;
   }
 
-  public void setSession(final WebSocketSession session) {
+  public void connect(final WebSocketSession session) {
     this.session = session;
   }
 
+  public void disconnect() {
+    if (this.isConnected()) {
+      try {
+        this.session.close();
+      } catch (IOException e) {
+        logger.error("Failed to disconnect {}.", this.name);
+      }
+    }
+    this.session = null;
+  }
+
   public boolean isConnected() {
-    return this.session != null;
+    return this.session != null && this.session.isOpen();
   }
 
   public boolean isReady() {
@@ -38,7 +49,8 @@ public class Player {
 
   @Override
   public String toString() {
-    return "Player [name=" + name + ", sessionId=" + this.session != null ? this.session.getId() : null + ", ready=" + this.ready + "]";
+    return "Player [name=" + name + ", sessionId=" + this.session != null ? this.session.getId()
+        : null + ", connected=" + this.isConnected() + ", ready=" + this.ready + "]";
   }
 
   @Override
@@ -67,32 +79,32 @@ public class Player {
   }
 
   public void sendMessage(final TextMessage message) {
-    if (this.session == null)
+    if (this.session == null) {
       return;
+    }
 
     try {
       this.session.sendMessage(message);
     } catch (IOException e) {
       logger.error(
-          String.format("Failed to send message (%s) to %s.", message.getPayload(), this.toString()), e);
+          "Failed to send a message({}) to {}.", message.getPayload(), this.toString(), e);
     }
   }
 
   public void ping() {
     this.ready = false;
-    if (this.session == null)
+    if (!this.isConnected()) {
       return;
+    }
+
     try {
       this.session.sendMessage(new PingMessage());
     } catch (IOException e) {
-      logger.error(
-          String.format("Failed to ping %s.", this.toString()), e);
+      logger.error("Failed to ping {}.", this.toString(), e);
     }
   }
 
-  public void pong() {
-    if (this.session == null)
-      return;
+  public void setReady() {
     this.ready = true;
   }
 }
