@@ -31,7 +31,7 @@ import tools.jackson.databind.ObjectMapper;
 
 @WebMvcTest(InSyncController.class)
 @Import({ WebMvcConfig.class, SchedulerConfig.class })
-public class InSyncControllerTests {
+class InSyncControllerTests {
   @Autowired
   private MockMvc mockMvc;
 

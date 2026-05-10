@@ -15,12 +15,12 @@ import games.boardless.in_sync.config.WebMvcConfig;
 
 @WebMvcTest(MetadataController.class)
 @Import(WebMvcConfig.class)
-public class MetadataControllerTests {
+class MetadataControllerTests {
   @Autowired
   private MockMvc mockMvc;
 
   @Test
-  public void health_shouldReturnOk() throws Exception {
+  void health_shouldReturnOk() throws Exception {
     final MvcResult result = this.mockMvc.perform(MockMvcRequestBuilders.get("/health"))
         .andExpectAll(MockMvcResultMatchers.status().isOk(), MockMvcResultMatchers.content().string("")).andReturn();
 
