@@ -63,10 +63,13 @@ public class InSyncController {
   @ApiResponse(responseCode = "200", description = "Successfully initiated the start process.", content = @Content)
   @ApiResponse(responseCode = "400", description = "An empty or invalid game code was provided.", content = {
       @Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") })
-  @ApiResponse(responseCode = "503", description = "The game's players are not ready.", content = {
+  @ApiResponse(responseCode = "503", description = """
+      - The game's players are not ready
+      - The request took too long
+      """, content = {
       @Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json") })
   @PostMapping("/game/{gameCode}/start")
-  public DeferredResult<ResponseEntity<Void>> initiateStartGame(
+  public DeferredResult<ResponseEntity<Void>> startGame(
       @PathVariable @Parameter(description = "The game code.", example = "123456") final String gameCode)
       throws BadRequestException, ServiceUnavailableException {
     return inSyncService.startGame(gameCode);
