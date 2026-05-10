@@ -118,7 +118,9 @@ public class InSyncService {
 
     game.initialize();
 
-    final DeferredResult<ResponseEntity<Void>> deferredResult = new DeferredResult<>(10000L);
+    final DeferredResult<ResponseEntity<Void>> deferredResult = new DeferredResult<>(WAIT_PLAYER_READY_TIME + 5_000L,
+        new ServiceUnavailableException(
+            String.format("Request timed out while starting game %s.", game.getGameCode())));
 
     // Create auto start timer.
     this.taskScheduler.schedule(() -> {
