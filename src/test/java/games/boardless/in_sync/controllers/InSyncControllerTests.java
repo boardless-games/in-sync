@@ -42,7 +42,7 @@ public class InSyncControllerTests {
   private InSyncService inSyncService;
 
   @Test
-  public void newGame_shouldReturnCreated() throws Exception {
+  void newGame_shouldReturnCreated() throws Exception {
     final GameCodeDto dto = new GameCodeDto("123456");
     when(this.inSyncService.newGame())
         .thenReturn(ResponseEntity.status(HttpStatus.CREATED).body(dto));
@@ -54,7 +54,7 @@ public class InSyncControllerTests {
   }
 
   @Test
-  public void newGame_withBadRequestException_shouldReturnBadRequest() throws Exception {
+  void newGame_withBadRequestException_shouldReturnBadRequest() throws Exception {
     final String message = "Test message.";
     when(this.inSyncService.newGame())
         .thenThrow(new BadRequestException(message));
@@ -66,7 +66,7 @@ public class InSyncControllerTests {
   }
 
   @Test
-  public void newGame_withServiceUnavailableException_shouldReturnServiceUnavailable() throws Exception {
+  void newGame_withServiceUnavailableException_shouldReturnServiceUnavailable() throws Exception {
     final String message = UUID.randomUUID().toString();
     when(this.inSyncService.newGame())
         .thenThrow(new ServiceUnavailableException(message));
@@ -78,7 +78,7 @@ public class InSyncControllerTests {
   }
 
   @Test
-  public void newGame_withRuntimeException_shouldReturnInternalServerError() throws Exception {
+  void newGame_withRuntimeException_shouldReturnInternalServerError() throws Exception {
     when(this.inSyncService.newGame())
         .thenThrow(RuntimeException.class);
 
@@ -89,7 +89,7 @@ public class InSyncControllerTests {
   }
 
   @Test
-  public void newPlayer_shouldReturnCreated() throws Exception {
+  void newPlayer_shouldReturnCreated() throws Exception {
     when(this.inSyncService.newPlayer(anyString(), any(NameDto.class)))
         .thenReturn(ResponseEntity.status(HttpStatus.CREATED).build());
 
@@ -100,7 +100,7 @@ public class InSyncControllerTests {
   }
 
   @Test
-  public void newPlayer_withNoBody_shouldReturnBadRequest() throws Exception {
+  void newPlayer_withNoBody_shouldReturnBadRequest() throws Exception {
     this.mockMvc
         .perform(MockMvcRequestBuilders.post("/in-sync/game/123456/player"))
         .andExpectAll(
@@ -110,7 +110,7 @@ public class InSyncControllerTests {
   }
 
   @Test
-  public void newPlayer_withInvalidBody_shouldReturnBadRequest() throws Exception {
+  void newPlayer_withInvalidBody_shouldReturnBadRequest() throws Exception {
     this.mockMvc
         .perform(MockMvcRequestBuilders.post("/in-sync/game/123456/player")
             .content("Craiglington").contentType("application/json"))
@@ -121,7 +121,7 @@ public class InSyncControllerTests {
   }
 
   @Test
-  public void newPlayer_withBadRequestException_shouldReturnBadRequest() throws Exception {
+  void newPlayer_withBadRequestException_shouldReturnBadRequest() throws Exception {
     final String message = UUID.randomUUID().toString();
     when(this.inSyncService.newPlayer(anyString(), any(NameDto.class)))
         .thenThrow(new BadRequestException(message));
@@ -136,7 +136,7 @@ public class InSyncControllerTests {
   }
 
   @Test
-  public void newPlayer_withServiceUnavailableException_shouldReturnServiceUnavailable() throws Exception {
+  void newPlayer_withServiceUnavailableException_shouldReturnServiceUnavailable() throws Exception {
     final String message = UUID.randomUUID().toString();
     when(this.inSyncService.newPlayer(anyString(), any(NameDto.class)))
         .thenThrow(new ServiceUnavailableException(message));
@@ -151,7 +151,7 @@ public class InSyncControllerTests {
   }
 
   @Test
-  public void newPlayer_withRuntimeException_shouldReturnInternalServerError() throws Exception {
+  void newPlayer_withRuntimeException_shouldReturnInternalServerError() throws Exception {
     when(this.inSyncService.newPlayer(anyString(), any(NameDto.class)))
         .thenThrow(RuntimeException.class);
 
@@ -165,7 +165,7 @@ public class InSyncControllerTests {
   }
 
   @Test
-  public void startGame_shouldReturnOk() throws Exception {
+  void startGame_shouldReturnOk() throws Exception {
     final DeferredResult<ResponseEntity<Void>> deferredResult = new DeferredResult<>(10_000L);
 
     when(this.inSyncService.startGame(anyString())).thenReturn(deferredResult);
@@ -181,7 +181,7 @@ public class InSyncControllerTests {
   }
 
   @Test
-  public void startGame_withServiceUnavailableException_shouldReturnServiceUnavailable() throws Exception {
+  void startGame_withServiceUnavailableException_shouldReturnServiceUnavailable() throws Exception {
     final String message = UUID.randomUUID().toString();
     final DeferredResult<ResponseEntity<Void>> deferredResult = new DeferredResult<>();
 
@@ -199,7 +199,7 @@ public class InSyncControllerTests {
   }
 
   @Test
-  public void startGame_withBadRequestException_shouldReturnBadRequest() throws Exception {
+  void startGame_withBadRequestException_shouldReturnBadRequest() throws Exception {
     final String message = UUID.randomUUID().toString();
     final DeferredResult<ResponseEntity<Void>> deferredResult = new DeferredResult<>();
 
@@ -217,7 +217,7 @@ public class InSyncControllerTests {
   }
 
   @Test
-  public void startGame_withRuntimeException_shouldReturnInternalServerError() throws Exception {
+  void startGame_withRuntimeException_shouldReturnInternalServerError() throws Exception {
     final DeferredResult<ResponseEntity<Void>> deferredResult = new DeferredResult<>();
 
     when(this.inSyncService.startGame(anyString())).thenReturn(deferredResult);
