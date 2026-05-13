@@ -9,7 +9,7 @@ public class Constants {
   public static final int MAX_NUM_GAMES = 1;
   public static final long GAME_AUTO_DELETE_TIME = 30000L;
   public static final long PLAYER_AUTO_REMOVE_TIME = 10000L;
-  public static final long WAIT_PLAYER_READY_TIME = 2500L;
+  public static final long WAIT_PLAYER_READY_TIME = 2000L;
   public static final int MIN_PLAYER_NAME_LENGTH = 3;
   public static final int MAX_PLAYER_NAME_LENGTH = 15;
   public static final int MAX_NUM_PLAYERS = 20;
