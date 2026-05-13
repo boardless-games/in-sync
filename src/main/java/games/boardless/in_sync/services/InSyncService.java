@@ -6,7 +6,7 @@ import static games.boardless.in_sync.constants.Constants.PLAYER_AUTO_REMOVE_TIM
 import static games.boardless.in_sync.constants.Constants.WAIT_PLAYER_READY_TIME;
 
 import java.io.IOException;
-import java.time.Instant;
+import java.time.Clock;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -36,18 +36,20 @@ import games.boardless.in_sync.utils.ToString;
 @Service
 public class InSyncService {
   private static final Logger logger = LoggerFactory.getLogger(InSyncService.class);
-  private static final Map<String, Game> games = new ConcurrentHashMap<>();
   private final TaskScheduler taskScheduler;
+  private final Clock clock;
+  final Map<String, Game> games = new ConcurrentHashMap<>();
 
   @Autowired
-  public InSyncService(final TaskScheduler taskScheduler) {
+  public InSyncService(final TaskScheduler taskScheduler, final Clock clock) {
     this.taskScheduler = taskScheduler;
+    this.clock = clock;
   }
 
   public synchronized ResponseEntity<GameCodeDto> newGame()
       throws BadRequestException, ServiceUnavailableException {
     // Is the server already at the max capacity?
-    if (games.size() >= MAX_NUM_GAMES) {
+    if (this.games.size() >= MAX_NUM_GAMES) {
       throw new ServiceUnavailableException("The server is at max capacity. Please try again later.");
     }
 
@@ -55,16 +57,16 @@ public class InSyncService {
     String gameCode;
     do {
       gameCode = Game.generateGameCode();
-    } while (games.containsKey(gameCode));
+    } while (this.games.containsKey(gameCode));
 
     // Create and add the new game and player.
     final Game newGame = new Game(gameCode);
-    games.put(gameCode, newGame);
+    this.games.put(gameCode, newGame);
 
     // Create auto delete timer.
     this.taskScheduler.schedule(() -> {
       autoDeleteGame(newGame.getGameCode());
-    }, Instant.now().plusMillis(GAME_AUTO_DELETE_TIME));
+    }, this.clock.instant().plusMillis(GAME_AUTO_DELETE_TIME));
 
     logger.info("Created game {}.", gameCode);
 
@@ -86,7 +88,7 @@ public class InSyncService {
     }
 
     // Get the game.
-    final Game game = games.get(gameCode);
+    final Game game = this.games.get(gameCode);
     if (game == null) {
       throw new BadRequestException(String.format("Game %s not found.", gameCode));
     }
@@ -97,7 +99,7 @@ public class InSyncService {
     // Create auto remove timer.
     this.taskScheduler.schedule(() -> {
       autoRemovePlayer(game.getGameCode(), nameDto.name());
-    }, Instant.now().plusMillis(PLAYER_AUTO_REMOVE_TIME));
+    }, this.clock.instant().plusMillis(PLAYER_AUTO_REMOVE_TIME));
 
     return ResponseEntity.status(HttpStatus.CREATED).build();
   }
@@ -111,7 +113,7 @@ public class InSyncService {
     }
 
     // Get the game.
-    final Game game = games.get(gameCode);
+    final Game game = this.games.get(gameCode);
     if (game == null) {
       throw new BadRequestException(String.format("Game %s not found.", gameCode));
     }
@@ -130,7 +132,7 @@ public class InSyncService {
       } catch (Exception e) {
         deferredResult.setErrorResult(e);
       }
-    }, Instant.now().plusMillis(WAIT_PLAYER_READY_TIME));
+    }, this.clock.instant().plusMillis(WAIT_PLAYER_READY_TIME));
 
     return deferredResult;
   }
@@ -149,7 +151,7 @@ public class InSyncService {
       }
 
       // Get the game.
-      final Game game = games.get(gameCode);
+      final Game game = this.games.get(gameCode);
       if (game == null) {
         throw new BadRequestException(String.format("Game %s not found.", gameCode));
       }
@@ -191,7 +193,7 @@ public class InSyncService {
       }
 
       // Get the game.
-      final Game game = games.get(gameCode);
+      final Game game = this.games.get(gameCode);
       if (game == null) {
         return;
       }
@@ -236,7 +238,7 @@ public class InSyncService {
       }
 
       // Get the game.
-      final Game game = games.get(gameCode);
+      final Game game = this.games.get(gameCode);
       if (game == null) {
         throw new BadRequestException(String.format("Game %s not found.", gameCode));
       }
@@ -257,9 +259,9 @@ public class InSyncService {
     }
   }
 
-  private void autoDeleteGame(final String gameCode) {
+  void autoDeleteGame(final String gameCode) {
     // Get the game.
-    final Game game = games.get(gameCode);
+    final Game game = this.games.get(gameCode);
     if (game == null || game.hasConnectedPlayers()) {
       return;
     }
@@ -269,7 +271,7 @@ public class InSyncService {
 
   public void deleteGame(final String gameCode) {
     // Delete the game.
-    final Game deletedGame = games.remove(gameCode);
+    final Game deletedGame = this.games.remove(gameCode);
     if (deletedGame == null) {
       logger.error("Failed to delete game {}.", gameCode);
       return;
@@ -278,9 +280,9 @@ public class InSyncService {
     logger.info("Deleted game {}.", gameCode);
   }
 
-  private void autoRemovePlayer(final String gameCode, final String name) {
+  void autoRemovePlayer(final String gameCode, final String name) {
     // Find the game.
-    final Game game = games.get(gameCode);
+    final Game game = this.games.get(gameCode);
     if (game == null) {
       return;
     }
@@ -295,9 +297,9 @@ public class InSyncService {
     }
   }
 
-  private void autoStartGame(final String gameCode) throws BadRequestException, ServiceUnavailableException {
+  void autoStartGame(final String gameCode) throws BadRequestException, ServiceUnavailableException {
     // Get the game.
-    final Game game = games.get(gameCode);
+    final Game game = this.games.get(gameCode);
     if (game == null) {
       throw new BadRequestException(String.format("Game %s was deleted while starting.", gameCode));
     }
