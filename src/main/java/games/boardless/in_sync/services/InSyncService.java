@@ -82,6 +82,10 @@ public class InSyncService {
     }
 
     // Validate the name.
+    if (nameDto == null) {
+      throw new BadRequestException("Name must be provided.");
+    }
+
     final Optional<String> nameValidation = InputValidation.validateName(nameDto.name());
     if (nameValidation.isPresent()) {
       throw new BadRequestException(nameValidation.get());
@@ -138,6 +142,11 @@ public class InSyncService {
   }
 
   public void connect(final WebSocketSession session) {
+    // Validate session
+    if (session == null) {
+      return;
+    }
+
     // Get the query params.
     MultiValueMap<String, String> queryParams = UriComponentsBuilder.fromUri(session.getUri()).build()
         .getQueryParams();
@@ -180,6 +189,11 @@ public class InSyncService {
   }
 
   public void disconnect(final WebSocketSession session) {
+    // Validate session
+    if (session == null) {
+      return;
+    }
+
     // Get the query params.
     MultiValueMap<String, String> queryParams = UriComponentsBuilder.fromUri(session.getUri()).build()
         .getQueryParams();
@@ -225,6 +239,11 @@ public class InSyncService {
   }
 
   public void handlePongMessage(final WebSocketSession session) {
+    // Validate session
+    if (session == null) {
+      return;
+    }
+
     // Get the query params.
     MultiValueMap<String, String> queryParams = UriComponentsBuilder.fromUri(session.getUri()).build()
         .getQueryParams();
@@ -260,6 +279,11 @@ public class InSyncService {
   }
 
   void autoDeleteGame(final String gameCode) {
+    // Validate gameCode
+    if (gameCode == null) {
+      return;
+    }
+
     // Get the game.
     final Game game = this.games.get(gameCode);
     if (game == null || game.hasConnectedPlayers()) {
@@ -270,6 +294,11 @@ public class InSyncService {
   }
 
   public void deleteGame(final String gameCode) {
+    // Validate gameCode
+    if (gameCode == null) {
+      return;
+    }
+
     // Delete the game.
     final Game deletedGame = this.games.remove(gameCode);
     if (deletedGame == null) {
@@ -281,13 +310,18 @@ public class InSyncService {
   }
 
   void autoRemovePlayer(final String gameCode, final String name) {
+    // Validate gameCode and name
+    if (gameCode == null || name == null) {
+      return;
+    }
+
     // Find the game.
     final Game game = this.games.get(gameCode);
     if (game == null) {
       return;
     }
 
-    // Delete the player if they are not connected.
+    // Remove the player if they are not connected.
     if (!game.isConnected(name)) {
       try {
         game.removePlayer(name);
@@ -298,6 +332,11 @@ public class InSyncService {
   }
 
   void autoStartGame(final String gameCode) throws BadRequestException, ServiceUnavailableException {
+    // Validate gameCode
+    if (gameCode == null) {
+      return;
+    }
+
     // Get the game.
     final Game game = this.games.get(gameCode);
     if (game == null) {

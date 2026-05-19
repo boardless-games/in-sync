@@ -4,6 +4,7 @@ import static games.boardless.in_sync.constants.Constants.GAME_AUTO_DELETE_TIME;
 import static games.boardless.in_sync.constants.Constants.MAX_NUM_GAMES;
 import static games.boardless.in_sync.constants.Constants.PLAYER_AUTO_REMOVE_TIME;
 import static games.boardless.in_sync.constants.Constants.WAIT_PLAYER_READY_TIME;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -60,6 +61,7 @@ import games.boardless.in_sync.dtos.NameDto;
 import games.boardless.in_sync.exceptions.BadRequestException;
 import games.boardless.in_sync.exceptions.ServiceUnavailableException;
 import games.boardless.in_sync.models.Game;
+import games.boardless.in_sync.models.Game.GameStatus;
 import games.boardless.in_sync.utils.InputValidation;
 
 @ExtendWith(MockitoExtension.class)
@@ -123,6 +125,21 @@ class InSyncServiceTests {
 
       assertEquals(validationResult, e.getMessage());
       inputValidationStaticMock.verify(() -> InputValidation.validateGameCode(anyString()));
+    }
+  }
+
+  @Test
+  void newPlayer_withNullName_shouldThrowBadRequestException() {
+    try (MockedStatic<InputValidation> inputValidationStaticMock = mockStatic(InputValidation.class)) {
+      inputValidationStaticMock.when(() -> InputValidation.validateGameCode(anyString()))
+          .thenReturn(Optional.empty());
+      final String gameCode = UUID.randomUUID().toString();
+
+      assertThrows(BadRequestException.class, () -> {
+        this.inSyncService.newPlayer(gameCode, null);
+      });
+
+      inputValidationStaticMock.verify(() -> InputValidation.validateGameCode(gameCode));
     }
   }
 
@@ -226,7 +243,8 @@ class InSyncServiceTests {
   }
 
   @Test
-  void startGame_withBadAutoStart_shouldHaveExceptionResult() throws BadRequestException, ServiceUnavailableException {
+  void startGame_withFailingAutoStart_shouldHaveExceptionResult()
+      throws BadRequestException, ServiceUnavailableException {
     try (MockedStatic<InputValidation> inputValidationStaticMock = mockStatic(InputValidation.class)) {
       inputValidationStaticMock.when(() -> InputValidation.validateGameCode(anyString()))
           .thenReturn(Optional.empty());
@@ -295,6 +313,18 @@ class InSyncServiceTests {
   }
 
   @Test
+  void connect_withNullSession_shouldNotCloseSession() throws IOException {
+    try (MockedStatic<UriComponentsBuilder> uriComponentsBuilderStaticMock = mockStatic(UriComponentsBuilder.class)) {
+
+      assertDoesNotThrow(() -> {
+        this.inSyncService.connect(null);
+      });
+
+      uriComponentsBuilderStaticMock.verifyNoInteractions();
+    }
+  }
+
+  @Test
   void connect_withNoGameCode_shouldCloseSession() throws IOException {
     try (MockedStatic<UriComponentsBuilder> uriComponentsBuilderStaticMock = mockStatic(UriComponentsBuilder.class)) {
       final MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
@@ -303,7 +333,9 @@ class InSyncServiceTests {
       final WebSocketSession mockSession = mock();
       when(mockSession.getUri()).thenReturn(mock());
 
-      this.inSyncService.connect(mockSession);
+      assertDoesNotThrow(() -> {
+        this.inSyncService.connect(mockSession);
+      });
 
       verify(mockSession).close(CloseStatus.BAD_DATA);
     }
@@ -325,7 +357,9 @@ class InSyncServiceTests {
       logger.addAppender(listAppender);
 
       try {
-        this.inSyncService.connect(mockSession);
+        assertDoesNotThrow(() -> {
+          this.inSyncService.connect(mockSession);
+        });
 
         verify(mockSession).close(CloseStatus.BAD_DATA);
 
@@ -359,7 +393,9 @@ class InSyncServiceTests {
       logger.addAppender(listAppender);
 
       try {
-        this.inSyncService.connect(mockSession);
+        assertDoesNotThrow(() -> {
+          this.inSyncService.connect(mockSession);
+        });
 
         final ILoggingEvent log = listAppender.list.getLast();
         assertEquals(Level.ERROR, log.getLevel());
@@ -384,7 +420,9 @@ class InSyncServiceTests {
 
       inputValidationStaticMock.when(() -> InputValidation.validateGameCode(anyString())).thenReturn(Optional.of(""));
 
-      this.inSyncService.connect(mockSession);
+      assertDoesNotThrow(() -> {
+        this.inSyncService.connect(mockSession);
+      });
 
       verify(mockSession).close(CloseStatus.BAD_DATA);
     }
@@ -403,7 +441,9 @@ class InSyncServiceTests {
 
       inputValidationStaticMock.when(() -> InputValidation.validateGameCode(anyString())).thenReturn(Optional.empty());
 
-      this.inSyncService.connect(mockSession);
+      assertDoesNotThrow(() -> {
+        this.inSyncService.connect(mockSession);
+      });
 
       verify(mockSession).close(CloseStatus.BAD_DATA);
     }
@@ -426,7 +466,9 @@ class InSyncServiceTests {
       final Game mockGame = mock();
       this.inSyncService.games.put(gameCode, mockGame);
 
-      this.inSyncService.connect(mockSession);
+      assertDoesNotThrow(() -> {
+        this.inSyncService.connect(mockSession);
+      });
 
       verify(mockGame, never()).connect(anyString(), any(WebSocketSession.class));
       verify(mockSession).close(CloseStatus.BAD_DATA);
@@ -452,7 +494,9 @@ class InSyncServiceTests {
       final Game mockGame = mock();
       this.inSyncService.games.put(gameCode, mockGame);
 
-      this.inSyncService.connect(mockSession);
+      assertDoesNotThrow(() -> {
+        this.inSyncService.connect(mockSession);
+      });
 
       verify(mockGame, never()).connect(anyString(), any(WebSocketSession.class));
       verify(mockSession).close(CloseStatus.BAD_DATA);
@@ -460,7 +504,7 @@ class InSyncServiceTests {
   }
 
   @Test
-  void connect_withBadGameConnect_shouldCloseSession() throws IOException, BadRequestException {
+  void connect_withFailingGameConnect_shouldCloseSession() throws IOException, BadRequestException {
     try (MockedStatic<UriComponentsBuilder> uriComponentsBuilderStaticMock = mockStatic(UriComponentsBuilder.class);
         MockedStatic<InputValidation> inputValidationStaticMock = mockStatic(InputValidation.class)) {
       final String gameCode = UUID.randomUUID().toString();
@@ -480,7 +524,9 @@ class InSyncServiceTests {
       doThrow(BadRequestException.class).when(mockGame).connect(anyString(), any(WebSocketSession.class));
       this.inSyncService.games.put(gameCode, mockGame);
 
-      this.inSyncService.connect(mockSession);
+      assertDoesNotThrow(() -> {
+        this.inSyncService.connect(mockSession);
+      });
 
       verify(mockGame).connect(name, mockSession);
       verify(mockSession).close(CloseStatus.BAD_DATA);
@@ -507,11 +553,736 @@ class InSyncServiceTests {
       final Game mockGame = mock();
       this.inSyncService.games.put(gameCode, mockGame);
 
-      this.inSyncService.connect(mockSession);
+      assertDoesNotThrow(() -> {
+        this.inSyncService.connect(mockSession);
+      });
 
       verify(mockGame).connect(name, mockSession);
       verify(mockSession, never()).close(any(CloseStatus.class));
     }
+  }
+
+  @Test
+  void disconnect_withNullSession_shouldNotCloseSession() throws IOException {
+    try (MockedStatic<UriComponentsBuilder> uriComponentsBuilderStaticMock = mockStatic(UriComponentsBuilder.class)) {
+
+      assertDoesNotThrow(() -> {
+        this.inSyncService.disconnect(null);
+      });
+
+      uriComponentsBuilderStaticMock.verifyNoInteractions();
+    }
+  }
+
+  @Test
+  void disconnect_withNoGameCode_shouldNotThrow() throws IOException {
+    try (MockedStatic<UriComponentsBuilder> uriComponentsBuilderStaticMock = mockStatic(UriComponentsBuilder.class)) {
+      final MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
+      this.provideMockQueryParams(uriComponentsBuilderStaticMock, queryParams);
+
+      final WebSocketSession mockSession = mock();
+      when(mockSession.getUri()).thenReturn(mock());
+
+      assertDoesNotThrow(() -> {
+        this.inSyncService.disconnect(mockSession);
+      });
+    }
+  }
+
+  @Test
+  void disconnect_withUnexpectedException_shouldLogException() {
+    try (MockedStatic<UriComponentsBuilder> uriComponentsBuilderStaticMock = mockStatic(UriComponentsBuilder.class);
+        MockedStatic<InputValidation> inputValidationStaticMock = mockStatic(InputValidation.class)) {
+      final MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
+      queryParams.add("gameCode", "");
+      this.provideMockQueryParams(uriComponentsBuilderStaticMock, queryParams);
+
+      final WebSocketSession mockSession = mock();
+      when(mockSession.getUri()).thenReturn(mock());
+
+      inputValidationStaticMock.when(() -> InputValidation.validateGameCode(anyString()))
+          .thenThrow(RuntimeException.class);
+
+      final ListAppender<ILoggingEvent> listAppender = new ListAppender<>();
+      final Logger logger = (Logger) LoggerFactory.getLogger(InSyncService.class);
+      listAppender.start();
+      logger.addAppender(listAppender);
+
+      try {
+        assertDoesNotThrow(() -> {
+          this.inSyncService.disconnect(mockSession);
+        });
+
+        final ILoggingEvent log = listAppender.list.getLast();
+        assertEquals(Level.ERROR, log.getLevel());
+        assertTrue(log.getFormattedMessage().contains("Unexpected error"));
+      } finally {
+        logger.detachAppender(listAppender);
+        listAppender.stop();
+      }
+    }
+  }
+
+  @Test
+  void disconnect_withInvalidGameCode_shouldNotThrow() throws IOException {
+    try (MockedStatic<UriComponentsBuilder> uriComponentsBuilderStaticMock = mockStatic(UriComponentsBuilder.class);
+        MockedStatic<InputValidation> inputValidationStaticMock = mockStatic(InputValidation.class)) {
+      final MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
+      queryParams.add("gameCode", "");
+      this.provideMockQueryParams(uriComponentsBuilderStaticMock, queryParams);
+
+      final WebSocketSession mockSession = mock();
+      when(mockSession.getUri()).thenReturn(mock());
+
+      inputValidationStaticMock.when(() -> InputValidation.validateGameCode(anyString())).thenReturn(Optional.of(""));
+
+      assertDoesNotThrow(() -> {
+        this.inSyncService.disconnect(mockSession);
+      });
+    }
+  }
+
+  @Test
+  void disconnect_withNonExistentGameCode_shouldNotThrow() throws IOException {
+    try (MockedStatic<UriComponentsBuilder> uriComponentsBuilderStaticMock = mockStatic(UriComponentsBuilder.class);
+        MockedStatic<InputValidation> inputValidationStaticMock = mockStatic(InputValidation.class)) {
+      final MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
+      queryParams.add("gameCode", "");
+      this.provideMockQueryParams(uriComponentsBuilderStaticMock, queryParams);
+
+      final WebSocketSession mockSession = mock();
+      when(mockSession.getUri()).thenReturn(mock());
+
+      inputValidationStaticMock.when(() -> InputValidation.validateGameCode(anyString())).thenReturn(Optional.empty());
+
+      assertDoesNotThrow(() -> {
+        this.inSyncService.disconnect(mockSession);
+      });
+    }
+  }
+
+  @Test
+  void disconnect_withNoName_shouldNotThrow() throws IOException, BadRequestException {
+    try (MockedStatic<UriComponentsBuilder> uriComponentsBuilderStaticMock = mockStatic(UriComponentsBuilder.class);
+        MockedStatic<InputValidation> inputValidationStaticMock = mockStatic(InputValidation.class)) {
+      final String gameCode = UUID.randomUUID().toString();
+      final MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
+      queryParams.add("gameCode", gameCode);
+      this.provideMockQueryParams(uriComponentsBuilderStaticMock, queryParams);
+
+      final WebSocketSession mockSession = mock();
+      when(mockSession.getUri()).thenReturn(mock());
+
+      inputValidationStaticMock.when(() -> InputValidation.validateGameCode(anyString())).thenReturn(Optional.empty());
+
+      final Game mockGame = mock();
+      this.inSyncService.games.put(gameCode, mockGame);
+
+      assertDoesNotThrow(() -> {
+        this.inSyncService.disconnect(mockSession);
+      });
+
+      verify(mockGame, never()).disconnect(anyString());
+    }
+  }
+
+  @Test
+  void disconnect_withInvalidName_shouldNotThrow() throws IOException, BadRequestException {
+    try (MockedStatic<UriComponentsBuilder> uriComponentsBuilderStaticMock = mockStatic(UriComponentsBuilder.class);
+        MockedStatic<InputValidation> inputValidationStaticMock = mockStatic(InputValidation.class)) {
+      final String gameCode = UUID.randomUUID().toString();
+      final MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
+      queryParams.add("gameCode", gameCode);
+      queryParams.add("name", "");
+      this.provideMockQueryParams(uriComponentsBuilderStaticMock, queryParams);
+
+      final WebSocketSession mockSession = mock();
+      when(mockSession.getUri()).thenReturn(mock());
+
+      inputValidationStaticMock.when(() -> InputValidation.validateGameCode(anyString())).thenReturn(Optional.empty());
+      inputValidationStaticMock.when(() -> InputValidation.validateName(anyString())).thenReturn(Optional.of(""));
+
+      final Game mockGame = mock();
+      this.inSyncService.games.put(gameCode, mockGame);
+
+      assertDoesNotThrow(() -> {
+        this.inSyncService.connect(mockSession);
+      });
+
+      verify(mockGame, never()).disconnect(anyString());
+    }
+  }
+
+  @Test
+  void disconnect_withFailingGameDisconnect_shouldNotThrow() throws IOException, BadRequestException {
+    try (MockedStatic<UriComponentsBuilder> uriComponentsBuilderStaticMock = mockStatic(UriComponentsBuilder.class);
+        MockedStatic<InputValidation> inputValidationStaticMock = mockStatic(InputValidation.class)) {
+      final String gameCode = UUID.randomUUID().toString();
+      final String name = UUID.randomUUID().toString();
+      final MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
+      queryParams.add("gameCode", gameCode);
+      queryParams.add("name", name);
+      this.provideMockQueryParams(uriComponentsBuilderStaticMock, queryParams);
+
+      final WebSocketSession mockSession = mock();
+      when(mockSession.getUri()).thenReturn(mock());
+
+      inputValidationStaticMock.when(() -> InputValidation.validateGameCode(anyString())).thenReturn(Optional.empty());
+      inputValidationStaticMock.when(() -> InputValidation.validateName(anyString())).thenReturn(Optional.empty());
+
+      final Game mockGame = mock();
+      doThrow(BadRequestException.class).when(mockGame).disconnect(anyString());
+      this.inSyncService.games.put(gameCode, mockGame);
+
+      assertDoesNotThrow(() -> {
+        this.inSyncService.disconnect(mockSession);
+      });
+
+      verify(mockGame).disconnect(name);
+    }
+  }
+
+  @Test
+  void disconnect_withLobbyStatusAndRemainingPlayers_shouldDisconnectAndRemovePlayer()
+      throws IOException, BadRequestException {
+    try (MockedStatic<UriComponentsBuilder> uriComponentsBuilderStaticMock = mockStatic(UriComponentsBuilder.class);
+        MockedStatic<InputValidation> inputValidationStaticMock = mockStatic(InputValidation.class)) {
+      final String gameCode = UUID.randomUUID().toString();
+      final String name = UUID.randomUUID().toString();
+      final MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
+      queryParams.add("gameCode", gameCode);
+      queryParams.add("name", name);
+      this.provideMockQueryParams(uriComponentsBuilderStaticMock, queryParams);
+
+      final WebSocketSession mockSession = mock();
+      when(mockSession.getUri()).thenReturn(mock());
+
+      inputValidationStaticMock.when(() -> InputValidation.validateGameCode(anyString())).thenReturn(Optional.empty());
+      inputValidationStaticMock.when(() -> InputValidation.validateName(anyString())).thenReturn(Optional.empty());
+
+      final Game mockGame = mock();
+      when(mockGame.getStatus()).thenReturn(GameStatus.LOBBY);
+      when(mockGame.numPlayers()).thenReturn(1);
+      this.inSyncService.games.put(gameCode, mockGame);
+
+      assertDoesNotThrow(() -> {
+        this.inSyncService.disconnect(mockSession);
+      });
+
+      verify(mockGame).disconnect(name);
+      verify(mockGame).removePlayer(name);
+      verify(this.inSyncService, never()).deleteGame(anyString());
+    }
+  }
+
+  @Test
+  void disconnect_withLobbyStatusAndZeroPlayers_shouldDisconnectAndDeleteGame()
+      throws IOException, BadRequestException {
+    try (MockedStatic<UriComponentsBuilder> uriComponentsBuilderStaticMock = mockStatic(UriComponentsBuilder.class);
+        MockedStatic<InputValidation> inputValidationStaticMock = mockStatic(InputValidation.class)) {
+      final String gameCode = UUID.randomUUID().toString();
+      final String name = UUID.randomUUID().toString();
+      final MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
+      queryParams.add("gameCode", gameCode);
+      queryParams.add("name", name);
+      this.provideMockQueryParams(uriComponentsBuilderStaticMock, queryParams);
+
+      final WebSocketSession mockSession = mock();
+      when(mockSession.getUri()).thenReturn(mock());
+
+      inputValidationStaticMock.when(() -> InputValidation.validateGameCode(anyString())).thenReturn(Optional.empty());
+      inputValidationStaticMock.when(() -> InputValidation.validateName(anyString())).thenReturn(Optional.empty());
+
+      final Game mockGame = mock();
+      when(mockGame.getStatus()).thenReturn(GameStatus.LOBBY);
+      when(mockGame.numPlayers()).thenReturn(0);
+      when(mockGame.getGameCode()).thenReturn(gameCode);
+      this.inSyncService.games.put(gameCode, mockGame);
+
+      doNothing().when(this.inSyncService).deleteGame(anyString());
+
+      assertDoesNotThrow(() -> {
+        this.inSyncService.disconnect(mockSession);
+      });
+
+      verify(mockGame).disconnect(name);
+      verify(mockGame).removePlayer(name);
+      verify(this.inSyncService).deleteGame(gameCode);
+    }
+  }
+
+  @Test
+  void disconnect_withNonLobbyStatusAndNoConnectedPlayers_shouldDisconnectAndDeleteGame()
+      throws IOException, BadRequestException {
+    try (MockedStatic<UriComponentsBuilder> uriComponentsBuilderStaticMock = mockStatic(UriComponentsBuilder.class);
+        MockedStatic<InputValidation> inputValidationStaticMock = mockStatic(InputValidation.class)) {
+      final String gameCode = UUID.randomUUID().toString();
+      final String name = UUID.randomUUID().toString();
+      final MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
+      queryParams.add("gameCode", gameCode);
+      queryParams.add("name", name);
+      this.provideMockQueryParams(uriComponentsBuilderStaticMock, queryParams);
+
+      final WebSocketSession mockSession = mock();
+      when(mockSession.getUri()).thenReturn(mock());
+
+      inputValidationStaticMock.when(() -> InputValidation.validateGameCode(anyString())).thenReturn(Optional.empty());
+      inputValidationStaticMock.when(() -> InputValidation.validateName(anyString())).thenReturn(Optional.empty());
+
+      final Game mockGame = mock();
+      when(mockGame.getStatus()).thenReturn(GameStatus.IN_GAME);
+      when(mockGame.hasConnectedPlayers()).thenReturn(false);
+      when(mockGame.getGameCode()).thenReturn(gameCode);
+      this.inSyncService.games.put(gameCode, mockGame);
+
+      doNothing().when(this.inSyncService).deleteGame(anyString());
+
+      assertDoesNotThrow(() -> {
+        this.inSyncService.disconnect(mockSession);
+      });
+
+      verify(mockGame).disconnect(name);
+      verify(this.inSyncService).deleteGame(gameCode);
+    }
+  }
+
+  @Test
+  void disconnect_withNonLobbyStatusAndConnectedPlayers_shouldDisconnectOnly()
+      throws IOException, BadRequestException {
+    try (MockedStatic<UriComponentsBuilder> uriComponentsBuilderStaticMock = mockStatic(UriComponentsBuilder.class);
+        MockedStatic<InputValidation> inputValidationStaticMock = mockStatic(InputValidation.class)) {
+      final String gameCode = UUID.randomUUID().toString();
+      final String name = UUID.randomUUID().toString();
+      final MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
+      queryParams.add("gameCode", gameCode);
+      queryParams.add("name", name);
+      this.provideMockQueryParams(uriComponentsBuilderStaticMock, queryParams);
+
+      final WebSocketSession mockSession = mock();
+      when(mockSession.getUri()).thenReturn(mock());
+
+      inputValidationStaticMock.when(() -> InputValidation.validateGameCode(anyString())).thenReturn(Optional.empty());
+      inputValidationStaticMock.when(() -> InputValidation.validateName(anyString())).thenReturn(Optional.empty());
+
+      final Game mockGame = mock();
+      when(mockGame.getStatus()).thenReturn(GameStatus.IN_GAME);
+      when(mockGame.hasConnectedPlayers()).thenReturn(true);
+      this.inSyncService.games.put(gameCode, mockGame);
+
+      assertDoesNotThrow(() -> {
+        this.inSyncService.disconnect(mockSession);
+      });
+
+      verify(mockGame).disconnect(name);
+      verify(mockGame, never()).removePlayer(anyString());
+      verify(this.inSyncService, never()).deleteGame(anyString());
+    }
+  }
+
+  @Test
+  void handlePongMessage_withNullSession_shouldNotCloseSession() throws IOException {
+    try (MockedStatic<UriComponentsBuilder> uriComponentsBuilderStaticMock = mockStatic(UriComponentsBuilder.class)) {
+
+      assertDoesNotThrow(() -> {
+        this.inSyncService.handlePongMessage(null);
+      });
+
+      uriComponentsBuilderStaticMock.verifyNoInteractions();
+    }
+  }
+
+  @Test
+  void handlePongMessage_withNoGameCode_shouldNotThrow() throws IOException {
+    try (MockedStatic<UriComponentsBuilder> uriComponentsBuilderStaticMock = mockStatic(UriComponentsBuilder.class)) {
+      final MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
+      this.provideMockQueryParams(uriComponentsBuilderStaticMock, queryParams);
+
+      final WebSocketSession mockSession = mock();
+      when(mockSession.getUri()).thenReturn(mock());
+
+      assertDoesNotThrow(() -> {
+        this.inSyncService.handlePongMessage(mockSession);
+      });
+    }
+  }
+
+  @Test
+  void handlePongMessage_withUnexpectedException_shouldLogException() {
+    try (MockedStatic<UriComponentsBuilder> uriComponentsBuilderStaticMock = mockStatic(UriComponentsBuilder.class);
+        MockedStatic<InputValidation> inputValidationStaticMock = mockStatic(InputValidation.class)) {
+      final MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
+      queryParams.add("gameCode", "");
+      this.provideMockQueryParams(uriComponentsBuilderStaticMock, queryParams);
+
+      final WebSocketSession mockSession = mock();
+      when(mockSession.getUri()).thenReturn(mock());
+
+      inputValidationStaticMock.when(() -> InputValidation.validateGameCode(anyString()))
+          .thenThrow(RuntimeException.class);
+
+      final ListAppender<ILoggingEvent> listAppender = new ListAppender<>();
+      final Logger logger = (Logger) LoggerFactory.getLogger(InSyncService.class);
+      listAppender.start();
+      logger.addAppender(listAppender);
+
+      try {
+        assertDoesNotThrow(() -> {
+          this.inSyncService.handlePongMessage(mockSession);
+        });
+
+        final ILoggingEvent log = listAppender.list.getLast();
+        assertEquals(Level.ERROR, log.getLevel());
+        assertTrue(log.getFormattedMessage().contains("Unexpected error"));
+      } finally {
+        logger.detachAppender(listAppender);
+        listAppender.stop();
+      }
+    }
+  }
+
+  @Test
+  void handlePongMessage_withInvalidGameCode_shouldNotThrow() throws IOException {
+    try (MockedStatic<UriComponentsBuilder> uriComponentsBuilderStaticMock = mockStatic(UriComponentsBuilder.class);
+        MockedStatic<InputValidation> inputValidationStaticMock = mockStatic(InputValidation.class)) {
+      final MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
+      queryParams.add("gameCode", "");
+      this.provideMockQueryParams(uriComponentsBuilderStaticMock, queryParams);
+
+      final WebSocketSession mockSession = mock();
+      when(mockSession.getUri()).thenReturn(mock());
+
+      inputValidationStaticMock.when(() -> InputValidation.validateGameCode(anyString())).thenReturn(Optional.of(""));
+
+      assertDoesNotThrow(() -> {
+        this.inSyncService.handlePongMessage(mockSession);
+      });
+    }
+  }
+
+  @Test
+  void handlePongMessage_withNonExistentGameCode_shouldNotThrow() throws IOException {
+    try (MockedStatic<UriComponentsBuilder> uriComponentsBuilderStaticMock = mockStatic(UriComponentsBuilder.class);
+        MockedStatic<InputValidation> inputValidationStaticMock = mockStatic(InputValidation.class)) {
+      final MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
+      queryParams.add("gameCode", "");
+      this.provideMockQueryParams(uriComponentsBuilderStaticMock, queryParams);
+
+      final WebSocketSession mockSession = mock();
+      when(mockSession.getUri()).thenReturn(mock());
+
+      inputValidationStaticMock.when(() -> InputValidation.validateGameCode(anyString())).thenReturn(Optional.empty());
+
+      assertDoesNotThrow(() -> {
+        this.inSyncService.handlePongMessage(mockSession);
+      });
+    }
+  }
+
+  @Test
+  void handlePongMessage_withNoName_shouldNotThrow() throws IOException, BadRequestException {
+    try (MockedStatic<UriComponentsBuilder> uriComponentsBuilderStaticMock = mockStatic(UriComponentsBuilder.class);
+        MockedStatic<InputValidation> inputValidationStaticMock = mockStatic(InputValidation.class)) {
+      final String gameCode = UUID.randomUUID().toString();
+      final MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
+      queryParams.add("gameCode", gameCode);
+      this.provideMockQueryParams(uriComponentsBuilderStaticMock, queryParams);
+
+      final WebSocketSession mockSession = mock();
+      when(mockSession.getUri()).thenReturn(mock());
+
+      inputValidationStaticMock.when(() -> InputValidation.validateGameCode(anyString())).thenReturn(Optional.empty());
+
+      final Game mockGame = mock();
+      this.inSyncService.games.put(gameCode, mockGame);
+
+      assertDoesNotThrow(() -> {
+        this.inSyncService.handlePongMessage(mockSession);
+      });
+
+      verify(mockGame, never()).setReady(anyString());
+    }
+  }
+
+  @Test
+  void handlePongMessage_withInvalidName_shouldNotThrow() throws IOException, BadRequestException {
+    try (MockedStatic<UriComponentsBuilder> uriComponentsBuilderStaticMock = mockStatic(UriComponentsBuilder.class);
+        MockedStatic<InputValidation> inputValidationStaticMock = mockStatic(InputValidation.class)) {
+      final String gameCode = UUID.randomUUID().toString();
+      final MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
+      queryParams.add("gameCode", gameCode);
+      queryParams.add("name", "");
+      this.provideMockQueryParams(uriComponentsBuilderStaticMock, queryParams);
+
+      final WebSocketSession mockSession = mock();
+      when(mockSession.getUri()).thenReturn(mock());
+
+      inputValidationStaticMock.when(() -> InputValidation.validateGameCode(anyString())).thenReturn(Optional.empty());
+      inputValidationStaticMock.when(() -> InputValidation.validateName(anyString())).thenReturn(Optional.of(""));
+
+      final Game mockGame = mock();
+      this.inSyncService.games.put(gameCode, mockGame);
+
+      assertDoesNotThrow(() -> {
+        this.inSyncService.handlePongMessage(mockSession);
+      });
+
+      verify(mockGame, never()).setReady(anyString());
+    }
+  }
+
+  @Test
+  void handlePongMessage_withFailingGameSetReady_shouldNotThrow() throws IOException, BadRequestException {
+    try (MockedStatic<UriComponentsBuilder> uriComponentsBuilderStaticMock = mockStatic(UriComponentsBuilder.class);
+        MockedStatic<InputValidation> inputValidationStaticMock = mockStatic(InputValidation.class)) {
+      final String gameCode = UUID.randomUUID().toString();
+      final String name = UUID.randomUUID().toString();
+      final MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
+      queryParams.add("gameCode", gameCode);
+      queryParams.add("name", name);
+      this.provideMockQueryParams(uriComponentsBuilderStaticMock, queryParams);
+
+      final WebSocketSession mockSession = mock();
+      when(mockSession.getUri()).thenReturn(mock());
+
+      inputValidationStaticMock.when(() -> InputValidation.validateGameCode(anyString())).thenReturn(Optional.empty());
+      inputValidationStaticMock.when(() -> InputValidation.validateName(anyString())).thenReturn(Optional.empty());
+
+      final Game mockGame = mock();
+      doThrow(BadRequestException.class).when(mockGame).setReady(anyString());
+      this.inSyncService.games.put(gameCode, mockGame);
+
+      assertDoesNotThrow(() -> {
+        this.inSyncService.handlePongMessage(mockSession);
+      });
+
+      verify(mockGame).setReady(name);
+    }
+  }
+
+  @Test
+  void handlePongMessage_shouldSetReady()
+      throws IOException, BadRequestException {
+    try (MockedStatic<UriComponentsBuilder> uriComponentsBuilderStaticMock = mockStatic(UriComponentsBuilder.class);
+        MockedStatic<InputValidation> inputValidationStaticMock = mockStatic(InputValidation.class)) {
+      final String gameCode = UUID.randomUUID().toString();
+      final String name = UUID.randomUUID().toString();
+      final MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
+      queryParams.add("gameCode", gameCode);
+      queryParams.add("name", name);
+      this.provideMockQueryParams(uriComponentsBuilderStaticMock, queryParams);
+
+      final WebSocketSession mockSession = mock();
+      when(mockSession.getUri()).thenReturn(mock());
+
+      inputValidationStaticMock.when(() -> InputValidation.validateGameCode(anyString())).thenReturn(Optional.empty());
+      inputValidationStaticMock.when(() -> InputValidation.validateName(anyString())).thenReturn(Optional.empty());
+
+      final Game mockGame = mock();
+      this.inSyncService.games.put(gameCode, mockGame);
+
+      assertDoesNotThrow(() -> {
+        this.inSyncService.handlePongMessage(mockSession);
+      });
+
+      verify(mockGame).setReady(name);
+    }
+  }
+
+  @Test
+  void autoDeleteGame_withNullGameCode_shouldNotDeleteGame() {
+    this.inSyncService.autoDeleteGame(null);
+
+    verify(this.inSyncService, never()).deleteGame(anyString());
+  }
+
+  @Test
+  void autoDeleteGame_withNonExistentGameCode_shouldNotDeleteGame() {
+    this.inSyncService.autoDeleteGame("");
+
+    verify(this.inSyncService, never()).deleteGame(anyString());
+  }
+
+  @Test
+  void autoDeleteGame_withConnectedPlayers_shouldNotDeleteGame() {
+    final String gameCode = UUID.randomUUID().toString();
+    final Game mockGame = mock();
+    when(mockGame.hasConnectedPlayers()).thenReturn(true);
+    this.inSyncService.games.put(gameCode, mockGame);
+
+    this.inSyncService.autoDeleteGame(gameCode);
+
+    verify(this.inSyncService, never()).deleteGame(anyString());
+  }
+
+  @Test
+  void autoDeleteGame_shouldDeleteGame() {
+    final String gameCode = UUID.randomUUID().toString();
+    final Game mockGame = mock();
+    when(mockGame.hasConnectedPlayers()).thenReturn(false);
+    this.inSyncService.games.put(gameCode, mockGame);
+
+    doNothing().when(this.inSyncService).deleteGame(anyString());
+
+    this.inSyncService.autoDeleteGame(gameCode);
+
+    verify(this.inSyncService).deleteGame(gameCode);
+  }
+
+  @Test
+  void deleteGame_withNullGameCode_shouldNotThrow() {
+    assertDoesNotThrow(() -> {
+      this.inSyncService.deleteGame(null);
+    });
+  }
+
+  @Test
+  void deleteGame_withNonExistentGameCode_shouldLogMessage() {
+    final ListAppender<ILoggingEvent> listAppender = new ListAppender<>();
+    final Logger logger = (Logger) LoggerFactory.getLogger(InSyncService.class);
+    listAppender.start();
+    logger.addAppender(listAppender);
+
+    try {
+      assertDoesNotThrow(() -> {
+        this.inSyncService.deleteGame("");
+      });
+
+      final ILoggingEvent log = listAppender.list.getLast();
+      assertEquals(Level.ERROR, log.getLevel());
+      assertTrue(log.getFormattedMessage().contains("Failed to delete game"));
+    } finally {
+      logger.detachAppender(listAppender);
+      listAppender.stop();
+    }
+  }
+
+  @Test
+  void deleteGame_shouldDeleteGame() {
+    final String gameCode = UUID.randomUUID().toString();
+    this.inSyncService.games.put(gameCode, mock());
+
+    this.inSyncService.deleteGame(gameCode);
+
+    assertTrue(this.inSyncService.games.isEmpty());
+  }
+
+  @Test
+  void autoRemovePlayer_withNullGameCode_shouldNotThrow() {
+    assertDoesNotThrow(() -> {
+      this.inSyncService.autoRemovePlayer(null, "");
+    });
+  }
+
+  @Test
+  void autoRemovePlayer_withNullName_shouldNotThrow() {
+    assertDoesNotThrow(() -> {
+      this.inSyncService.autoRemovePlayer("", null);
+    });
+  }
+
+  @Test
+  void autoRemovePlayer_withNonExistentGameCode_shouldNotRemovePlayer() {
+    final String gameCode = UUID.randomUUID().toString();
+    assertNull(this.inSyncService.games.get(gameCode));
+    assertDoesNotThrow(() -> {
+      this.inSyncService.autoRemovePlayer(gameCode, "");
+    });
+  }
+
+  @Test
+  void autoRemovePlayer_withConnectedPlayer_shouldNotRemovePlayer() throws BadRequestException {
+    final String gameCode = UUID.randomUUID().toString();
+    final Game mockGame = mock();
+    when(mockGame.isConnected(anyString())).thenReturn(true);
+    this.inSyncService.games.put(gameCode, mockGame);
+
+    this.inSyncService.autoRemovePlayer(gameCode, "");
+
+    verify(mockGame, never()).removePlayer(anyString());
+  }
+
+  @Test
+  void autoRemovePlayer_withFailingRemovePlayer_shouldLogExceptionAndNotThrow() throws BadRequestException {
+    final String gameCode = UUID.randomUUID().toString();
+    final String name = UUID.randomUUID().toString();
+    final Game mockGame = mock();
+    when(mockGame.isConnected(anyString())).thenReturn(false);
+    doThrow(BadRequestException.class).when(mockGame).removePlayer(anyString());
+    this.inSyncService.games.put(gameCode, mockGame);
+
+    final ListAppender<ILoggingEvent> listAppender = new ListAppender<>();
+    final Logger logger = (Logger) LoggerFactory.getLogger(InSyncService.class);
+    listAppender.start();
+    logger.addAppender(listAppender);
+
+    try {
+      assertDoesNotThrow(() -> {
+        this.inSyncService.autoRemovePlayer(gameCode, name);
+      });
+
+      verify(mockGame).removePlayer(name);
+
+      final ILoggingEvent log = listAppender.list.getLast();
+      assertEquals(Level.ERROR, log.getLevel());
+      assertTrue(log.getFormattedMessage().contains("Failed to auto remove"));
+    } finally {
+      logger.detachAppender(listAppender);
+      listAppender.stop();
+    }
+  }
+
+  @Test
+  void autoRemovePlayer_shouldRemovePlayer() throws BadRequestException {
+    final String gameCode = UUID.randomUUID().toString();
+    final String name = UUID.randomUUID().toString();
+    final Game mockGame = mock();
+    when(mockGame.isConnected(anyString())).thenReturn(false);
+    this.inSyncService.games.put(gameCode, mockGame);
+
+    assertDoesNotThrow(() -> {
+      this.inSyncService.autoRemovePlayer(gameCode, name);
+    });
+
+    verify(mockGame).removePlayer(name);
+  }
+
+  @Test
+  void autoStartGame_withNullGameCode_shouldNotThrow() {
+    assertDoesNotThrow(() -> {
+      this.inSyncService.autoStartGame(null);
+    });
+  }
+
+  @Test
+  void autoStartGame_withNonExistentGameCode_shouldThrowBadRequestException() {
+    assertThrows(BadRequestException.class, () -> {
+      this.inSyncService.autoStartGame("");
+    });
+  }
+
+  @Test
+  void autoStartGame_withFailingStartGame_shouldThrowServiceUnavailableException() throws ServiceUnavailableException {
+    final String gameCode = UUID.randomUUID().toString();
+    final Game mockGame = mock();
+    doThrow(ServiceUnavailableException.class).when(mockGame).start();
+    this.inSyncService.games.put(gameCode, mockGame);
+
+    assertThrows(ServiceUnavailableException.class, () -> {
+      this.inSyncService.autoStartGame(gameCode);
+    });
+    verify(mockGame).start();
+  }
+
+  @Test
+  void autoStartGame_shouldStartGame() throws ServiceUnavailableException {
+    final String gameCode = UUID.randomUUID().toString();
+    final Game mockGame = mock();
+    this.inSyncService.games.put(gameCode, mockGame);
+
+    assertDoesNotThrow(() -> {
+      this.inSyncService.autoStartGame(gameCode);
+    });
+    verify(mockGame).start();
   }
 
   /**
