@@ -13,6 +13,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.socket.WebSocketSession;
 
+import games.boardless.in_sync.constants.GameType;
+import games.boardless.in_sync.dtos.GameSettingsDto;
 import games.boardless.in_sync.exceptions.BadRequestException;
 import games.boardless.in_sync.exceptions.ServiceUnavailableException;
 
@@ -28,6 +30,7 @@ public class Game {
 
   private final String gameCode;
   private GameStatus status;
+  private GameType type;
   private final ReentrantLock playerLock;
   private final Map<String, Player> players;
 
@@ -45,6 +48,10 @@ public class Game {
 
   public GameStatus getStatus() {
     return this.status;
+  }
+
+  public GameType getType() {
+    return this.type;
   }
 
   public String[] getPlayers() {
@@ -186,7 +193,7 @@ public class Game {
     this.pingPlayers();
   }
 
-  public synchronized void start() throws ServiceUnavailableException {
+  public synchronized void start(final GameSettingsDto gameSettings) throws ServiceUnavailableException {
     if (this.status == GameStatus.LOBBY) {
       throw new ServiceUnavailableException(String.format("Game %s has not been initialized.", this.gameCode));
     }
@@ -198,6 +205,7 @@ public class Game {
     }
 
     logger.info("Starting game {}.", gameCode);
+    this.type = gameSettings.gameType();
     this.status = GameStatus.IN_GAME;
   }
 }

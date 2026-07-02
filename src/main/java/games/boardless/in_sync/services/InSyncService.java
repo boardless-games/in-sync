@@ -25,6 +25,7 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import games.boardless.in_sync.dtos.GameCodeDto;
+import games.boardless.in_sync.dtos.GameSettingsDto;
 import games.boardless.in_sync.dtos.NameDto;
 import games.boardless.in_sync.exceptions.BadRequestException;
 import games.boardless.in_sync.exceptions.ServiceUnavailableException;
@@ -73,7 +74,7 @@ public class InSyncService {
     return ResponseEntity.status(HttpStatus.CREATED).body(new GameCodeDto(gameCode));
   }
 
-  public ResponseEntity<Void> newPlayer(final String gameCode, final NameDto nameDto)
+  public ResponseEntity<Void> newPlayer(final String gameCode, final NameDto name)
       throws BadRequestException, ServiceUnavailableException {
     // Validate the game code.
     final Optional<String> gameCodeValidation = InputValidation.validateGameCode(gameCode);
@@ -82,11 +83,11 @@ public class InSyncService {
     }
 
     // Validate the name.
-    if (nameDto == null) {
+    if (name == null) {
       throw new BadRequestException("Name must be provided.");
     }
 
-    final Optional<String> nameValidation = InputValidation.validateName(nameDto.name());
+    final Optional<String> nameValidation = InputValidation.validateName(name.name());
     if (nameValidation.isPresent()) {
       throw new BadRequestException(nameValidation.get());
     }
@@ -98,17 +99,17 @@ public class InSyncService {
     }
 
     // Add the player
-    game.addPlayer(nameDto.name());
+    game.addPlayer(name.name());
 
     // Create auto remove timer.
     this.taskScheduler.schedule(() -> {
-      autoRemovePlayer(game.getGameCode(), nameDto.name());
+      autoRemovePlayer(game.getGameCode(), name.name());
     }, this.clock.instant().plusMillis(PLAYER_AUTO_REMOVE_TIME));
 
     return ResponseEntity.status(HttpStatus.CREATED).build();
   }
 
-  public DeferredResult<ResponseEntity<Void>> startGame(final String gameCode)
+  public DeferredResult<ResponseEntity<Void>> startGame(final String gameCode, final GameSettingsDto gameSettings)
       throws BadRequestException, ServiceUnavailableException {
     // Validate the game code.
     final Optional<String> gameCodeValidation = InputValidation.validateGameCode(gameCode);
@@ -131,7 +132,7 @@ public class InSyncService {
     // Create auto start timer.
     this.taskScheduler.schedule(() -> {
       try {
-        autoStartGame(gameCode);
+        autoStartGame(gameCode, gameSettings);
         deferredResult.setResult(ResponseEntity.ok().build());
       } catch (Exception e) {
         deferredResult.setErrorResult(e);
@@ -331,7 +332,8 @@ public class InSyncService {
     }
   }
 
-  void autoStartGame(final String gameCode) throws BadRequestException, ServiceUnavailableException {
+  void autoStartGame(final String gameCode, final GameSettingsDto gameSettings)
+      throws BadRequestException, ServiceUnavailableException {
     // Validate gameCode
     if (gameCode == null) {
       return;
@@ -344,6 +346,6 @@ public class InSyncService {
     }
 
     // Start the game.
-    game.start();
+    game.start(gameSettings);
   }
 }
