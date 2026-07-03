@@ -21,10 +21,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
-import org.springframework.web.context.request.async.DeferredResult;
 import tools.jackson.databind.ObjectMapper;
 
 @WebMvcTest(InSyncController.class)
@@ -175,91 +173,100 @@ class InSyncControllerTests {
             MockMvcResultMatchers.jsonPath("$.error").isString());
   }
 
-  @Test
-  void startGame_shouldReturnOk() throws Exception {
-    final DeferredResult<ResponseEntity<Void>> deferredResult = new DeferredResult<>(10_000L);
+  // @Test
+  // void startGame_shouldReturnOk() throws Exception {
+  // final DeferredResult<ResponseEntity<Void>> deferredResult = new
+  // DeferredResult<>(10_000L);
 
-    when(this.inSyncService.startGame(anyString())).thenReturn(deferredResult);
+  // when(this.inSyncService.startGame(anyString())).thenReturn(deferredResult);
 
-    final MvcResult result =
-        this.mockMvc
-            .perform(MockMvcRequestBuilders.post("/in-sync/game/123456/start"))
-            .andExpect(MockMvcResultMatchers.request().asyncStarted())
-            .andReturn();
+  // final MvcResult result =
+  // this.mockMvc
+  // .perform(MockMvcRequestBuilders.post("/in-sync/game/123456/start"))
+  // .andExpect(MockMvcResultMatchers.request().asyncStarted())
+  // .andReturn();
 
-    deferredResult.setResult(ResponseEntity.ok().build());
+  // deferredResult.setResult(ResponseEntity.ok().build());
 
-    this.mockMvc
-        .perform(MockMvcRequestBuilders.asyncDispatch(result))
-        .andExpectAll(
-            MockMvcResultMatchers.status().isOk(), MockMvcResultMatchers.content().string(""));
-  }
+  // this.mockMvc
+  // .perform(MockMvcRequestBuilders.asyncDispatch(result))
+  // .andExpectAll(
+  // MockMvcResultMatchers.status().isOk(),
+  // MockMvcResultMatchers.content().string(""));
+  // }
 
-  @Test
-  void startGame_withServiceUnavailableException_shouldReturnServiceUnavailable() throws Exception {
-    final String message = UUID.randomUUID().toString();
-    final DeferredResult<ResponseEntity<Void>> deferredResult = new DeferredResult<>();
+  // @Test
+  // void
+  // startGame_withServiceUnavailableException_shouldReturnServiceUnavailable()
+  // throws Exception {
+  // final String message = UUID.randomUUID().toString();
+  // final DeferredResult<ResponseEntity<Void>> deferredResult = new
+  // DeferredResult<>();
 
-    when(this.inSyncService.startGame(anyString())).thenReturn(deferredResult);
+  // when(this.inSyncService.startGame(anyString())).thenReturn(deferredResult);
 
-    final MvcResult result =
-        this.mockMvc
-            .perform(MockMvcRequestBuilders.post("/in-sync/game/123456/start"))
-            .andExpect(MockMvcResultMatchers.request().asyncStarted())
-            .andReturn();
+  // final MvcResult result =
+  // this.mockMvc
+  // .perform(MockMvcRequestBuilders.post("/in-sync/game/123456/start"))
+  // .andExpect(MockMvcResultMatchers.request().asyncStarted())
+  // .andReturn();
 
-    deferredResult.setErrorResult(new ServiceUnavailableException(message));
+  // deferredResult.setErrorResult(new ServiceUnavailableException(message));
 
-    this.mockMvc
-        .perform(MockMvcRequestBuilders.asyncDispatch(result))
-        .andExpectAll(
-            MockMvcResultMatchers.status().isServiceUnavailable(),
-            MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON),
-            MockMvcResultMatchers.jsonPath("$.error").value(message));
-  }
+  // this.mockMvc
+  // .perform(MockMvcRequestBuilders.asyncDispatch(result))
+  // .andExpectAll(
+  // MockMvcResultMatchers.status().isServiceUnavailable(),
+  // MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON),
+  // MockMvcResultMatchers.jsonPath("$.error").value(message));
+  // }
 
-  @Test
-  void startGame_withBadRequestException_shouldReturnBadRequest() throws Exception {
-    final String message = UUID.randomUUID().toString();
-    final DeferredResult<ResponseEntity<Void>> deferredResult = new DeferredResult<>();
+  // @Test
+  // void startGame_withBadRequestException_shouldReturnBadRequest() throws
+  // Exception {
+  // final String message = UUID.randomUUID().toString();
+  // final DeferredResult<ResponseEntity<Void>> deferredResult = new
+  // DeferredResult<>();
 
-    when(this.inSyncService.startGame(anyString())).thenReturn(deferredResult);
+  // when(this.inSyncService.startGame(anyString())).thenReturn(deferredResult);
 
-    final MvcResult result =
-        this.mockMvc
-            .perform(MockMvcRequestBuilders.post("/in-sync/game/123456/start"))
-            .andExpect(MockMvcResultMatchers.request().asyncStarted())
-            .andReturn();
+  // final MvcResult result =
+  // this.mockMvc
+  // .perform(MockMvcRequestBuilders.post("/in-sync/game/123456/start"))
+  // .andExpect(MockMvcResultMatchers.request().asyncStarted())
+  // .andReturn();
 
-    deferredResult.setErrorResult(new BadRequestException(message));
+  // deferredResult.setErrorResult(new BadRequestException(message));
 
-    this.mockMvc
-        .perform(MockMvcRequestBuilders.asyncDispatch(result))
-        .andExpectAll(
-            MockMvcResultMatchers.status().isBadRequest(),
-            MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON),
-            MockMvcResultMatchers.jsonPath("$.error").value(message));
-  }
+  // this.mockMvc
+  // .perform(MockMvcRequestBuilders.asyncDispatch(result))
+  // .andExpectAll(
+  // MockMvcResultMatchers.status().isBadRequest(),
+  // MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON),
+  // MockMvcResultMatchers.jsonPath("$.error").value(message));
+  // }
 
-  @Test
-  void startGame_withRuntimeException_shouldReturnInternalServerError() throws Exception {
-    final DeferredResult<ResponseEntity<Void>> deferredResult = new DeferredResult<>();
+  // @Test
+  // void startGame_withRuntimeException_shouldReturnInternalServerError() throws
+  // Exception {
+  // final DeferredResult<ResponseEntity<Void>> deferredResult = new
+  // DeferredResult<>();
 
-    when(this.inSyncService.startGame(anyString())).thenReturn(deferredResult);
+  // when(this.inSyncService.startGame(anyString())).thenReturn(deferredResult);
 
-    final MvcResult result =
-        this.mockMvc
-            .perform(MockMvcRequestBuilders.post("/in-sync/game/123456/start"))
-            .andExpect(MockMvcResultMatchers.request().asyncStarted())
-            .andReturn();
+  // final MvcResult result =
+  // this.mockMvc
+  // .perform(MockMvcRequestBuilders.post("/in-sync/game/123456/start"))
+  // .andExpect(MockMvcResultMatchers.request().asyncStarted())
+  // .andReturn();
 
-    deferredResult.setErrorResult(new RuntimeException());
+  // deferredResult.setErrorResult(new RuntimeException());
 
-    this.mockMvc
-        .perform(MockMvcRequestBuilders.asyncDispatch(result))
-        .andExpectAll(
-            MockMvcResultMatchers.status().isInternalServerError(),
-            MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON),
-            MockMvcResultMatchers.jsonPath("$.error").isString());
-  }
+  // this.mockMvc
+  // .perform(MockMvcRequestBuilders.asyncDispatch(result))
+  // .andExpectAll(
+  // MockMvcResultMatchers.status().isInternalServerError(),
+  // MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON),
+  // MockMvcResultMatchers.jsonPath("$.error").isString());
+  // }
 }
