@@ -4,7 +4,9 @@ import static games.boardless.in_sync.constants.Constants.GAME_CODE_MAX;
 import static games.boardless.in_sync.constants.Constants.GAME_CODE_MIN;
 import static games.boardless.in_sync.constants.Constants.MAX_NUM_PLAYERS;
 
+import games.boardless.in_sync.constants.GameDifficulty;
 import games.boardless.in_sync.constants.GameType;
+import games.boardless.in_sync.constants.MessageTopic;
 import games.boardless.in_sync.dtos.GameSettingsDto;
 import games.boardless.in_sync.exceptions.BadRequestException;
 import games.boardless.in_sync.exceptions.ServiceUnavailableException;
@@ -29,6 +31,8 @@ public class Game {
   private final String gameCode;
   private GameStatus status;
   private GameType type;
+  private GameDifficulty difficulty;
+  private Song song = null;
   private final ReentrantLock playerLock;
   private final Map<String, Player> players;
 
@@ -166,11 +170,15 @@ public class Game {
     }
   }
 
-  public synchronized void pingPlayers() throws ServiceUnavailableException {
+  public synchronized void pingPlayers() {
     logger.info("Pinging {} in game {}.", this.getPlayers(), this.gameCode);
     for (final Player player : this.players.values()) {
       player.ping();
     }
+  }
+
+  public synchronized void messagePlayers(final MessageTopic topic, final String message) {
+    logger.info("Messaging {} to {} in game {}.", topic, this.getPlayers(), this.gameCode);
   }
 
   public void setReady(final String playerName) throws BadRequestException {
@@ -211,6 +219,9 @@ public class Game {
 
     logger.info("Starting game {}.", gameCode);
     this.type = gameSettings.gameType();
+    this.difficulty = gameSettings.gameDifficulty();
     this.status = GameStatus.IN_GAME;
+
+    this.song = new Song(this.type, this.difficulty);
   }
 }
