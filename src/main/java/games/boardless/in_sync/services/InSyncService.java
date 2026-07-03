@@ -5,12 +5,20 @@ import static games.boardless.in_sync.constants.Constants.MAX_NUM_GAMES;
 import static games.boardless.in_sync.constants.Constants.PLAYER_AUTO_REMOVE_TIME;
 import static games.boardless.in_sync.constants.Constants.WAIT_PLAYER_READY_TIME;
 
+import games.boardless.in_sync.dtos.GameCodeDto;
+import games.boardless.in_sync.dtos.GameSettingsDto;
+import games.boardless.in_sync.dtos.NameDto;
+import games.boardless.in_sync.exceptions.BadRequestException;
+import games.boardless.in_sync.exceptions.ServiceUnavailableException;
+import games.boardless.in_sync.models.Game;
+import games.boardless.in_sync.models.Game.GameStatus;
+import games.boardless.in_sync.utils.InputValidation;
+import games.boardless.in_sync.utils.ToString;
 import java.io.IOException;
 import java.time.Clock;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,16 +31,6 @@ import org.springframework.web.context.request.async.DeferredResult;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.util.UriComponentsBuilder;
-
-import games.boardless.in_sync.dtos.GameCodeDto;
-import games.boardless.in_sync.dtos.GameSettingsDto;
-import games.boardless.in_sync.dtos.NameDto;
-import games.boardless.in_sync.exceptions.BadRequestException;
-import games.boardless.in_sync.exceptions.ServiceUnavailableException;
-import games.boardless.in_sync.models.Game;
-import games.boardless.in_sync.models.Game.GameStatus;
-import games.boardless.in_sync.utils.InputValidation;
-import games.boardless.in_sync.utils.ToString;
 
 @Service
 public class InSyncService {
@@ -51,7 +49,8 @@ public class InSyncService {
       throws BadRequestException, ServiceUnavailableException {
     // Is the server already at the max capacity?
     if (this.games.size() >= MAX_NUM_GAMES) {
-      throw new ServiceUnavailableException("The server is at max capacity. Please try again later.");
+      throw new ServiceUnavailableException(
+          "The server is at max capacity. Please try again later.");
     }
 
     // Generate and validate the new game code.
@@ -65,9 +64,11 @@ public class InSyncService {
     this.games.put(gameCode, newGame);
 
     // Create auto delete timer.
-    this.taskScheduler.schedule(() -> {
-      autoDeleteGame(newGame.getGameCode());
-    }, this.clock.instant().plusMillis(GAME_AUTO_DELETE_TIME));
+    this.taskScheduler.schedule(
+        () -> {
+          autoDeleteGame(newGame.getGameCode());
+        },
+        this.clock.instant().plusMillis(GAME_AUTO_DELETE_TIME));
 
     logger.info("Created game {}.", gameCode);
 
@@ -102,14 +103,17 @@ public class InSyncService {
     game.addPlayer(name.name());
 
     // Create auto remove timer.
-    this.taskScheduler.schedule(() -> {
-      autoRemovePlayer(game.getGameCode(), name.name());
-    }, this.clock.instant().plusMillis(PLAYER_AUTO_REMOVE_TIME));
+    this.taskScheduler.schedule(
+        () -> {
+          autoRemovePlayer(game.getGameCode(), name.name());
+        },
+        this.clock.instant().plusMillis(PLAYER_AUTO_REMOVE_TIME));
 
     return ResponseEntity.status(HttpStatus.CREATED).build();
   }
 
-  public DeferredResult<ResponseEntity<Void>> startGame(final String gameCode, final GameSettingsDto gameSettings)
+  public DeferredResult<ResponseEntity<Void>> startGame(
+      final String gameCode, final GameSettingsDto gameSettings)
       throws BadRequestException, ServiceUnavailableException {
     // Validate the game code.
     final Optional<String> gameCodeValidation = InputValidation.validateGameCode(gameCode);
@@ -125,19 +129,23 @@ public class InSyncService {
 
     game.initialize();
 
-    final DeferredResult<ResponseEntity<Void>> deferredResult = new DeferredResult<>(WAIT_PLAYER_READY_TIME + 5_000L,
-        new ServiceUnavailableException(
-            String.format("Request timed out while starting game %s.", game.getGameCode())));
+    final DeferredResult<ResponseEntity<Void>> deferredResult =
+        new DeferredResult<>(
+            WAIT_PLAYER_READY_TIME + 5_000L,
+            new ServiceUnavailableException(
+                String.format("Request timed out while starting game %s.", game.getGameCode())));
 
     // Create auto start timer.
-    this.taskScheduler.schedule(() -> {
-      try {
-        autoStartGame(gameCode, gameSettings);
-        deferredResult.setResult(ResponseEntity.ok().build());
-      } catch (Exception e) {
-        deferredResult.setErrorResult(e);
-      }
-    }, this.clock.instant().plusMillis(WAIT_PLAYER_READY_TIME));
+    this.taskScheduler.schedule(
+        () -> {
+          try {
+            autoStartGame(gameCode, gameSettings);
+            deferredResult.setResult(ResponseEntity.ok().build());
+          } catch (Exception e) {
+            deferredResult.setErrorResult(e);
+          }
+        },
+        this.clock.instant().plusMillis(WAIT_PLAYER_READY_TIME));
 
     return deferredResult;
   }
@@ -149,8 +157,8 @@ public class InSyncService {
     }
 
     // Get the query params.
-    MultiValueMap<String, String> queryParams = UriComponentsBuilder.fromUri(session.getUri()).build()
-        .getQueryParams();
+    MultiValueMap<String, String> queryParams =
+        UriComponentsBuilder.fromUri(session.getUri()).build().getQueryParams();
 
     try {
       // Get and validate the game code.
@@ -176,13 +184,17 @@ public class InSyncService {
       // Set the player's session.
       game.connect(name, session);
     } catch (NullPointerException | BadRequestException badDataException) {
-      logger.info("Closing {} after connection established due to bad data.",
-          ToString.toString(session), badDataException);
+      logger.info(
+          "Closing {} after connection established due to bad data.",
+          ToString.toString(session),
+          badDataException);
       try {
         session.close(CloseStatus.BAD_DATA);
       } catch (IOException ioException) {
-        logger.error("Failed to close {} after connection established due to bad data.",
-            ToString.toString(session), ioException);
+        logger.error(
+            "Failed to close {} after connection established due to bad data.",
+            ToString.toString(session),
+            ioException);
       }
     } catch (Exception e) {
       logger.error("Unexpected error while connecting.", e);
@@ -196,8 +208,8 @@ public class InSyncService {
     }
 
     // Get the query params.
-    MultiValueMap<String, String> queryParams = UriComponentsBuilder.fromUri(session.getUri()).build()
-        .getQueryParams();
+    MultiValueMap<String, String> queryParams =
+        UriComponentsBuilder.fromUri(session.getUri()).build().getQueryParams();
 
     try {
       // Get and validate the game code.
@@ -232,8 +244,10 @@ public class InSyncService {
         this.deleteGame(game.getGameCode());
       }
     } catch (NullPointerException | BadRequestException badDataException) {
-      logger.info("Failed to disconnect from {} due to bad data.",
-          ToString.toString(session), badDataException);
+      logger.info(
+          "Failed to disconnect from {} due to bad data.",
+          ToString.toString(session),
+          badDataException);
     } catch (Exception e) {
       logger.error("Unexpected error while disconnecting.", e);
     }
@@ -246,8 +260,8 @@ public class InSyncService {
     }
 
     // Get the query params.
-    MultiValueMap<String, String> queryParams = UriComponentsBuilder.fromUri(session.getUri()).build()
-        .getQueryParams();
+    MultiValueMap<String, String> queryParams =
+        UriComponentsBuilder.fromUri(session.getUri()).build().getQueryParams();
 
     try {
       // Get and validate the game code.
@@ -273,9 +287,11 @@ public class InSyncService {
       // Set ready.
       game.setReady(name);
     } catch (NullPointerException | BadRequestException e) {
-      logger.info("Failed to handle pong message from {} due to bad data.", ToString.toString(session), e);
+      logger.info(
+          "Failed to handle pong message from {} due to bad data.", ToString.toString(session), e);
     } catch (Exception e) {
-      logger.error("Unexpected error while handling pong message from {}.", ToString.toString(session), e);
+      logger.error(
+          "Unexpected error while handling pong message from {}.", ToString.toString(session), e);
     }
   }
 

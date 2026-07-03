@@ -24,7 +24,9 @@ public enum NoteFrequency {
 
   public NoteFrequency fromFrequency(final float frequency) {
     return Stream.of(NoteFrequency.values())
-        .filter((final NoteFrequency noteFrequency) -> Float.compare(noteFrequency.frequency, frequency) == 0)
+        .filter(
+            (final NoteFrequency noteFrequency) ->
+                Float.compare(noteFrequency.frequency, frequency) == 0)
         .findFirst()
         .orElseThrow();
   }

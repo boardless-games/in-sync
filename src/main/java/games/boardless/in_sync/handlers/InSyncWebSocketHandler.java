@@ -1,5 +1,7 @@
 package games.boardless.in_sync.handlers;
 
+import games.boardless.in_sync.services.InSyncService;
+import games.boardless.in_sync.utils.ToString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,9 +11,6 @@ import org.springframework.web.socket.PongMessage;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
-
-import games.boardless.in_sync.services.InSyncService;
-import games.boardless.in_sync.utils.ToString;
 
 @Component
 public class InSyncWebSocketHandler extends TextWebSocketHandler {
@@ -45,7 +44,8 @@ public class InSyncWebSocketHandler extends TextWebSocketHandler {
   }
 
   @Override
-  public void afterConnectionClosed(WebSocketSession session, CloseStatus closeStatus) throws Exception {
+  public void afterConnectionClosed(WebSocketSession session, CloseStatus closeStatus)
+      throws Exception {
     this.inSyncService.disconnect(session);
   }
 

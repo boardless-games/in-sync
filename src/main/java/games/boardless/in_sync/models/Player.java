@@ -1,7 +1,6 @@
 package games.boardless.in_sync.models;
 
 import java.io.IOException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.socket.PingMessage;
@@ -49,7 +48,8 @@ public class Player {
 
   @Override
   public String toString() {
-    return "Player [name=" + name + ", sessionId=" + this.session != null ? this.session.getId()
+    return "Player [name=" + name + ", sessionId=" + this.session != null
+        ? this.session.getId()
         : null + ", connected=" + this.isConnected() + ", ready=" + this.ready + "]";
   }
 
@@ -63,18 +63,13 @@ public class Player {
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj)
-      return true;
-    if (obj == null)
-      return false;
-    if (getClass() != obj.getClass())
-      return false;
+    if (this == obj) return true;
+    if (obj == null) return false;
+    if (getClass() != obj.getClass()) return false;
     Player other = (Player) obj;
     if (name == null) {
-      if (other.name != null)
-        return false;
-    } else if (!name.equals(other.name))
-      return false;
+      if (other.name != null) return false;
+    } else if (!name.equals(other.name)) return false;
     return true;
   }
 
@@ -86,8 +81,7 @@ public class Player {
     try {
       this.session.sendMessage(message);
     } catch (IOException e) {
-      logger.error(
-          "Failed to send a message({}) to {}.", message.getPayload(), this.toString(), e);
+      logger.error("Failed to send a message({}) to {}.", message.getPayload(), this.toString(), e);
     }
   }
 

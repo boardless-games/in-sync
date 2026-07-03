@@ -6,6 +6,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
+import games.boardless.in_sync.services.InSyncService;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,18 +22,11 @@ import org.springframework.web.socket.PongMessage;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.read.ListAppender;
-import games.boardless.in_sync.services.InSyncService;
-
 @ExtendWith(MockitoExtension.class)
 class InSyncWebSocketHandlerTests {
-  @Mock
-  private InSyncService inSyncService;
+  @Mock private InSyncService inSyncService;
 
-  @InjectMocks
-  private InSyncWebSocketHandler inSyncWebSocketHandler;
+  @InjectMocks private InSyncWebSocketHandler inSyncWebSocketHandler;
 
   @Test
   void afterConnectionEstablished_shouldConnect() throws Exception {

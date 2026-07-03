@@ -19,7 +19,9 @@ public enum SongTempo {
   }
 
   public SongTempo fromTempo(final int tempo) {
-    return Stream.of(SongTempo.values()).filter((final SongTempo songTempo) -> songTempo.tempo == tempo).findFirst()
+    return Stream.of(SongTempo.values())
+        .filter((final SongTempo songTempo) -> songTempo.tempo == tempo)
+        .findFirst()
         .orElseThrow();
   }
 }

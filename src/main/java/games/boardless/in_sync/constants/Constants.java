@@ -13,8 +13,6 @@ public class Constants {
   public static final int MIN_PLAYER_NAME_LENGTH = 3;
   public static final int MAX_PLAYER_NAME_LENGTH = 15;
   public static final int MAX_NUM_PLAYERS = 20;
-  public static final String[] ALLOWED_ORIGINS = {
-      "http://localhost:4200"
-  };
+  public static final String[] ALLOWED_ORIGINS = {"http://localhost:4200"};
   public static final int MILLIS_PER_MINUTE = 60_000;
 }

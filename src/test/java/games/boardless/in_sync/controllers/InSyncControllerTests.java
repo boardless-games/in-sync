@@ -4,8 +4,14 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
+import games.boardless.in_sync.config.SchedulerConfig;
+import games.boardless.in_sync.config.WebMvcConfig;
+import games.boardless.in_sync.dtos.GameCodeDto;
+import games.boardless.in_sync.dtos.NameDto;
+import games.boardless.in_sync.exceptions.BadRequestException;
+import games.boardless.in_sync.exceptions.ServiceUnavailableException;
+import games.boardless.in_sync.services.InSyncService;
 import java.util.UUID;
-
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -19,27 +25,16 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.web.context.request.async.DeferredResult;
-
-import games.boardless.in_sync.config.SchedulerConfig;
-import games.boardless.in_sync.config.WebMvcConfig;
-import games.boardless.in_sync.dtos.GameCodeDto;
-import games.boardless.in_sync.dtos.NameDto;
-import games.boardless.in_sync.exceptions.BadRequestException;
-import games.boardless.in_sync.exceptions.ServiceUnavailableException;
-import games.boardless.in_sync.services.InSyncService;
 import tools.jackson.databind.ObjectMapper;
 
 @WebMvcTest(InSyncController.class)
-@Import({ WebMvcConfig.class, SchedulerConfig.class })
+@Import({WebMvcConfig.class, SchedulerConfig.class})
 class InSyncControllerTests {
-  @Autowired
-  private MockMvc mockMvc;
+  @Autowired private MockMvc mockMvc;
 
-  @Autowired
-  private ObjectMapper objectMapper;
+  @Autowired private ObjectMapper objectMapper;
 
-  @MockitoBean
-  private InSyncService inSyncService;
+  @MockitoBean private InSyncService inSyncService;
 
   @Test
   void newGame_shouldReturnCreated() throws Exception {
@@ -47,45 +42,50 @@ class InSyncControllerTests {
     when(this.inSyncService.newGame())
         .thenReturn(ResponseEntity.status(HttpStatus.CREATED).body(dto));
 
-    this.mockMvc.perform(MockMvcRequestBuilders.post("/in-sync/game")).andExpectAll(
-        MockMvcResultMatchers.status().isCreated(),
-        MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON),
-        MockMvcResultMatchers.jsonPath("$.gameCode").value(dto.gameCode()));
+    this.mockMvc
+        .perform(MockMvcRequestBuilders.post("/in-sync/game"))
+        .andExpectAll(
+            MockMvcResultMatchers.status().isCreated(),
+            MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON),
+            MockMvcResultMatchers.jsonPath("$.gameCode").value(dto.gameCode()));
   }
 
   @Test
   void newGame_withBadRequestException_shouldReturnBadRequest() throws Exception {
     final String message = "Test message.";
-    when(this.inSyncService.newGame())
-        .thenThrow(new BadRequestException(message));
+    when(this.inSyncService.newGame()).thenThrow(new BadRequestException(message));
 
-    this.mockMvc.perform(MockMvcRequestBuilders.post("/in-sync/game")).andExpectAll(
-        MockMvcResultMatchers.status().isBadRequest(),
-        MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON),
-        MockMvcResultMatchers.jsonPath("$.error").value(message));
+    this.mockMvc
+        .perform(MockMvcRequestBuilders.post("/in-sync/game"))
+        .andExpectAll(
+            MockMvcResultMatchers.status().isBadRequest(),
+            MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON),
+            MockMvcResultMatchers.jsonPath("$.error").value(message));
   }
 
   @Test
   void newGame_withServiceUnavailableException_shouldReturnServiceUnavailable() throws Exception {
     final String message = UUID.randomUUID().toString();
-    when(this.inSyncService.newGame())
-        .thenThrow(new ServiceUnavailableException(message));
+    when(this.inSyncService.newGame()).thenThrow(new ServiceUnavailableException(message));
 
-    this.mockMvc.perform(MockMvcRequestBuilders.post("/in-sync/game")).andExpectAll(
-        MockMvcResultMatchers.status().isServiceUnavailable(),
-        MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON),
-        MockMvcResultMatchers.jsonPath("$.error").value(message));
+    this.mockMvc
+        .perform(MockMvcRequestBuilders.post("/in-sync/game"))
+        .andExpectAll(
+            MockMvcResultMatchers.status().isServiceUnavailable(),
+            MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON),
+            MockMvcResultMatchers.jsonPath("$.error").value(message));
   }
 
   @Test
   void newGame_withRuntimeException_shouldReturnInternalServerError() throws Exception {
-    when(this.inSyncService.newGame())
-        .thenThrow(RuntimeException.class);
+    when(this.inSyncService.newGame()).thenThrow(RuntimeException.class);
 
-    this.mockMvc.perform(MockMvcRequestBuilders.post("/in-sync/game")).andExpectAll(
-        MockMvcResultMatchers.status().isInternalServerError(),
-        MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON),
-        MockMvcResultMatchers.jsonPath("$.error").isString());
+    this.mockMvc
+        .perform(MockMvcRequestBuilders.post("/in-sync/game"))
+        .andExpectAll(
+            MockMvcResultMatchers.status().isInternalServerError(),
+            MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON),
+            MockMvcResultMatchers.jsonPath("$.error").isString());
   }
 
   @Test
@@ -94,9 +94,12 @@ class InSyncControllerTests {
         .thenReturn(ResponseEntity.status(HttpStatus.CREATED).build());
 
     this.mockMvc
-        .perform(MockMvcRequestBuilders.post("/in-sync/game/123456/player")
-            .content(this.objectMapper.writeValueAsString(new NameDto("Craiglington"))).contentType("application/json"))
-        .andExpectAll(MockMvcResultMatchers.status().isCreated(), MockMvcResultMatchers.content().string(""));
+        .perform(
+            MockMvcRequestBuilders.post("/in-sync/game/123456/player")
+                .content(this.objectMapper.writeValueAsString(new NameDto("Craiglington")))
+                .contentType("application/json"))
+        .andExpectAll(
+            MockMvcResultMatchers.status().isCreated(), MockMvcResultMatchers.content().string(""));
   }
 
   @Test
@@ -112,8 +115,10 @@ class InSyncControllerTests {
   @Test
   void newPlayer_withInvalidBody_shouldReturnBadRequest() throws Exception {
     this.mockMvc
-        .perform(MockMvcRequestBuilders.post("/in-sync/game/123456/player")
-            .content("Craiglington").contentType("application/json"))
+        .perform(
+            MockMvcRequestBuilders.post("/in-sync/game/123456/player")
+                .content("Craiglington")
+                .contentType("application/json"))
         .andExpectAll(
             MockMvcResultMatchers.status().isBadRequest(),
             MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON),
@@ -127,8 +132,10 @@ class InSyncControllerTests {
         .thenThrow(new BadRequestException(message));
 
     this.mockMvc
-        .perform(MockMvcRequestBuilders.post("/in-sync/game/123456/player")
-            .content(this.objectMapper.writeValueAsString(new NameDto("Craiglington"))).contentType("application/json"))
+        .perform(
+            MockMvcRequestBuilders.post("/in-sync/game/123456/player")
+                .content(this.objectMapper.writeValueAsString(new NameDto("Craiglington")))
+                .contentType("application/json"))
         .andExpectAll(
             MockMvcResultMatchers.status().isBadRequest(),
             MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON),
@@ -142,8 +149,10 @@ class InSyncControllerTests {
         .thenThrow(new ServiceUnavailableException(message));
 
     this.mockMvc
-        .perform(MockMvcRequestBuilders.post("/in-sync/game/123456/player")
-            .content(this.objectMapper.writeValueAsString(new NameDto("Craiglington"))).contentType("application/json"))
+        .perform(
+            MockMvcRequestBuilders.post("/in-sync/game/123456/player")
+                .content(this.objectMapper.writeValueAsString(new NameDto("Craiglington")))
+                .contentType("application/json"))
         .andExpectAll(
             MockMvcResultMatchers.status().isServiceUnavailable(),
             MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON),
@@ -156,8 +165,10 @@ class InSyncControllerTests {
         .thenThrow(RuntimeException.class);
 
     this.mockMvc
-        .perform(MockMvcRequestBuilders.post("/in-sync/game/123456/player")
-            .content(this.objectMapper.writeValueAsString(new NameDto("Craiglington"))).contentType("application/json"))
+        .perform(
+            MockMvcRequestBuilders.post("/in-sync/game/123456/player")
+                .content(this.objectMapper.writeValueAsString(new NameDto("Craiglington")))
+                .contentType("application/json"))
         .andExpectAll(
             MockMvcResultMatchers.status().isInternalServerError(),
             MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON),
@@ -170,14 +181,18 @@ class InSyncControllerTests {
 
     when(this.inSyncService.startGame(anyString())).thenReturn(deferredResult);
 
-    final MvcResult result = this.mockMvc.perform(MockMvcRequestBuilders.post("/in-sync/game/123456/start"))
-        .andExpect(MockMvcResultMatchers.request().asyncStarted()).andReturn();
+    final MvcResult result =
+        this.mockMvc
+            .perform(MockMvcRequestBuilders.post("/in-sync/game/123456/start"))
+            .andExpect(MockMvcResultMatchers.request().asyncStarted())
+            .andReturn();
 
     deferredResult.setResult(ResponseEntity.ok().build());
 
-    this.mockMvc.perform(MockMvcRequestBuilders.asyncDispatch(result)).andExpectAll(
-        MockMvcResultMatchers.status().isOk(),
-        MockMvcResultMatchers.content().string(""));
+    this.mockMvc
+        .perform(MockMvcRequestBuilders.asyncDispatch(result))
+        .andExpectAll(
+            MockMvcResultMatchers.status().isOk(), MockMvcResultMatchers.content().string(""));
   }
 
   @Test
@@ -187,15 +202,20 @@ class InSyncControllerTests {
 
     when(this.inSyncService.startGame(anyString())).thenReturn(deferredResult);
 
-    final MvcResult result = this.mockMvc.perform(MockMvcRequestBuilders.post("/in-sync/game/123456/start"))
-        .andExpect(MockMvcResultMatchers.request().asyncStarted()).andReturn();
+    final MvcResult result =
+        this.mockMvc
+            .perform(MockMvcRequestBuilders.post("/in-sync/game/123456/start"))
+            .andExpect(MockMvcResultMatchers.request().asyncStarted())
+            .andReturn();
 
     deferredResult.setErrorResult(new ServiceUnavailableException(message));
 
-    this.mockMvc.perform(MockMvcRequestBuilders.asyncDispatch(result)).andExpectAll(
-        MockMvcResultMatchers.status().isServiceUnavailable(),
-        MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON),
-        MockMvcResultMatchers.jsonPath("$.error").value(message));
+    this.mockMvc
+        .perform(MockMvcRequestBuilders.asyncDispatch(result))
+        .andExpectAll(
+            MockMvcResultMatchers.status().isServiceUnavailable(),
+            MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON),
+            MockMvcResultMatchers.jsonPath("$.error").value(message));
   }
 
   @Test
@@ -205,15 +225,20 @@ class InSyncControllerTests {
 
     when(this.inSyncService.startGame(anyString())).thenReturn(deferredResult);
 
-    final MvcResult result = this.mockMvc.perform(MockMvcRequestBuilders.post("/in-sync/game/123456/start"))
-        .andExpect(MockMvcResultMatchers.request().asyncStarted()).andReturn();
+    final MvcResult result =
+        this.mockMvc
+            .perform(MockMvcRequestBuilders.post("/in-sync/game/123456/start"))
+            .andExpect(MockMvcResultMatchers.request().asyncStarted())
+            .andReturn();
 
     deferredResult.setErrorResult(new BadRequestException(message));
 
-    this.mockMvc.perform(MockMvcRequestBuilders.asyncDispatch(result)).andExpectAll(
-        MockMvcResultMatchers.status().isBadRequest(),
-        MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON),
-        MockMvcResultMatchers.jsonPath("$.error").value(message));
+    this.mockMvc
+        .perform(MockMvcRequestBuilders.asyncDispatch(result))
+        .andExpectAll(
+            MockMvcResultMatchers.status().isBadRequest(),
+            MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON),
+            MockMvcResultMatchers.jsonPath("$.error").value(message));
   }
 
   @Test
@@ -222,14 +247,19 @@ class InSyncControllerTests {
 
     when(this.inSyncService.startGame(anyString())).thenReturn(deferredResult);
 
-    final MvcResult result = this.mockMvc.perform(MockMvcRequestBuilders.post("/in-sync/game/123456/start"))
-        .andExpect(MockMvcResultMatchers.request().asyncStarted()).andReturn();
+    final MvcResult result =
+        this.mockMvc
+            .perform(MockMvcRequestBuilders.post("/in-sync/game/123456/start"))
+            .andExpect(MockMvcResultMatchers.request().asyncStarted())
+            .andReturn();
 
     deferredResult.setErrorResult(new RuntimeException());
 
-    this.mockMvc.perform(MockMvcRequestBuilders.asyncDispatch(result)).andExpectAll(
-        MockMvcResultMatchers.status().isInternalServerError(),
-        MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON),
-        MockMvcResultMatchers.jsonPath("$.error").isString());
+    this.mockMvc
+        .perform(MockMvcRequestBuilders.asyncDispatch(result))
+        .andExpectAll(
+            MockMvcResultMatchers.status().isInternalServerError(),
+            MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON),
+            MockMvcResultMatchers.jsonPath("$.error").isString());
   }
 }

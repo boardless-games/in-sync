@@ -4,19 +4,17 @@ import static games.boardless.in_sync.constants.Constants.GAME_CODE_MAX;
 import static games.boardless.in_sync.constants.Constants.GAME_CODE_MIN;
 import static games.boardless.in_sync.constants.Constants.MAX_NUM_PLAYERS;
 
-import java.util.Map;
-import java.util.Random;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.ReentrantLock;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.web.socket.WebSocketSession;
-
 import games.boardless.in_sync.constants.GameType;
 import games.boardless.in_sync.dtos.GameSettingsDto;
 import games.boardless.in_sync.exceptions.BadRequestException;
 import games.boardless.in_sync.exceptions.ServiceUnavailableException;
+import java.util.Map;
+import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantLock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.web.socket.WebSocketSession;
 
 public class Game {
   public enum GameStatus {
@@ -77,18 +75,13 @@ public class Game {
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj)
-      return true;
-    if (obj == null)
-      return false;
-    if (getClass() != obj.getClass())
-      return false;
+    if (this == obj) return true;
+    if (obj == null) return false;
+    if (getClass() != obj.getClass()) return false;
     Game other = (Game) obj;
     if (gameCode == null) {
-      if (other.gameCode != null)
-        return false;
-    } else if (!gameCode.equals(other.gameCode))
-      return false;
+      if (other.gameCode != null) return false;
+    } else if (!gameCode.equals(other.gameCode)) return false;
     return true;
   }
 
@@ -108,10 +101,12 @@ public class Game {
     this.playerLock.lock();
     try {
       if (this.status != GameStatus.LOBBY) {
-        throw new ServiceUnavailableException(String.format("Game %s has already started.", this.gameCode));
+        throw new ServiceUnavailableException(
+            String.format("Game %s has already started.", this.gameCode));
       }
       if (this.players.size() >= MAX_NUM_PLAYERS) {
-        throw new ServiceUnavailableException(String.format("Game %s is at max capacity.", this.gameCode));
+        throw new ServiceUnavailableException(
+            String.format("Game %s is at max capacity.", this.gameCode));
       }
       if (this.players.get(name) != null) {
         throw new BadRequestException(String.format("The name %s is already taken.", name));
@@ -127,7 +122,8 @@ public class Game {
     this.playerLock.lock();
     try {
       if (this.players.remove(name) == null) {
-        throw new BadRequestException(String.format("%s is not a player in game %s.", name, this.gameCode));
+        throw new BadRequestException(
+            String.format("%s is not a player in game %s.", name, this.gameCode));
       }
       logger.info("{} was removed from game {}.", name, this.gameCode);
     } finally {
@@ -135,10 +131,12 @@ public class Game {
     }
   }
 
-  public void connect(final String playerName, final WebSocketSession session) throws BadRequestException {
+  public void connect(final String playerName, final WebSocketSession session)
+      throws BadRequestException {
     final Player player = this.players.get(playerName);
     if (player == null) {
-      throw new BadRequestException(String.format("%s is not a player in game %s.", playerName, this.gameCode));
+      throw new BadRequestException(
+          String.format("%s is not a player in game %s.", playerName, this.gameCode));
     }
     player.connect(session);
     logger.info("{} connected to game {}.", playerName, this.gameCode);
@@ -152,7 +150,8 @@ public class Game {
   public void disconnect(final String playerName) throws BadRequestException {
     final Player player = this.players.get(playerName);
     if (player == null) {
-      throw new BadRequestException(String.format("%s is not a player in game %s.", playerName, this.gameCode));
+      throw new BadRequestException(
+          String.format("%s is not a player in game %s.", playerName, this.gameCode));
     }
     player.disconnect();
     logger.info("{} disconnected from game {}.", playerName, this.gameCode);
@@ -177,7 +176,8 @@ public class Game {
   public void setReady(final String playerName) throws BadRequestException {
     final Player player = this.players.get(playerName);
     if (player == null) {
-      throw new BadRequestException(String.format("%s is not a player in game %s.", playerName, this.gameCode));
+      throw new BadRequestException(
+          String.format("%s is not a player in game %s.", playerName, this.gameCode));
     }
     player.setReady();
     logger.info("{} is ready in game {}.", playerName, this.gameCode);
@@ -185,7 +185,8 @@ public class Game {
 
   public synchronized void initialize() throws ServiceUnavailableException {
     if (this.status != GameStatus.LOBBY) {
-      throw new ServiceUnavailableException(String.format("Game %s has already started.", this.gameCode));
+      throw new ServiceUnavailableException(
+          String.format("Game %s has already started.", this.gameCode));
     }
 
     this.status = GameStatus.INITIALIZING;
@@ -193,15 +194,19 @@ public class Game {
     this.pingPlayers();
   }
 
-  public synchronized void start(final GameSettingsDto gameSettings) throws ServiceUnavailableException {
+  public synchronized void start(final GameSettingsDto gameSettings)
+      throws ServiceUnavailableException {
     if (this.status == GameStatus.LOBBY) {
-      throw new ServiceUnavailableException(String.format("Game %s has not been initialized.", this.gameCode));
+      throw new ServiceUnavailableException(
+          String.format("Game %s has not been initialized.", this.gameCode));
     }
     if (this.status == GameStatus.IN_GAME) {
-      throw new ServiceUnavailableException(String.format("Game %s has already started.", this.gameCode));
+      throw new ServiceUnavailableException(
+          String.format("Game %s has already started.", this.gameCode));
     }
     if (!this.playersAreReady()) {
-      throw new ServiceUnavailableException(String.format("Players in game %s are not ready.", gameCode));
+      throw new ServiceUnavailableException(
+          String.format("Players in game %s are not ready.", gameCode));
     }
 
     logger.info("Starting game {}.", gameCode);
