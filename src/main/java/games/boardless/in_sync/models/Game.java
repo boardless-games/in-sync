@@ -3,19 +3,23 @@ package games.boardless.in_sync.models;
 import static games.boardless.in_sync.constants.Constants.GAME_CODE_MAX;
 import static games.boardless.in_sync.constants.Constants.GAME_CODE_MIN;
 import static games.boardless.in_sync.constants.Constants.MAX_NUM_PLAYERS;
+import static games.boardless.in_sync.constants.Constants.PERFORMANCE_SCHEDULE_OFFSET;
 
 import games.boardless.in_sync.constants.GameDifficulty;
 import games.boardless.in_sync.constants.GameType;
 import games.boardless.in_sync.constants.MessageTopic;
 import games.boardless.in_sync.dtos.GameSettingsDto;
+import games.boardless.in_sync.dtos.SchedulePerformanceDto;
 import games.boardless.in_sync.exceptions.BadRequestException;
 import games.boardless.in_sync.exceptions.ServiceUnavailableException;
+import games.boardless.in_sync.utils.ToTextMessage;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
 public class Game {
@@ -33,6 +37,7 @@ public class Game {
   private GameType type;
   private GameDifficulty difficulty;
   private Song song = null;
+  private Long performanceSchedule = null;
   private final ReentrantLock playerLock;
   private final Map<String, Player> players;
 
@@ -62,6 +67,10 @@ public class Game {
 
   public int numPlayers() {
     return this.players.size();
+  }
+
+  public boolean isPerformanceScheduled() {
+    return this.performanceSchedule != null;
   }
 
   @Override
@@ -97,7 +106,7 @@ public class Game {
     return this.players.values().stream().anyMatch((final Player player) -> player.isConnected());
   }
 
-  public boolean playersAreReady() {
+  public boolean arePlayersReady() {
     return this.players.values().stream().allMatch((final Player player) -> player.isReady());
   }
 
@@ -177,8 +186,12 @@ public class Game {
     }
   }
 
-  public synchronized void messagePlayers(final MessageTopic topic, final String message) {
+  public synchronized void messagePlayers(final MessageTopic topic, final Object data) {
     logger.info("Messaging {} to {} in game {}.", topic, this.getPlayers(), this.gameCode);
+    final TextMessage textMessage = ToTextMessage.toTextMessage(new Message(topic, data));
+    for (final Player player : this.players.values()) {
+      player.message(textMessage);
+    }
   }
 
   public void setReady(final String playerName) throws BadRequestException {
@@ -187,7 +200,7 @@ public class Game {
       throw new BadRequestException(
           String.format("%s is not a player in game %s.", playerName, this.gameCode));
     }
-    player.setReady();
+    player.setReady(true);
     logger.info("{} is ready in game {}.", playerName, this.gameCode);
   }
 
@@ -212,7 +225,7 @@ public class Game {
       throw new ServiceUnavailableException(
           String.format("Game %s has already started.", this.gameCode));
     }
-    if (!this.playersAreReady()) {
+    if (!this.arePlayersReady()) {
       throw new ServiceUnavailableException(
           String.format("Players in game %s are not ready.", gameCode));
     }
@@ -223,5 +236,28 @@ public class Game {
     this.status = GameStatus.IN_GAME;
 
     this.song = new Song(this.type, this.difficulty);
+
+    this.messagePlayers(MessageTopic.SONG, this.song);
+  }
+
+  public synchronized void schedulePerformance() throws ServiceUnavailableException {
+    if (this.status != GameStatus.IN_GAME) {
+      throw new ServiceUnavailableException(
+          String.format("Game %s has not been started.", this.gameCode));
+    }
+
+    if (this.isPerformanceScheduled()) {
+      throw new ServiceUnavailableException(
+          String.format("A performance for game %s has already been scheduled.", this.gameCode));
+    }
+
+    for (final Player player : this.players.values()) {
+      player.setReady(false);
+    }
+
+    this.performanceSchedule = System.currentTimeMillis() + PERFORMANCE_SCHEDULE_OFFSET;
+
+    this.messagePlayers(
+        MessageTopic.PERFORMANCE_SCHEDULE, new SchedulePerformanceDto(this.performanceSchedule));
   }
 }

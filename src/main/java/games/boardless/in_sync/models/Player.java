@@ -46,6 +46,10 @@ public class Player {
     return this.isConnected() && this.ready;
   }
 
+  public void setReady(final boolean ready) {
+    this.ready = ready;
+  }
+
   @Override
   public String toString() {
     return "Player [name=" + name + ", sessionId=" + this.session != null
@@ -73,7 +77,7 @@ public class Player {
     return true;
   }
 
-  public void sendMessage(final TextMessage message) {
+  public void message(final TextMessage message) {
     if (this.session == null) {
       return;
     }
@@ -96,9 +100,5 @@ public class Player {
     } catch (IOException e) {
       logger.error("Failed to ping {}.", this.toString(), e);
     }
-  }
-
-  public void setReady() {
-    this.ready = true;
   }
 }

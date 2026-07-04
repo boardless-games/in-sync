@@ -7,7 +7,9 @@ import static games.boardless.in_sync.constants.Constants.MIN_PLAYER_NAME_LENGTH
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-public class InputValidation {
+public final class InputValidation {
+  private InputValidation() {}
+
   /**
    * Returns an Optional with a String explanation if the provided name is invalid. If valid, the
    * Optional will be empty.

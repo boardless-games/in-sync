@@ -9,6 +9,7 @@ import games.boardless.in_sync.constants.NoteFrequency;
 import games.boardless.in_sync.constants.NoteSound;
 import games.boardless.in_sync.constants.SongTempo;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 public class Song {
@@ -44,5 +45,13 @@ public class Song {
 
       currentLength += (1f / this.tempo.getTempo()) * MILLIS_PER_MINUTE;
     }
+  }
+
+  public SongTempo getTempo() {
+    return this.tempo;
+  }
+
+  public List<Note> getNotes() {
+    return List.copyOf(this.notes);
   }
 }

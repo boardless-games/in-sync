@@ -150,6 +150,46 @@ public class InSyncService {
     return deferredResult;
   }
 
+  public DeferredResult<ResponseEntity<Void>> schedulePerformance(final String gameCode)
+      throws BadRequestException, ServiceUnavailableException {
+
+    // Validate the game code.
+    final Optional<String> gameCodeValidation = InputValidation.validateGameCode(gameCode);
+    if (gameCodeValidation.isPresent()) {
+      throw new BadRequestException(gameCodeValidation.get());
+    }
+
+    // Get the game.
+    final Game game = this.games.get(gameCode);
+    if (game == null) {
+      throw new BadRequestException(String.format("Game %s not found.", gameCode));
+    }
+
+    game.schedulePerformance();
+
+    final DeferredResult<ResponseEntity<Void>> deferredResult =
+        new DeferredResult<>(
+            WAIT_PLAYER_READY_TIME + 5_000L,
+            new ServiceUnavailableException(
+                String.format(
+                    "Request timed out while scheduling a performance for game %s.",
+                    game.getGameCode())));
+
+    // Create timer.
+    this.taskScheduler.schedule(
+        () -> {
+          try {
+            autoVerifyPerformanceSchedule(gameCode);
+            deferredResult.setResult(ResponseEntity.ok().build());
+          } catch (Exception e) {
+            deferredResult.setErrorResult(e);
+          }
+        },
+        this.clock.instant().plusMillis(WAIT_PLAYER_READY_TIME));
+
+    return deferredResult;
+  }
+
   public void connect(final WebSocketSession session) {
     // Validate session
     if (session == null) {
@@ -350,11 +390,6 @@ public class InSyncService {
 
   void autoStartGame(final String gameCode, final GameSettingsDto gameSettings)
       throws BadRequestException, ServiceUnavailableException {
-    // Validate gameCode
-    if (gameCode == null) {
-      return;
-    }
-
     // Get the game.
     final Game game = this.games.get(gameCode);
     if (game == null) {
@@ -363,5 +398,24 @@ public class InSyncService {
 
     // Start the game.
     game.start(gameSettings);
+  }
+
+  void autoVerifyPerformanceSchedule(final String gameCode)
+      throws BadRequestException, ServiceUnavailableException {
+    // Get the game.
+    final Game game = this.games.get(gameCode);
+    if (game == null) {
+      throw new BadRequestException(
+          String.format("Game %s was deleted while scheduling a performance.", gameCode));
+    }
+
+    if (!game.isPerformanceScheduled()) {
+      throw new ServiceUnavailableException(
+          String.format("Failed to schedule a performance for game %s."));
+    }
+
+    if (!game.arePlayersReady()) {
+      throw new ServiceUnavailableException(String.format("Players in game %s are not ready."));
+    }
   }
 }

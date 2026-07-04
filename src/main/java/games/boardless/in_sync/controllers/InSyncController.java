@@ -66,9 +66,9 @@ public class InSyncController {
       responseCode = "400",
       description =
           """
-            - An empty or invalid game code provided.
-            - An empty or invalid new player was provided.
-            """,
+      - An empty or invalid game code provided.
+      - An empty or invalid new player was provided.
+      """,
       content = {
         @Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json")
       })
@@ -88,15 +88,15 @@ public class InSyncController {
   @Operation(summary = "Start a game.")
   @ApiResponse(
       responseCode = "200",
-      description = "Successfully initiated the start process.",
+      description = "Successfully started the game.",
       content = @Content)
   @ApiResponse(
       responseCode = "400",
       description =
           """
-            - An empty or invalid game code was provided.
-            - Invalid game settings were provided.
-            """,
+      - An empty or invalid game code was provided.
+      - Invalid game settings were provided.
+      """,
       content = {
         @Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json")
       })
@@ -104,9 +104,9 @@ public class InSyncController {
       responseCode = "503",
       description =
           """
-            - The game's players are not ready
-            - The request took too long
-            """,
+      - The game's players are not ready
+      - The request took too long
+      """,
       content = {
         @Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json")
       })
@@ -115,5 +115,51 @@ public class InSyncController {
       @PathVariable final String gameCode, @RequestBody final GameSettingsDto gameSettings)
       throws BadRequestException, ServiceUnavailableException {
     return inSyncService.startGame(gameCode, gameSettings);
+  }
+
+  @Operation(summary = "Schedule a performance.")
+  @ApiResponse(
+      responseCode = "200",
+      description = "Successfully scheduled a performance.",
+      content = @Content)
+  @ApiResponse(
+      responseCode = "400",
+      description = "An empty or invalid game code was provided.",
+      content = {
+        @Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json")
+      })
+  @ApiResponse(
+      responseCode = "503",
+      description = "A performance has already been scheduled.",
+      content = {
+        @Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json")
+      })
+  @PostMapping("/game/{gameCode}/schedule")
+  public DeferredResult<ResponseEntity<Void>> schedulePerformance(
+      @PathVariable final String gameCode) throws BadRequestException, ServiceUnavailableException {
+    return inSyncService.schedulePerformance(gameCode);
+  }
+
+  @Operation(summary = "Acknowledge a performance schedule.")
+  @ApiResponse(
+      responseCode = "200",
+      description = "Successfully acknowledged a performance schedule.",
+      content = @Content)
+  @ApiResponse(
+      responseCode = "400",
+      description = "An empty or invalid game code was provided.",
+      content = {
+        @Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json")
+      })
+  @ApiResponse(
+      responseCode = "503",
+      description = "A performance has already been scheduled.",
+      content = {
+        @Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json")
+      })
+  @PostMapping("/game/{gameCode}/schedule")
+  public DeferredResult<ResponseEntity<Void>> acknowledgePerformanceSchedule(
+      @PathVariable final String gameCode) throws BadRequestException, ServiceUnavailableException {
+    return inSyncService.acknowledgePerformanceSchedule(gameCode);
   }
 }
