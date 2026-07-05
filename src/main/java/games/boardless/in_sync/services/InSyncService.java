@@ -153,7 +153,7 @@ public class InSyncService {
   }
 
   public DeferredResult<ResponseEntity<Void>> schedule(
-      final String gameCode, final ScheduleType type)
+      final String gameCode, final ScheduleType scheduleType)
       throws BadRequestException, ServiceUnavailableException {
 
     // Validate the game code.
@@ -168,7 +168,7 @@ public class InSyncService {
       throw new BadRequestException(String.format("Game %s not found.", gameCode));
     }
 
-    game.schedule(type);
+    game.schedule(scheduleType);
 
     final DeferredResult<ResponseEntity<Void>> deferredResult =
         new DeferredResult<>(
@@ -181,7 +181,7 @@ public class InSyncService {
     this.taskScheduler.schedule(
         () -> {
           try {
-            autoVerifyScheduleAcknowledgement(gameCode);
+            autoVerifyScheduleAcknowledgement(scheduleType, gameCode);
             deferredResult.setResult(ResponseEntity.ok().build());
           } catch (Exception e) {
             deferredResult.setErrorResult(e);
@@ -192,7 +192,7 @@ public class InSyncService {
     return deferredResult;
   }
 
-  public ResponseEntity<Void> acknowledgePerformanceSchedule(
+  public ResponseEntity<Void> acknowledgeSchedule(
       final String gameCode, final AcknowledgeScheduleDto ack) throws BadRequestException {
     // Validate the game code.
     final Optional<String> gameCodeValidation = InputValidation.validateGameCode(gameCode);
@@ -216,7 +216,7 @@ public class InSyncService {
       throw new BadRequestException(String.format("Game %s not found.", gameCode));
     }
 
-    game.acknowledgePerformanceSchedule(ack.playerName(), ack.schedule());
+    game.acknowledgeSchedule(ack.playerName(), ack.schedule());
 
     return ResponseEntity.ok().build();
   }
@@ -436,28 +436,30 @@ public class InSyncService {
     game.start(gameSettings);
   }
 
-  void autoVerifyScheduleAcknowledgement(final String gameCode)
+  void autoVerifyScheduleAcknowledgement(final ScheduleType scheduleType, final String gameCode)
       throws BadRequestException, ServiceUnavailableException {
 
     if (gameCode == null) {
-      throw new BadRequestException("Game code must be provided");
+      throw new BadRequestException("Game code must be provided.");
     }
 
     // Get the game.
     final Game game = this.games.get(gameCode);
     if (game == null) {
       throw new BadRequestException(
-          String.format("Game %s was deleted while scheduling.", gameCode));
+          String.format("Game %s was deleted while scheduling a %s.", gameCode, scheduleType));
     }
 
     if (!game.isPerformanceScheduled()) {
-      throw new ServiceUnavailableException(String.format("Failed to schedule for game %s."));
+      throw new ServiceUnavailableException(
+          String.format("Failed to schedule a %s for game %s.", scheduleType, gameCode));
     }
 
     if (!game.arePlayersReady()) {
-      game.clearPerformanceSchedule();
+      game.clearSchedule();
       throw new ServiceUnavailableException(
-          String.format("Players in game %s have not acknowledged the schedule."));
+          String.format(
+              "Players in game %s have not acknowledged the %s schedule.", gameCode, scheduleType));
     }
   }
 }

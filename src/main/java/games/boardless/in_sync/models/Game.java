@@ -3,7 +3,7 @@ package games.boardless.in_sync.models;
 import static games.boardless.in_sync.constants.Constants.GAME_CODE_MAX;
 import static games.boardless.in_sync.constants.Constants.GAME_CODE_MIN;
 import static games.boardless.in_sync.constants.Constants.MAX_NUM_PLAYERS;
-import static games.boardless.in_sync.constants.Constants.PERFORMANCE_SCHEDULE_OFFSET;
+import static games.boardless.in_sync.constants.Constants.SCHEDULE_OFFSET;
 
 import games.boardless.in_sync.constants.GameDifficulty;
 import games.boardless.in_sync.constants.GameType;
@@ -72,6 +72,10 @@ public class Game {
 
   public boolean isPerformanceScheduled() {
     return this.performanceSchedule != null;
+  }
+
+  public void clearSchedule() {
+    this.performanceSchedule = null;
   }
 
   @Override
@@ -236,16 +240,13 @@ public class Game {
     this.difficulty = gameSettings.gameDifficulty();
     this.status = GameStatus.IN_GAME;
 
-    this.song = new Song(this.type, this.difficulty);
+    this.song = new Song(this.type, this.difficulty, this.players);
 
     this.messagePlayers(MessageTopic.SONG, this.song);
   }
 
-  public void clearPerformanceSchedule() {
-    this.performanceSchedule = null;
-  }
-
-  public synchronized void schedule(final ScheduleType type) throws ServiceUnavailableException {
+  public synchronized void schedule(final ScheduleType scheduleType)
+      throws ServiceUnavailableException {
     if (this.status != GameStatus.IN_GAME) {
       throw new ServiceUnavailableException(
           String.format("Game %s has not been started.", this.gameCode));
@@ -253,19 +254,20 @@ public class Game {
 
     if (this.isPerformanceScheduled()) {
       throw new ServiceUnavailableException(
-          String.format("A performance for game %s has already been scheduled.", this.gameCode));
+          String.format("Game %s has already been scheduled.", this.gameCode));
     }
 
     for (final Player player : this.players.values()) {
       player.setReady(false);
     }
 
-    this.performanceSchedule = System.currentTimeMillis() + PERFORMANCE_SCHEDULE_OFFSET;
+    this.performanceSchedule = System.currentTimeMillis() + SCHEDULE_OFFSET;
 
-    this.messagePlayers(MessageTopic.SCHEDULE, new ScheduleDto(this.performanceSchedule));
+    this.messagePlayers(
+        MessageTopic.SCHEDULE, new ScheduleDto(scheduleType, this.performanceSchedule));
   }
 
-  public void acknowledgePerformanceSchedule(final String playerName, final long schedule)
+  public void acknowledgeSchedule(final String playerName, final long schedule)
       throws BadRequestException {
     final Player player = this.players.get(playerName);
     if (player == null) {

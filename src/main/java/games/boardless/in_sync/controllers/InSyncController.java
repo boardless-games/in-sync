@@ -134,9 +134,9 @@ public class InSyncController {
       responseCode = "503",
       description =
           """
-          - A performance has already been scheduled.
-          - Players did not acknowledge the schedule.
-          """,
+      - A performance has already been scheduled.
+      - Players did not acknowledge the schedule.
+      """,
       content = {
         @Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json")
       })
@@ -182,10 +182,10 @@ public class InSyncController {
       responseCode = "400",
       description =
           """
-          - An empty or invalid game code was provided.
-          - An empty or invalid schedule was provided.
-          - An empty or invalid name was provided.
-          """,
+      - An empty or invalid game code was provided.
+      - An empty or invalid schedule was provided.
+      - An empty or invalid name was provided.
+      """,
       content = {
         @Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json")
       })
@@ -200,10 +200,10 @@ public class InSyncController {
         @Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json")
       })
   @PostMapping("/game/{gameCode}/acknowledge")
-  public ResponseEntity<Void> acknowledgePerformanceSchedule(
+  public ResponseEntity<Void> acknowledgeSchedule(
       @PathVariable final String gameCode, @RequestBody final AcknowledgeScheduleDto ack)
       throws BadRequestException, ServiceUnavailableException {
-    return inSyncService.acknowledgePerformanceSchedule(gameCode, ack);
+    return inSyncService.acknowledgeSchedule(gameCode, ack);
   }
 
   @Operation(summary = "Report a performance.")
@@ -226,9 +226,9 @@ public class InSyncController {
       responseCode = "503",
       description =
           """
-          - A performance has not been scheduled.
-          - The performance has already been acknowledged.
-          """,
+      - A performance has not been scheduled.
+      - The performance has already been acknowledged.
+      """,
       content = {
         @Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json")
       })
@@ -236,6 +236,6 @@ public class InSyncController {
   public ResponseEntity<Void> reportPerformance(
       @PathVariable final String gameCode, @RequestBody final AcknowledgeScheduleDto ack)
       throws BadRequestException, ServiceUnavailableException {
-    return inSyncService.acknowledgePerformanceSchedule(gameCode, ack);
+    return inSyncService.acknowledgeSchedule(gameCode, ack);
   }
 }

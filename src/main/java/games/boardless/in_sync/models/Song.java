@@ -16,7 +16,7 @@ public class Song {
   private final SongTempo tempo;
   private final ArrayList<Note> notes = new ArrayList<>();
 
-  public Song(final GameType type, final GameDifficulty difficulty) {
+  public Song(final GameType type, final GameDifficulty difficulty, final List<String> players) {
     int length; // Milliseconds
     if (difficulty == GameDifficulty.EASY) {
       this.tempo = SongTempo.LARGO;
