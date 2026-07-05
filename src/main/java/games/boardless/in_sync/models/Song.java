@@ -11,37 +11,44 @@ import games.boardless.in_sync.constants.SongTempo;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 
 public class Song {
   private final SongTempo tempo;
   private final ArrayList<Note> notes = new ArrayList<>();
 
-  public Song(final GameType type, final GameDifficulty difficulty, final List<String> players) {
+  public Song(final GameType type, final GameDifficulty difficulty, final Set<String> players) {
     int length; // Milliseconds
+    boolean randomPlayerOrder;
     if (difficulty == GameDifficulty.EASY) {
       this.tempo = SongTempo.LARGO;
       length = 10000;
+      randomPlayerOrder = false;
     } else if (difficulty == GameDifficulty.MEDIUM) {
       this.tempo = SongTempo.MODERATO;
       length = 8000;
+      randomPlayerOrder = false;
     } else if (difficulty == GameDifficulty.HARD) {
       this.tempo = SongTempo.ALLEGRO;
       length = 7000;
+      randomPlayerOrder = true;
     } else if (difficulty == GameDifficulty.EXPERT) {
       this.tempo = SongTempo.PRESTO;
       length = 6000;
+      randomPlayerOrder = true;
     } else {
       throw new IllegalArgumentException("Invalid game difficulty.");
     }
 
     // Create notes
     final Random rand = new Random();
+
     for (int currentLength = 0; currentLength < length; ) {
       final NoteSound noteSound = NoteSound.MAIN;
       final NoteDuration noteDuration =
           NoteDuration.values()[rand.nextInt(NoteDuration.values().length)];
       final NoteFrequency noteFrequency = NoteFrequency.C4;
-      this.notes.add(new Note(noteSound, noteDuration, noteFrequency));
+      // this.notes.add(new Note(noteSound, noteDuration, noteFrequency));
 
       currentLength += (1f / this.tempo.getTempo()) * MILLIS_PER_MINUTE;
     }

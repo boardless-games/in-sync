@@ -240,7 +240,7 @@ public class Game {
     this.difficulty = gameSettings.gameDifficulty();
     this.status = GameStatus.IN_GAME;
 
-    this.song = new Song(this.type, this.difficulty, this.players);
+    this.song = new Song(this.type, this.difficulty, this.players.keySet());
 
     this.messagePlayers(MessageTopic.SONG, this.song);
   }

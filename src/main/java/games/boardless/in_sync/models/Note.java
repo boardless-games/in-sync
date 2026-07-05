@@ -10,11 +10,15 @@ public class Note {
   private final NoteFrequency frequency;
   private String playerAssignment;
 
-  public Note(final NoteSound sound, final NoteDuration duration, final NoteFrequency frequency) {
+  public Note(
+      final NoteSound sound,
+      final NoteDuration duration,
+      final NoteFrequency frequency,
+      final String playerAssignment) {
     this.sound = sound;
     this.duration = duration;
     this.frequency = frequency;
-    this.playerAssignment = null;
+    this.playerAssignment = playerAssignment;
   }
 
   public NoteSound getSound() {
