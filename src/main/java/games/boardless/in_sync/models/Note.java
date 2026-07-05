@@ -8,11 +8,13 @@ public class Note {
   private final NoteSound sound;
   private final NoteDuration duration;
   private final NoteFrequency frequency;
+  private String playerAssignment;
 
   public Note(final NoteSound sound, final NoteDuration duration, final NoteFrequency frequency) {
     this.sound = sound;
     this.duration = duration;
     this.frequency = frequency;
+    this.playerAssignment = null;
   }
 
   public NoteSound getSound() {
@@ -25,6 +27,14 @@ public class Note {
 
   public NoteFrequency getFrequency() {
     return this.frequency;
+  }
+
+  public String getPlayerAssignment() {
+    return this.playerAssignment;
+  }
+
+  public void setPlayerAssignment(final String playerAssignment) {
+    this.playerAssignment = playerAssignment;
   }
 
   @Override

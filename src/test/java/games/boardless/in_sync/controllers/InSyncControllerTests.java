@@ -7,7 +7,7 @@ import static org.mockito.Mockito.when;
 import games.boardless.in_sync.config.SchedulerConfig;
 import games.boardless.in_sync.config.WebMvcConfig;
 import games.boardless.in_sync.dtos.GameCodeDto;
-import games.boardless.in_sync.dtos.NameDto;
+import games.boardless.in_sync.dtos.PlayerNameDto;
 import games.boardless.in_sync.exceptions.BadRequestException;
 import games.boardless.in_sync.exceptions.ServiceUnavailableException;
 import games.boardless.in_sync.services.InSyncService;
@@ -88,13 +88,13 @@ class InSyncControllerTests {
 
   @Test
   void newPlayer_shouldReturnCreated() throws Exception {
-    when(this.inSyncService.newPlayer(anyString(), any(NameDto.class)))
+    when(this.inSyncService.newPlayer(anyString(), any(PlayerNameDto.class)))
         .thenReturn(ResponseEntity.status(HttpStatus.CREATED).build());
 
     this.mockMvc
         .perform(
             MockMvcRequestBuilders.post("/in-sync/game/123456/player")
-                .content(this.objectMapper.writeValueAsString(new NameDto("Craiglington")))
+                .content(this.objectMapper.writeValueAsString(new PlayerNameDto("Craiglington")))
                 .contentType("application/json"))
         .andExpectAll(
             MockMvcResultMatchers.status().isCreated(), MockMvcResultMatchers.content().string(""));
@@ -126,13 +126,13 @@ class InSyncControllerTests {
   @Test
   void newPlayer_withBadRequestException_shouldReturnBadRequest() throws Exception {
     final String message = UUID.randomUUID().toString();
-    when(this.inSyncService.newPlayer(anyString(), any(NameDto.class)))
+    when(this.inSyncService.newPlayer(anyString(), any(PlayerNameDto.class)))
         .thenThrow(new BadRequestException(message));
 
     this.mockMvc
         .perform(
             MockMvcRequestBuilders.post("/in-sync/game/123456/player")
-                .content(this.objectMapper.writeValueAsString(new NameDto("Craiglington")))
+                .content(this.objectMapper.writeValueAsString(new PlayerNameDto("Craiglington")))
                 .contentType("application/json"))
         .andExpectAll(
             MockMvcResultMatchers.status().isBadRequest(),
@@ -143,13 +143,13 @@ class InSyncControllerTests {
   @Test
   void newPlayer_withServiceUnavailableException_shouldReturnServiceUnavailable() throws Exception {
     final String message = UUID.randomUUID().toString();
-    when(this.inSyncService.newPlayer(anyString(), any(NameDto.class)))
+    when(this.inSyncService.newPlayer(anyString(), any(PlayerNameDto.class)))
         .thenThrow(new ServiceUnavailableException(message));
 
     this.mockMvc
         .perform(
             MockMvcRequestBuilders.post("/in-sync/game/123456/player")
-                .content(this.objectMapper.writeValueAsString(new NameDto("Craiglington")))
+                .content(this.objectMapper.writeValueAsString(new PlayerNameDto("Craiglington")))
                 .contentType("application/json"))
         .andExpectAll(
             MockMvcResultMatchers.status().isServiceUnavailable(),
@@ -159,13 +159,13 @@ class InSyncControllerTests {
 
   @Test
   void newPlayer_withRuntimeException_shouldReturnInternalServerError() throws Exception {
-    when(this.inSyncService.newPlayer(anyString(), any(NameDto.class)))
+    when(this.inSyncService.newPlayer(anyString(), any(PlayerNameDto.class)))
         .thenThrow(RuntimeException.class);
 
     this.mockMvc
         .perform(
             MockMvcRequestBuilders.post("/in-sync/game/123456/player")
-                .content(this.objectMapper.writeValueAsString(new NameDto("Craiglington")))
+                .content(this.objectMapper.writeValueAsString(new PlayerNameDto("Craiglington")))
                 .contentType("application/json"))
         .andExpectAll(
             MockMvcResultMatchers.status().isInternalServerError(),

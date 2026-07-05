@@ -8,8 +8,9 @@ import static games.boardless.in_sync.constants.Constants.PERFORMANCE_SCHEDULE_O
 import games.boardless.in_sync.constants.GameDifficulty;
 import games.boardless.in_sync.constants.GameType;
 import games.boardless.in_sync.constants.MessageTopic;
+import games.boardless.in_sync.constants.ScheduleType;
 import games.boardless.in_sync.dtos.GameSettingsDto;
-import games.boardless.in_sync.dtos.SchedulePerformanceDto;
+import games.boardless.in_sync.dtos.ScheduleDto;
 import games.boardless.in_sync.exceptions.BadRequestException;
 import games.boardless.in_sync.exceptions.ServiceUnavailableException;
 import games.boardless.in_sync.utils.ToTextMessage;
@@ -240,7 +241,11 @@ public class Game {
     this.messagePlayers(MessageTopic.SONG, this.song);
   }
 
-  public synchronized void schedulePerformance() throws ServiceUnavailableException {
+  public void clearPerformanceSchedule() {
+    this.performanceSchedule = null;
+  }
+
+  public synchronized void schedule(final ScheduleType type) throws ServiceUnavailableException {
     if (this.status != GameStatus.IN_GAME) {
       throw new ServiceUnavailableException(
           String.format("Game %s has not been started.", this.gameCode));
@@ -257,7 +262,23 @@ public class Game {
 
     this.performanceSchedule = System.currentTimeMillis() + PERFORMANCE_SCHEDULE_OFFSET;
 
-    this.messagePlayers(
-        MessageTopic.PERFORMANCE_SCHEDULE, new SchedulePerformanceDto(this.performanceSchedule));
+    this.messagePlayers(MessageTopic.SCHEDULE, new ScheduleDto(this.performanceSchedule));
+  }
+
+  public void acknowledgePerformanceSchedule(final String playerName, final long schedule)
+      throws BadRequestException {
+    final Player player = this.players.get(playerName);
+    if (player == null) {
+      throw new BadRequestException(
+          String.format("%s is not a player in game %s.", playerName, this.gameCode));
+    }
+
+    if (this.performanceSchedule != schedule) {
+      throw new BadRequestException(
+          String.format("%d is not the correct schedule in game %s.", schedule, this.gameCode));
+    }
+
+    player.setReady(true);
+    logger.info("{} acknowledged the schedule in game {}.", playerName, this.gameCode);
   }
 }

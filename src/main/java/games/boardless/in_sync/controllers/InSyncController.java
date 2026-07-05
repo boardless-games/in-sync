@@ -1,9 +1,11 @@
 package games.boardless.in_sync.controllers;
 
+import games.boardless.in_sync.constants.ScheduleType;
+import games.boardless.in_sync.dtos.AcknowledgeScheduleDto;
 import games.boardless.in_sync.dtos.ErrorDto;
 import games.boardless.in_sync.dtos.GameCodeDto;
 import games.boardless.in_sync.dtos.GameSettingsDto;
-import games.boardless.in_sync.dtos.NameDto;
+import games.boardless.in_sync.dtos.PlayerNameDto;
 import games.boardless.in_sync.exceptions.BadRequestException;
 import games.boardless.in_sync.exceptions.ServiceUnavailableException;
 import games.boardless.in_sync.services.InSyncService;
@@ -80,7 +82,7 @@ public class InSyncController {
       })
   @PostMapping("/game/{gameCode}/player")
   public ResponseEntity<Void> newPlayer(
-      @PathVariable final String gameCode, @RequestBody final NameDto name)
+      @PathVariable final String gameCode, @RequestBody final PlayerNameDto name)
       throws BadRequestException, ServiceUnavailableException {
     return inSyncService.newPlayer(gameCode, name);
   }
@@ -130,20 +132,24 @@ public class InSyncController {
       })
   @ApiResponse(
       responseCode = "503",
-      description = "A performance has already been scheduled.",
+      description =
+          """
+          - A performance has already been scheduled.
+          - Players did not acknowledge the schedule.
+          """,
       content = {
         @Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json")
       })
-  @PostMapping("/game/{gameCode}/schedule")
+  @PostMapping("/game/{gameCode}/schedule/performance")
   public DeferredResult<ResponseEntity<Void>> schedulePerformance(
       @PathVariable final String gameCode) throws BadRequestException, ServiceUnavailableException {
-    return inSyncService.schedulePerformance(gameCode);
+    return inSyncService.schedule(gameCode, ScheduleType.PERFORMANCE);
   }
 
-  @Operation(summary = "Acknowledge a performance schedule.")
+  @Operation(summary = "Schedule a playback.")
   @ApiResponse(
       responseCode = "200",
-      description = "Successfully acknowledged a performance schedule.",
+      description = "Successfully scheduled a playback.",
       content = @Content)
   @ApiResponse(
       responseCode = "400",
@@ -153,13 +159,83 @@ public class InSyncController {
       })
   @ApiResponse(
       responseCode = "503",
-      description = "A performance has already been scheduled.",
+      description =
+          """
+      - A playback has already been scheduled.
+      - Players did not acknowledge the schedule.
+      """,
       content = {
         @Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json")
       })
-  @PostMapping("/game/{gameCode}/schedule")
-  public DeferredResult<ResponseEntity<Void>> acknowledgePerformanceSchedule(
-      @PathVariable final String gameCode) throws BadRequestException, ServiceUnavailableException {
-    return inSyncService.acknowledgePerformanceSchedule(gameCode);
+  @PostMapping("/game/{gameCode}/schedule/playback")
+  public DeferredResult<ResponseEntity<Void>> schedulePlayback(@PathVariable final String gameCode)
+      throws BadRequestException, ServiceUnavailableException {
+    return inSyncService.schedule(gameCode, ScheduleType.PLAYBACK);
+  }
+
+  @Operation(summary = "Acknowledge a performance schedule.")
+  @ApiResponse(
+      responseCode = "200",
+      description = "Successfully acknowledged a performance schedule.",
+      content = @Content)
+  @ApiResponse(
+      responseCode = "400",
+      description =
+          """
+          - An empty or invalid game code was provided.
+          - An empty or invalid schedule was provided.
+          - An empty or invalid name was provided.
+          """,
+      content = {
+        @Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json")
+      })
+  @ApiResponse(
+      responseCode = "503",
+      description =
+          """
+      - A performance has not been scheduled.
+      - The performance has already been acknowledged.
+      """,
+      content = {
+        @Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json")
+      })
+  @PostMapping("/game/{gameCode}/acknowledge")
+  public ResponseEntity<Void> acknowledgePerformanceSchedule(
+      @PathVariable final String gameCode, @RequestBody final AcknowledgeScheduleDto ack)
+      throws BadRequestException, ServiceUnavailableException {
+    return inSyncService.acknowledgePerformanceSchedule(gameCode, ack);
+  }
+
+  @Operation(summary = "Report a performance.")
+  @ApiResponse(
+      responseCode = "200",
+      description = "Successfully acknowledged a performance schedule.",
+      content = @Content)
+  @ApiResponse(
+      responseCode = "400",
+      description =
+          """
+      - An empty or invalid game code was provided.
+      - An empty or invalid schedule was provided.
+      - An empty or invalid name was provided.
+      """,
+      content = {
+        @Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json")
+      })
+  @ApiResponse(
+      responseCode = "503",
+      description =
+          """
+          - A performance has not been scheduled.
+          - The performance has already been acknowledged.
+          """,
+      content = {
+        @Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json")
+      })
+  @PostMapping("/game/{gameCode}/report")
+  public ResponseEntity<Void> reportPerformance(
+      @PathVariable final String gameCode, @RequestBody final AcknowledgeScheduleDto ack)
+      throws BadRequestException, ServiceUnavailableException {
+    return inSyncService.acknowledgePerformanceSchedule(gameCode, ack);
   }
 }
