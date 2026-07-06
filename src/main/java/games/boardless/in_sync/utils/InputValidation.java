@@ -14,7 +14,7 @@ public final class InputValidation {
    * Returns an Optional with a String explanation if the provided name is invalid. If valid, the
    * Optional will be empty.
    */
-  public static Optional<String> validateName(final String name) {
+  public static Optional<String> validatePlayerName(final String name) {
     if (name == null) {
       return Optional.of("Name must be defined.");
     } else if (name.isBlank()) {

@@ -14,10 +14,11 @@ import games.boardless.in_sync.dtos.ScheduleDto;
 import games.boardless.in_sync.exceptions.BadRequestException;
 import games.boardless.in_sync.exceptions.ServiceUnavailableException;
 import games.boardless.in_sync.utils.ToTextMessage;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.ReentrantLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.socket.TextMessage;
@@ -39,13 +40,11 @@ public class Game {
   private GameDifficulty difficulty;
   private Song song = null;
   private Long performanceSchedule = null;
-  private final ReentrantLock playerLock;
   private final Map<String, Player> players;
 
   public Game(final String gameCode) {
     this.gameCode = gameCode;
     this.status = GameStatus.LOBBY;
-    this.playerLock = new ReentrantLock(true);
     this.players = new ConcurrentHashMap<>();
   }
 
@@ -63,7 +62,10 @@ public class Game {
   }
 
   public String[] getPlayers() {
-    return this.players.keySet().toArray(new String[0]);
+    return this.players.values().stream()
+        .sorted()
+        .map(player -> player.getName())
+        .toArray(String[]::new);
   }
 
   public int numPlayers() {
@@ -108,16 +110,15 @@ public class Game {
   }
 
   public boolean hasConnectedPlayers() {
-    return this.players.values().stream().anyMatch((final Player player) -> player.isConnected());
+    return this.players.values().stream().anyMatch(player -> player.isConnected());
   }
 
   public boolean arePlayersReady() {
-    return this.players.values().stream().allMatch((final Player player) -> player.isReady());
+    return this.players.values().stream().allMatch(player -> player.isReady());
   }
 
   public void addPlayer(final String name) throws ServiceUnavailableException, BadRequestException {
-    this.playerLock.lock();
-    try {
+    synchronized (this.players) {
       if (this.status != GameStatus.LOBBY) {
         throw new ServiceUnavailableException(
             String.format("Game %s has already started.", this.gameCode));
@@ -129,23 +130,21 @@ public class Game {
       if (this.players.get(name) != null) {
         throw new BadRequestException(String.format("The name %s is already taken.", name));
       }
-      this.players.put(name, new Player(name));
+      final int nextPosition =
+          this.players.values().stream().mapToInt(player -> player.getPosition()).max().orElse(0)
+              + 1;
+      this.players.put(name, new Player(name, nextPosition));
       logger.info("{} was added to game {}.", name, this.gameCode);
-    } finally {
-      this.playerLock.unlock();
     }
   }
 
   public void removePlayer(final String name) throws BadRequestException {
-    this.playerLock.lock();
-    try {
+    synchronized (this.players) {
       if (this.players.remove(name) == null) {
         throw new BadRequestException(
             String.format("%s is not a player in game %s.", name, this.gameCode));
       }
       logger.info("{} was removed from game {}.", name, this.gameCode);
-    } finally {
-      this.playerLock.unlock();
     }
   }
 
@@ -157,6 +156,11 @@ public class Game {
           String.format("%s is not a player in game %s.", playerName, this.gameCode));
     }
     player.connect(session);
+
+    if (this.status == GameStatus.LOBBY) {
+      this.messagePlayers(MessageTopic.LOBBY, this.getPlayers());
+    }
+
     logger.info("{} connected to game {}.", playerName, this.gameCode);
   }
 
@@ -240,7 +244,8 @@ public class Game {
     this.difficulty = gameSettings.gameDifficulty();
     this.status = GameStatus.IN_GAME;
 
-    this.song = new Song(this.type, this.difficulty, this.players.keySet());
+    final ArrayList<String> playerNames = new ArrayList<>(Arrays.asList(this.getPlayers()));
+    this.song = new Song(this.type, this.difficulty, playerNames);
 
     this.messagePlayers(MessageTopic.SONG, this.song);
   }

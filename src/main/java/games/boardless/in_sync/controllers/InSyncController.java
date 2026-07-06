@@ -205,37 +205,4 @@ public class InSyncController {
       throws BadRequestException, ServiceUnavailableException {
     return inSyncService.acknowledgeSchedule(gameCode, ack);
   }
-
-  @Operation(summary = "Report a performance.")
-  @ApiResponse(
-      responseCode = "200",
-      description = "Successfully acknowledged a performance schedule.",
-      content = @Content)
-  @ApiResponse(
-      responseCode = "400",
-      description =
-          """
-      - An empty or invalid game code was provided.
-      - An empty or invalid schedule was provided.
-      - An empty or invalid name was provided.
-      """,
-      content = {
-        @Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json")
-      })
-  @ApiResponse(
-      responseCode = "503",
-      description =
-          """
-      - A performance has not been scheduled.
-      - The performance has already been acknowledged.
-      """,
-      content = {
-        @Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json")
-      })
-  @PostMapping("/game/{gameCode}/report")
-  public ResponseEntity<Void> reportPerformance(
-      @PathVariable final String gameCode, @RequestBody final AcknowledgeScheduleDto ack)
-      throws BadRequestException, ServiceUnavailableException {
-    return inSyncService.acknowledgeSchedule(gameCode, ack);
-  }
 }

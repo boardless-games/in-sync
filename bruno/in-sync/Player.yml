@@ -14,7 +14,7 @@ http:
     type: json
     data: |-
       {
-        "name": "Craiglington"
+        "playerName": "Craiglington"
       }
   auth: inherit
 
@@ -22,12 +22,12 @@ runtime:
   scripts:
     - type: after-response
       code: |-
-        let name = "";
+        let playerName = "";
         if (res.status === 201) {
           let data = req.getBody();
-          name = data.name;
+          playerName = data.playerName;
         }
-        bru.setVar("name", name);
+        bru.setVar("playerName", playerName);
 
 settings:
   encodeUrl: true

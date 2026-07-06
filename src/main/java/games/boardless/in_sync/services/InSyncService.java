@@ -5,6 +5,7 @@ import static games.boardless.in_sync.constants.Constants.MAX_NUM_GAMES;
 import static games.boardless.in_sync.constants.Constants.PLAYER_AUTO_REMOVE_TIME;
 import static games.boardless.in_sync.constants.Constants.WAIT_PLAYER_READY_TIME;
 
+import games.boardless.in_sync.constants.MessageTopic;
 import games.boardless.in_sync.constants.ScheduleType;
 import games.boardless.in_sync.dtos.AcknowledgeScheduleDto;
 import games.boardless.in_sync.dtos.GameCodeDto;
@@ -90,7 +91,7 @@ public class InSyncService {
       throw new BadRequestException("Name must be provided.");
     }
 
-    final Optional<String> nameValidation = InputValidation.validateName(name.playerName());
+    final Optional<String> nameValidation = InputValidation.validatePlayerName(name.playerName());
     if (nameValidation.isPresent()) {
       throw new BadRequestException(nameValidation.get());
     }
@@ -205,7 +206,7 @@ public class InSyncService {
       throw new BadRequestException("The acknowledgment must be provided.");
     }
 
-    final Optional<String> nameValidation = InputValidation.validateName(ack.playerName());
+    final Optional<String> nameValidation = InputValidation.validatePlayerName(ack.playerName());
     if (nameValidation.isPresent()) {
       throw new BadRequestException(nameValidation.get());
     }
@@ -246,14 +247,14 @@ public class InSyncService {
       }
 
       // Get and validate the name.
-      final String name = queryParams.get("name").getFirst();
-      final Optional<String> nameValidation = InputValidation.validateName(name);
+      final String playerName = queryParams.get("playerName").getFirst();
+      final Optional<String> nameValidation = InputValidation.validatePlayerName(playerName);
       if (nameValidation.isPresent()) {
         throw new BadRequestException(nameValidation.get());
       }
 
       // Set the player's session.
-      game.connect(name, session);
+      game.connect(playerName, session);
     } catch (NullPointerException | BadRequestException badDataException) {
       logger.info(
           "Closing {} after connection established due to bad data.",
@@ -297,19 +298,21 @@ public class InSyncService {
       }
 
       // Get and validate the name.
-      final String name = queryParams.get("name").getFirst();
-      final Optional<String> nameValidation = InputValidation.validateName(name);
+      final String playerName = queryParams.get("playerName").getFirst();
+      final Optional<String> nameValidation = InputValidation.validatePlayerName(playerName);
       if (nameValidation.isPresent()) {
         throw new BadRequestException(nameValidation.get());
       }
 
-      game.disconnect(name);
+      game.disconnect(playerName);
 
       if (game.getStatus() == GameStatus.LOBBY) {
-        game.removePlayer(name);
+        game.removePlayer(playerName);
         // Lobbies can have players that have joined but not yet connected.
         if (game.numPlayers() == 0) {
           this.deleteGame(game.getGameCode());
+        } else {
+          game.messagePlayers(MessageTopic.LOBBY, game.getPlayers());
         }
       } else if (!game.hasConnectedPlayers()) {
         this.deleteGame(game.getGameCode());
@@ -349,14 +352,14 @@ public class InSyncService {
       }
 
       // Get and validate the name.
-      final String name = queryParams.get("name").getFirst();
-      final Optional<String> nameValidation = InputValidation.validateName(name);
+      final String playerName = queryParams.get("playerName").getFirst();
+      final Optional<String> nameValidation = InputValidation.validatePlayerName(playerName);
       if (nameValidation.isPresent()) {
         throw new BadRequestException(nameValidation.get());
       }
 
       // Set ready.
-      game.setReady(name);
+      game.setReady(playerName);
     } catch (NullPointerException | BadRequestException e) {
       logger.info(
           "Failed to handle pong message from {} due to bad data.", ToString.toString(session), e);

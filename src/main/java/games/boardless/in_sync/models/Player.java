@@ -1,5 +1,6 @@
 package games.boardless.in_sync.models;
 
+import games.boardless.in_sync.utils.ToString;
 import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -7,20 +8,26 @@ import org.springframework.web.socket.PingMessage;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
-public class Player {
+public class Player implements Comparable<Player> {
   private static final Logger logger = LoggerFactory.getLogger(Player.class);
   private final String name;
+  private final int position;
   private WebSocketSession session;
   private boolean ready;
 
-  public Player(final String name) {
+  public Player(final String name, final int position) {
     this.name = name;
+    this.position = position;
     this.session = null;
     this.ready = false;
   }
 
   public String getName() {
     return this.name;
+  }
+
+  public int getPosition() {
+    return this.position;
   }
 
   public void connect(final WebSocketSession session) {
@@ -52,9 +59,15 @@ public class Player {
 
   @Override
   public String toString() {
-    return "Player [name=" + name + ", sessionId=" + this.session != null
-        ? this.session.getId()
-        : null + ", connected=" + this.isConnected() + ", ready=" + this.ready + "]";
+    return "Player [name="
+        + name
+        + ", position="
+        + position
+        + ", session="
+        + ToString.toString(session)
+        + ", ready="
+        + ready
+        + "]";
   }
 
   @Override
@@ -78,7 +91,7 @@ public class Player {
   }
 
   public void message(final TextMessage message) {
-    if (this.session == null) {
+    if (!this.isConnected()) {
       return;
     }
 
@@ -100,5 +113,10 @@ public class Player {
     } catch (IOException e) {
       logger.error("Failed to ping {}.", this.toString(), e);
     }
+  }
+
+  @Override
+  public int compareTo(Player other) {
+    return this.position - other.getPosition();
   }
 }

@@ -2,7 +2,7 @@ package games.boardless.in_sync.constants;
 
 import java.util.stream.Stream;
 
-public enum NoteDuration {
+public enum NoteType {
   EIGHTH(0.5f),
   QUARTER(1f),
   HALF(2f),
@@ -10,7 +10,7 @@ public enum NoteDuration {
 
   private final float beats;
 
-  private NoteDuration(final float beats) {
+  private NoteType(final float beats) {
     this.beats = beats;
   }
 
@@ -18,9 +18,9 @@ public enum NoteDuration {
     return this.beats;
   }
 
-  public NoteDuration fromDuration(final float beats) {
-    return Stream.of(NoteDuration.values())
-        .filter((final NoteDuration noteDuration) -> Float.compare(noteDuration.beats, beats) == 0)
+  public NoteType fromDuration(final float beats) {
+    return Stream.of(NoteType.values())
+        .filter((final NoteType noteDuration) -> Float.compare(noteDuration.beats, beats) == 0)
         .findFirst()
         .orElseThrow();
   }
