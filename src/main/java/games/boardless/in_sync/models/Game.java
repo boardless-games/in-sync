@@ -39,7 +39,7 @@ public class Game {
   private GameType type;
   private GameDifficulty difficulty;
   private Song song = null;
-  private Long performanceSchedule = null;
+  private Long schedule = null;
   private final Map<String, Player> players;
 
   public Game(final String gameCode) {
@@ -72,12 +72,17 @@ public class Game {
     return this.players.size();
   }
 
+  public long getSchedule() {
+    return this.schedule;
+  }
+
   public boolean isPerformanceScheduled() {
-    return this.performanceSchedule != null;
+    return this.schedule != null;
   }
 
   public void clearSchedule() {
-    this.performanceSchedule = null;
+    this.schedule = null;
+    logger.info("The schedule for game {} was cleared.", this.gameCode);
   }
 
   @Override
@@ -266,23 +271,34 @@ public class Game {
       player.setReady(false);
     }
 
-    this.performanceSchedule = System.currentTimeMillis() + SCHEDULE_OFFSET;
+    this.schedule = System.currentTimeMillis() + SCHEDULE_OFFSET;
 
-    this.messagePlayers(
-        MessageTopic.SCHEDULE, new ScheduleDto(scheduleType, this.performanceSchedule));
+    this.messagePlayers(MessageTopic.SCHEDULE, new ScheduleDto(scheduleType, this.schedule));
   }
 
   public void acknowledgeSchedule(final String playerName, final long schedule)
-      throws BadRequestException {
+      throws BadRequestException, ServiceUnavailableException {
     final Player player = this.players.get(playerName);
     if (player == null) {
       throw new BadRequestException(
           String.format("%s is not a player in game %s.", playerName, this.gameCode));
     }
 
-    if (this.performanceSchedule != schedule) {
+    if (this.schedule == null) {
+      throw new ServiceUnavailableException(
+          String.format("There is no schedule in game %s.", this.gameCode));
+    }
+
+    if (this.schedule != schedule) {
       throw new BadRequestException(
           String.format("%d is not the correct schedule in game %s.", schedule, this.gameCode));
+    }
+
+    if (player.isReady()) {
+      throw new ServiceUnavailableException(
+          String.format(
+              "%s already acknowledged the schedule for game %s.",
+              player.getName(), this.gameCode));
     }
 
     player.setReady(true);

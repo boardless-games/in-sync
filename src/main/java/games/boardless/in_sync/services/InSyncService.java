@@ -3,6 +3,7 @@ package games.boardless.in_sync.services;
 import static games.boardless.in_sync.constants.Constants.GAME_AUTO_DELETE_TIME;
 import static games.boardless.in_sync.constants.Constants.MAX_NUM_GAMES;
 import static games.boardless.in_sync.constants.Constants.PLAYER_AUTO_REMOVE_TIME;
+import static games.boardless.in_sync.constants.Constants.SCHEDULE_OFFSET;
 import static games.boardless.in_sync.constants.Constants.WAIT_PLAYER_READY_TIME;
 
 import games.boardless.in_sync.constants.MessageTopic;
@@ -182,7 +183,7 @@ public class InSyncService {
     this.taskScheduler.schedule(
         () -> {
           try {
-            autoVerifyScheduleAcknowledgement(scheduleType, gameCode);
+            autoVerifyScheduleAcknowledgement(gameCode);
             deferredResult.setResult(ResponseEntity.ok().build());
           } catch (Exception e) {
             deferredResult.setErrorResult(e);
@@ -190,11 +191,14 @@ public class InSyncService {
         },
         this.clock.instant().plusMillis(WAIT_PLAYER_READY_TIME));
 
+    this.taskScheduler.schedule(() -> {}, this.clock.instant().plusMillis(SCHEDULE_OFFSET));
+
     return deferredResult;
   }
 
   public ResponseEntity<Void> acknowledgeSchedule(
-      final String gameCode, final AcknowledgeScheduleDto ack) throws BadRequestException {
+      final String gameCode, final AcknowledgeScheduleDto ack)
+      throws BadRequestException, ServiceUnavailableException {
     // Validate the game code.
     final Optional<String> gameCodeValidation = InputValidation.validateGameCode(gameCode);
     if (gameCodeValidation.isPresent()) {
@@ -439,7 +443,7 @@ public class InSyncService {
     game.start(gameSettings);
   }
 
-  void autoVerifyScheduleAcknowledgement(final ScheduleType scheduleType, final String gameCode)
+  void autoVerifyScheduleAcknowledgement(final String gameCode)
       throws BadRequestException, ServiceUnavailableException {
 
     if (gameCode == null) {
@@ -450,19 +454,36 @@ public class InSyncService {
     final Game game = this.games.get(gameCode);
     if (game == null) {
       throw new BadRequestException(
-          String.format("Game %s was deleted while scheduling a %s.", gameCode, scheduleType));
+          String.format("Game %s was deleted while scheduling.", gameCode));
     }
 
     if (!game.isPerformanceScheduled()) {
       throw new ServiceUnavailableException(
-          String.format("Failed to schedule a %s for game %s.", scheduleType, gameCode));
+          String.format("Failed to schedule in game %s.", gameCode));
     }
 
     if (!game.arePlayersReady()) {
       game.clearSchedule();
+      game.messagePlayers(MessageTopic.CANCEL_SCHEDULE, null);
       throw new ServiceUnavailableException(
-          String.format(
-              "Players in game %s have not acknowledged the %s schedule.", gameCode, scheduleType));
+          String.format("Players in game %s have not acknowledged the schedule.", gameCode));
+    }
+  }
+
+  void autoClearSchedule(final String gameCode, final long schedule) throws BadRequestException {
+    if (gameCode == null) {
+      throw new BadRequestException("Game code must be provided.");
+    }
+
+    // Get the game.
+    final Game game = this.games.get(gameCode);
+    if (game == null) {
+      throw new BadRequestException(
+          String.format("Game %s was deleted while scheduling.", gameCode));
+    }
+
+    if (game.isPerformanceScheduled() && game.getSchedule() == schedule) {
+      game.clearSchedule();
     }
   }
 }

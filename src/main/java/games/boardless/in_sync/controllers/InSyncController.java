@@ -173,10 +173,10 @@ public class InSyncController {
     return inSyncService.schedule(gameCode, ScheduleType.PLAYBACK);
   }
 
-  @Operation(summary = "Acknowledge a performance schedule.")
+  @Operation(summary = "Acknowledge a schedule.")
   @ApiResponse(
       responseCode = "200",
-      description = "Successfully acknowledged a performance schedule.",
+      description = "Successfully acknowledged a schedule.",
       content = @Content)
   @ApiResponse(
       responseCode = "400",
@@ -193,8 +193,8 @@ public class InSyncController {
       responseCode = "503",
       description =
           """
-      - A performance has not been scheduled.
-      - The performance has already been acknowledged.
+      - Nothing has been scheduled.
+      - The schedule has already been acknowledged.
       """,
       content = {
         @Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json")
