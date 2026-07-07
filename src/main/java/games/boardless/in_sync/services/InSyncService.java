@@ -170,7 +170,7 @@ public class InSyncService {
       throw new BadRequestException(String.format("Game %s not found.", gameCode));
     }
 
-    game.schedule(scheduleType);
+    final long schedule = game.schedule(scheduleType);
 
     final DeferredResult<ResponseEntity<Void>> deferredResult =
         new DeferredResult<>(
@@ -191,7 +191,15 @@ public class InSyncService {
         },
         this.clock.instant().plusMillis(WAIT_PLAYER_READY_TIME));
 
-    this.taskScheduler.schedule(() -> {}, this.clock.instant().plusMillis(SCHEDULE_OFFSET));
+    this.taskScheduler.schedule(
+        () -> {
+          try {
+            autoClearSchedule(gameCode, schedule);
+          } catch (Exception e) {
+            logger.error("Failed to auto clear schedule.", e);
+          }
+        },
+        this.clock.instant().plusMillis(SCHEDULE_OFFSET));
 
     return deferredResult;
   }
@@ -310,15 +318,9 @@ public class InSyncService {
 
       game.disconnect(playerName);
 
-      if (game.getStatus() == GameStatus.LOBBY) {
-        game.removePlayer(playerName);
-        // Lobbies can have players that have joined but not yet connected.
-        if (game.numPlayers() == 0) {
-          this.deleteGame(game.getGameCode());
-        } else {
-          game.messagePlayers(MessageTopic.LOBBY, game.getPlayers());
-        }
-      } else if (!game.hasConnectedPlayers()) {
+      final GameStatus gameStatus = game.getStatus();
+      if ((gameStatus == GameStatus.LOBBY && game.numPlayers() == 0)
+          || (gameStatus != GameStatus.LOBBY && !game.hasConnectedPlayers())) {
         this.deleteGame(game.getGameCode());
       }
     } catch (NullPointerException | BadRequestException badDataException) {
@@ -373,21 +375,6 @@ public class InSyncService {
     }
   }
 
-  void autoDeleteGame(final String gameCode) {
-    // Validate gameCode
-    if (gameCode == null) {
-      return;
-    }
-
-    // Get the game.
-    final Game game = this.games.get(gameCode);
-    if (game == null || game.hasConnectedPlayers()) {
-      return;
-    }
-
-    this.deleteGame(gameCode);
-  }
-
   public void deleteGame(final String gameCode) {
     // Validate gameCode
     if (gameCode == null) {
@@ -402,6 +389,21 @@ public class InSyncService {
     }
 
     logger.info("Deleted game {}.", gameCode);
+  }
+
+  void autoDeleteGame(final String gameCode) {
+    // Validate gameCode
+    if (gameCode == null) {
+      return;
+    }
+
+    // Get the game.
+    final Game game = this.games.get(gameCode);
+    if (game == null || game.hasConnectedPlayers()) {
+      return;
+    }
+
+    this.deleteGame(gameCode);
   }
 
   void autoRemovePlayer(final String gameCode, final String name) {
@@ -457,7 +459,7 @@ public class InSyncService {
           String.format("Game %s was deleted while scheduling.", gameCode));
     }
 
-    if (!game.isPerformanceScheduled()) {
+    if (game.isScheduled()) {
       throw new ServiceUnavailableException(
           String.format("Failed to schedule in game %s.", gameCode));
     }
@@ -482,7 +484,7 @@ public class InSyncService {
           String.format("Game %s was deleted while scheduling.", gameCode));
     }
 
-    if (game.isPerformanceScheduled() && game.getSchedule() == schedule) {
+    if (game.getSchedule() == schedule) {
       game.clearSchedule();
     }
   }

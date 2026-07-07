@@ -39,7 +39,7 @@ public class Game {
   private GameType type;
   private GameDifficulty difficulty;
   private Song song = null;
-  private Long schedule = null;
+  private long schedule = 0l;
   private final Map<String, Player> players;
 
   public Game(final String gameCode) {
@@ -72,16 +72,16 @@ public class Game {
     return this.players.size();
   }
 
+  public boolean isScheduled() {
+    return this.schedule != 0l;
+  }
+
   public long getSchedule() {
     return this.schedule;
   }
 
-  public boolean isPerformanceScheduled() {
-    return this.schedule != null;
-  }
-
   public void clearSchedule() {
-    this.schedule = null;
+    this.schedule = 0l;
     logger.info("The schedule for game {} was cleared.", this.gameCode);
   }
 
@@ -162,11 +162,11 @@ public class Game {
     }
     player.connect(session);
 
+    logger.info("{} connected to game {}.", playerName, this.gameCode);
+
     if (this.status == GameStatus.LOBBY) {
       this.messagePlayers(MessageTopic.LOBBY, this.getPlayers());
     }
-
-    logger.info("{} connected to game {}.", playerName, this.gameCode);
   }
 
   public boolean isConnected(final String playerName) {
@@ -181,7 +181,13 @@ public class Game {
           String.format("%s is not a player in game %s.", playerName, this.gameCode));
     }
     player.disconnect();
+
     logger.info("{} disconnected from game {}.", playerName, this.gameCode);
+
+    if (this.status == GameStatus.LOBBY) {
+      this.removePlayer(playerName);
+      this.messagePlayers(MessageTopic.LOBBY, this.getPlayers());
+    }
   }
 
   public void disconnectAll() {
@@ -255,14 +261,14 @@ public class Game {
     this.messagePlayers(MessageTopic.SONG, this.song);
   }
 
-  public synchronized void schedule(final ScheduleType scheduleType)
+  public synchronized long schedule(final ScheduleType scheduleType)
       throws ServiceUnavailableException {
     if (this.status != GameStatus.IN_GAME) {
       throw new ServiceUnavailableException(
           String.format("Game %s has not been started.", this.gameCode));
     }
 
-    if (this.isPerformanceScheduled()) {
+    if (this.isScheduled()) {
       throw new ServiceUnavailableException(
           String.format("Game %s has already been scheduled.", this.gameCode));
     }
@@ -274,6 +280,8 @@ public class Game {
     this.schedule = System.currentTimeMillis() + SCHEDULE_OFFSET;
 
     this.messagePlayers(MessageTopic.SCHEDULE, new ScheduleDto(scheduleType, this.schedule));
+
+    return this.schedule;
   }
 
   public void acknowledgeSchedule(final String playerName, final long schedule)
@@ -284,7 +292,7 @@ public class Game {
           String.format("%s is not a player in game %s.", playerName, this.gameCode));
     }
 
-    if (this.schedule == null) {
+    if (!this.isScheduled()) {
       throw new ServiceUnavailableException(
           String.format("There is no schedule in game %s.", this.gameCode));
     }
