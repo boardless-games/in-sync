@@ -11,6 +11,7 @@ import games.boardless.in_sync.constants.ScheduleType;
 import games.boardless.in_sync.dtos.AcknowledgeScheduleDto;
 import games.boardless.in_sync.dtos.GameCodeDto;
 import games.boardless.in_sync.dtos.GameSettingsDto;
+import games.boardless.in_sync.dtos.PerformanceDto;
 import games.boardless.in_sync.dtos.PlayerNameDto;
 import games.boardless.in_sync.exceptions.BadRequestException;
 import games.boardless.in_sync.exceptions.ServiceUnavailableException;
@@ -228,6 +229,34 @@ public class InSyncService {
     }
 
     game.acknowledgeSchedule(ack.playerName(), ack.schedule());
+
+    return ResponseEntity.ok().build();
+  }
+
+  public ResponseEntity<Void> newPerformance(
+      final String gameCode, final PerformanceDto performance)
+      throws BadRequestException, ServiceUnavailableException {
+    final Optional<String> gameCodeValidation = InputValidation.validateGameCode(gameCode);
+    if (gameCodeValidation.isPresent()) {
+      throw new BadRequestException(gameCodeValidation.get());
+    }
+
+    if (performance == null) {
+      throw new BadRequestException("The performance must be provided.");
+    }
+
+    final Optional<String> nameValidation =
+        InputValidation.validatePlayerName(performance.playerName());
+    if (nameValidation.isPresent()) {
+      throw new BadRequestException(nameValidation.get());
+    }
+
+    final Game game = this.games.get(gameCode);
+    if (game == null) {
+      throw new BadRequestException(String.format("Game %s not found.", gameCode));
+    }
+
+    game.submitPerformance(performance);
 
     return ResponseEntity.ok().build();
   }

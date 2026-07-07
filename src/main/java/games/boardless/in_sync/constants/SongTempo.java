@@ -2,16 +2,17 @@ package games.boardless.in_sync.constants;
 
 import java.util.stream.Stream;
 
+// All tempos must evenly divide 60,000
 public enum SongTempo {
   LARGO(60),
-  MODERATO(90),
+  MODERATO(96),
   ALLEGRO(120),
   PRESTO(150);
 
   private final int tempo;
 
   private SongTempo(final int tempo) {
-    this.tempo = tempo;
+    this.tempo = 60_000 / tempo;
   }
 
   public int getTempo() {

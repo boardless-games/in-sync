@@ -11,6 +11,7 @@ import games.boardless.in_sync.constants.GameType;
 import games.boardless.in_sync.constants.MessageTopic;
 import games.boardless.in_sync.constants.ScheduleType;
 import games.boardless.in_sync.dtos.GameSettingsDto;
+import games.boardless.in_sync.dtos.PerformanceDto;
 import games.boardless.in_sync.dtos.ScheduleDto;
 import games.boardless.in_sync.exceptions.BadRequestException;
 import games.boardless.in_sync.exceptions.ServiceUnavailableException;
@@ -330,5 +331,24 @@ public class Game {
 
     player.setReady(true);
     logger.info("{} acknowledged the schedule in game {}.", playerName, this.gameCode);
+  }
+
+  public void submitPerformance(final PerformanceDto performance)
+      throws ServiceUnavailableException, BadRequestException {
+    if (this.status != GameStatus.PERFORMING || !this.isScheduled()) {
+      throw new ServiceUnavailableException(
+          String.format("Game %s is not in a performance.", this.gameCode));
+    }
+
+    if (this.schedule != performance.schedule()) {
+      throw new BadRequestException(
+          String.format("Invalid performanc schedule for game %s.", this.gameCode));
+    }
+
+    final Player player = this.players.get(performance.playerName());
+    if (player == null) {
+      throw new BadRequestException(
+          String.format("%s is not a player in game %s.", performance.playerName(), this.gameCode));
+    }
   }
 }

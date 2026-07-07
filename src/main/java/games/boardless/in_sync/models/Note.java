@@ -8,16 +8,19 @@ public class Note {
   private final NoteType type;
   private final NoteSound sound;
   private final NoteFrequency frequency;
+  private final int schedule;
   private String playerAssignment;
 
   public Note(
       final NoteType type,
       final NoteSound sound,
       final NoteFrequency frequency,
+      final int schedule,
       final String playerAssignment) {
     this.type = type;
     this.sound = sound;
     this.frequency = frequency;
+    this.schedule = schedule;
     this.playerAssignment = playerAssignment;
   }
 
@@ -31,6 +34,10 @@ public class Note {
 
   public NoteFrequency getFrequency() {
     return this.frequency;
+  }
+
+  public int getSchedule() {
+    return this.schedule;
   }
 
   public String getPlayerAssignment() {

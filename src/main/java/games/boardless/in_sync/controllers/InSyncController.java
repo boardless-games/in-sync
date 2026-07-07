@@ -5,6 +5,7 @@ import games.boardless.in_sync.dtos.AcknowledgeScheduleDto;
 import games.boardless.in_sync.dtos.ErrorDto;
 import games.boardless.in_sync.dtos.GameCodeDto;
 import games.boardless.in_sync.dtos.GameSettingsDto;
+import games.boardless.in_sync.dtos.PerformanceDto;
 import games.boardless.in_sync.dtos.PlayerNameDto;
 import games.boardless.in_sync.exceptions.BadRequestException;
 import games.boardless.in_sync.exceptions.ServiceUnavailableException;
@@ -144,9 +145,9 @@ public class InSyncController {
       })
   @PostMapping("/game/{gameCode}/performance")
   public ResponseEntity<Void> newPerformance(
-      @PathVariable final String gameCode, @RequestBody final AcknowledgeScheduleDto ack)
+      @PathVariable final String gameCode, @RequestBody final PerformanceDto performance)
       throws BadRequestException, ServiceUnavailableException {
-    return inSyncService.acknowledgeSchedule(gameCode, ack);
+    return inSyncService.newPerformance(gameCode, performance);
   }
 
   @Operation(summary = "Schedule a playback.")
