@@ -44,8 +44,8 @@ public class Song {
 
     final float millisPerBeat = (1f / this.tempo.getTempo()) * MILLIS_PER_MINUTE;
     final Map<NoteType, Float> millisPerNote = new HashMap<>();
-    for (final NoteType note : NoteType.values()) {
-      millisPerNote.put(note, millisPerBeat * note.getBeats());
+    for (final NoteType noteType : NoteType.values()) {
+      millisPerNote.put(noteType, millisPerBeat * noteType.getBeats());
     }
 
     // Create notes

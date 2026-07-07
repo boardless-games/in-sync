@@ -6,6 +6,7 @@ import static games.boardless.in_sync.constants.Constants.MAX_NUM_PLAYERS;
 import static games.boardless.in_sync.constants.Constants.SCHEDULE_OFFSET;
 
 import games.boardless.in_sync.constants.GameDifficulty;
+import games.boardless.in_sync.constants.GameStatus;
 import games.boardless.in_sync.constants.GameType;
 import games.boardless.in_sync.constants.MessageTopic;
 import games.boardless.in_sync.constants.ScheduleType;
@@ -25,12 +26,6 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
 public class Game {
-  public enum GameStatus {
-    LOBBY,
-    INITIALIZING,
-    IN_GAME
-  }
-
   private static final Logger logger = LoggerFactory.getLogger(Game.class);
   private static final Random rand = new Random();
 
@@ -48,7 +43,6 @@ public class Game {
     this.players = new ConcurrentHashMap<>();
   }
 
-  // Getters and setters
   public String getGameCode() {
     return this.gameCode;
   }
@@ -83,6 +77,13 @@ public class Game {
   public void clearSchedule() {
     this.schedule = 0l;
     logger.info("The schedule for game {} was cleared.", this.gameCode);
+  }
+
+  public void cancelSchedule() {
+    this.clearSchedule();
+    this.status = GameStatus.IN_GAME;
+    this.messagePlayers(MessageTopic.CANCEL_SCHEDULE, null);
+    logger.info("The schedule for game {} was cleared because it was canceled.", this.gameCode);
   }
 
   @Override
@@ -261,6 +262,20 @@ public class Game {
     this.messagePlayers(MessageTopic.SONG, this.song);
   }
 
+  public synchronized void quit() throws ServiceUnavailableException {
+    if (this.status != GameStatus.IN_GAME) {
+      throw new ServiceUnavailableException(
+          String.format("Game %s cannot be quit right now.", this.gameCode));
+    }
+
+    logger.info("Quitting game {}.", gameCode);
+    this.status = GameStatus.LOBBY;
+    this.clearSchedule();
+    this.song = null;
+
+    this.messagePlayers(MessageTopic.QUIT, null);
+  }
+
   public synchronized long schedule(final ScheduleType scheduleType)
       throws ServiceUnavailableException {
     if (this.status != GameStatus.IN_GAME) {
@@ -278,6 +293,10 @@ public class Game {
     }
 
     this.schedule = System.currentTimeMillis() + SCHEDULE_OFFSET;
+
+    if (scheduleType == ScheduleType.PERFORMANCE) {
+      this.status = GameStatus.PERFORMING;
+    }
 
     this.messagePlayers(MessageTopic.SCHEDULE, new ScheduleDto(scheduleType, this.schedule));
 
