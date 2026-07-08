@@ -1,7 +1,5 @@
 package games.boardless.in_sync.models;
 
-import static games.boardless.in_sync.constants.Constants.MILLIS_PER_MINUTE;
-
 import games.boardless.in_sync.constants.GameDifficulty;
 import games.boardless.in_sync.constants.GameType;
 import games.boardless.in_sync.constants.NoteFrequency;
@@ -42,10 +40,9 @@ public class Song {
       throw new IllegalArgumentException("Invalid game difficulty.");
     }
 
-    final float millisPerBeat = (1f / this.tempo.getTempo()) * MILLIS_PER_MINUTE;
     final Map<NoteType, Float> millisPerNote = new HashMap<>();
     for (final NoteType noteType : NoteType.values()) {
-      millisPerNote.put(noteType, millisPerBeat * noteType.getBeats());
+      millisPerNote.put(noteType, tempo.getMillisPerBeat() * noteType.getBeats());
     }
 
     // Create notes
