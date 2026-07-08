@@ -3,6 +3,7 @@ package games.boardless.in_sync.constants;
 import java.util.stream.Stream;
 
 public enum SongTempo {
+  // All values should be divisible by 2 and 4
   LARGO(1000), // 60 bpm
   MODERATO(600), // 100 bpm
   ALLEGRO(500), // 120 bpm

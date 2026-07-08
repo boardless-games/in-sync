@@ -18,23 +18,23 @@ public class Song {
 
   public Song(
       final GameType type, final GameDifficulty difficulty, final ArrayList<String> playerNames) {
-    float duration; // Milliseconds
+    int duration; // Milliseconds
     boolean randomPlayerOrder;
     if (difficulty == GameDifficulty.EASY) {
       this.tempo = SongTempo.LARGO;
-      duration = 10000f;
+      duration = 10000;
       randomPlayerOrder = false;
     } else if (difficulty == GameDifficulty.MEDIUM) {
       this.tempo = SongTempo.MODERATO;
-      duration = 8000f;
+      duration = 8000;
       randomPlayerOrder = false;
     } else if (difficulty == GameDifficulty.HARD) {
       this.tempo = SongTempo.ALLEGRO;
-      duration = 7000f;
+      duration = 7000;
       randomPlayerOrder = true;
     } else if (difficulty == GameDifficulty.EXPERT) {
       this.tempo = SongTempo.PRESTO;
-      duration = 6000f;
+      duration = 6000;
       randomPlayerOrder = true;
     } else {
       throw new IllegalArgumentException("Invalid game difficulty.");
@@ -49,7 +49,7 @@ public class Song {
     int playerIndex = 0;
     ArrayList<String> playersAvailable = new ArrayList<>(playerNames);
     final Random rand = new Random();
-    for (float currentDuration = 0f; currentDuration < duration; ) {
+    for (int currentDuration = 0; currentDuration < duration; ) {
       final NoteType noteType = NoteType.values()[rand.nextInt(NoteType.values().length)];
       final NoteSound noteSound = NoteSound.MAIN;
       final NoteFrequency noteFrequency = NoteFrequency.C4;
@@ -67,7 +67,8 @@ public class Song {
         }
         playerAssignment = playersAvailable.get(playerIndex++);
       }
-      this.notes.add(new Note(noteType, noteSound, noteFrequency, playerAssignment));
+      this.notes.add(
+          new Note(noteType, noteSound, noteFrequency, currentDuration, playerAssignment));
       currentDuration += millisPerNote.get(noteType);
     }
   }
