@@ -10,9 +10,9 @@ import games.boardless.in_sync.constants.GameStatus;
 import games.boardless.in_sync.constants.ScheduleType;
 import games.boardless.in_sync.dtos.AcknowledgeScheduleDto;
 import games.boardless.in_sync.dtos.GameCodeDto;
-import games.boardless.in_sync.dtos.GameSettingsDto;
 import games.boardless.in_sync.dtos.PerformanceDto;
 import games.boardless.in_sync.dtos.PlayerNameDto;
+import games.boardless.in_sync.dtos.SongSettingsDto;
 import games.boardless.in_sync.exceptions.BadRequestException;
 import games.boardless.in_sync.exceptions.ServiceUnavailableException;
 import games.boardless.in_sync.models.Game;
@@ -108,7 +108,7 @@ public class InSyncService {
   }
 
   public DeferredResult<ResponseEntity<Void>> startGame(
-      final String gameCode, final GameSettingsDto gameSettings)
+      final String gameCode, final SongSettingsDto gameSettings)
       throws BadRequestException, ServiceUnavailableException {
     final Optional<String> gameCodeValidation = InputValidation.validateGameCode(gameCode);
     if (gameCodeValidation.isPresent()) {
@@ -431,7 +431,7 @@ public class InSyncService {
     }
   }
 
-  void autoStartGame(final String gameCode, final GameSettingsDto gameSettings)
+  void autoStartGame(final String gameCode, final SongSettingsDto gameSettings)
       throws BadRequestException, ServiceUnavailableException {
 
     if (gameCode == null || gameSettings == null) {

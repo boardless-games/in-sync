@@ -1,5 +1,5 @@
 package games.boardless.in_sync.constants;
 
-public enum GameType {
+public enum SongType {
   ORIGINAL
 }

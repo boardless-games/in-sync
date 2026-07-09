@@ -5,19 +5,14 @@ import static games.boardless.in_sync.constants.Constants.GAME_CODE_MIN;
 import static games.boardless.in_sync.constants.Constants.MAX_NUM_PLAYERS;
 import static games.boardless.in_sync.constants.Constants.SCHEDULE_OFFSET;
 
-import games.boardless.in_sync.constants.GameDifficulty;
 import games.boardless.in_sync.constants.GameStatus;
-import games.boardless.in_sync.constants.GameType;
 import games.boardless.in_sync.constants.MessageTopic;
 import games.boardless.in_sync.constants.ScheduleType;
-import games.boardless.in_sync.dtos.GameSettingsDto;
 import games.boardless.in_sync.dtos.PerformanceDto;
 import games.boardless.in_sync.dtos.ScheduleDto;
+import games.boardless.in_sync.dtos.SongSettingsDto;
 import games.boardless.in_sync.exceptions.BadRequestException;
 import games.boardless.in_sync.exceptions.ServiceUnavailableException;
-import games.boardless.in_sync.utils.ToTextMessage;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
@@ -25,23 +20,25 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
+import tools.jackson.databind.ObjectMapper;
 
 public class Game {
   private static final Logger logger = LoggerFactory.getLogger(Game.class);
   private static final Random rand = new Random();
+  private static final ObjectMapper objectMapper = new ObjectMapper();
 
   private final String gameCode;
   private GameStatus status;
-  private GameType type;
-  private GameDifficulty difficulty;
   private Song song = null;
   private long schedule = 0l;
   private final Map<String, Player> players;
+  private final Map<String, Performance> performances;
 
   public Game(final String gameCode) {
     this.gameCode = gameCode;
     this.status = GameStatus.LOBBY;
     this.players = new ConcurrentHashMap<>();
+    this.performances = new ConcurrentHashMap<>();
   }
 
   public String getGameCode() {
@@ -50,10 +47,6 @@ public class Game {
 
   public GameStatus getStatus() {
     return this.status;
-  }
-
-  public GameType getType() {
-    return this.type;
   }
 
   public String[] getPlayers() {
@@ -210,7 +203,8 @@ public class Game {
 
   public synchronized void messagePlayers(final MessageTopic topic, final Object data) {
     logger.info("Messaging {} to {} in game {}.", topic, this.getPlayers(), this.gameCode);
-    final TextMessage textMessage = ToTextMessage.toTextMessage(new Message(topic, data));
+    final TextMessage textMessage =
+        new TextMessage(Game.objectMapper.writeValueAsString((new Message(topic, data))));
     for (final Player player : this.players.values()) {
       player.message(textMessage);
     }
@@ -237,13 +231,13 @@ public class Game {
     this.pingPlayers();
   }
 
-  public synchronized void start(final GameSettingsDto gameSettings)
-      throws ServiceUnavailableException {
+  public synchronized void start(final SongSettingsDto songSettings)
+      throws ServiceUnavailableException, BadRequestException {
     if (this.status == GameStatus.LOBBY) {
       throw new ServiceUnavailableException(
           String.format("Game %s has not been initialized.", this.gameCode));
     }
-    if (this.status == GameStatus.IN_GAME) {
+    if (this.status != GameStatus.INITIALIZING) {
       throw new ServiceUnavailableException(
           String.format("Game %s has already started.", this.gameCode));
     }
@@ -253,12 +247,9 @@ public class Game {
     }
 
     logger.info("Starting game {}.", gameCode);
-    this.type = gameSettings.gameType();
-    this.difficulty = gameSettings.gameDifficulty();
     this.status = GameStatus.IN_GAME;
 
-    final ArrayList<String> playerNames = new ArrayList<>(Arrays.asList(this.getPlayers()));
-    this.song = new Song(this.type, this.difficulty, playerNames);
+    this.song = new Song(songSettings, this.getPlayers());
 
     this.messagePlayers(MessageTopic.SONG, this.song);
   }
@@ -333,7 +324,7 @@ public class Game {
     logger.info("{} acknowledged the schedule in game {}.", playerName, this.gameCode);
   }
 
-  public void submitPerformance(final PerformanceDto performance)
+  public synchronized void submitPerformance(final PerformanceDto performance)
       throws ServiceUnavailableException, BadRequestException {
     if (this.status != GameStatus.PERFORMING || !this.isScheduled()) {
       throw new ServiceUnavailableException(
@@ -349,6 +340,21 @@ public class Game {
     if (player == null) {
       throw new BadRequestException(
           String.format("%s is not a player in game %s.", performance.playerName(), this.gameCode));
+    }
+
+    if (this.performances.containsKey(player.getName())) {
+      throw new ServiceUnavailableException(
+          String.format("%s already submitted a performance.", player.getName()));
+    }
+
+    this.performances.put(
+        player.getName(), new Performance(player.getName(), this.song, performance));
+
+    if (this.performances.size() == this.players.size()) {
+      this.messagePlayers(MessageTopic.PERFORMANCE_RESULTS, this.performances.values().toArray());
+      this.status = GameStatus.IN_GAME;
+      this.clearSchedule();
+      this.performances.clear();
     }
   }
 }

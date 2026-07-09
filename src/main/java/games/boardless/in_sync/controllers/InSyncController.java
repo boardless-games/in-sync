@@ -4,9 +4,9 @@ import games.boardless.in_sync.constants.ScheduleType;
 import games.boardless.in_sync.dtos.AcknowledgeScheduleDto;
 import games.boardless.in_sync.dtos.ErrorDto;
 import games.boardless.in_sync.dtos.GameCodeDto;
-import games.boardless.in_sync.dtos.GameSettingsDto;
 import games.boardless.in_sync.dtos.PerformanceDto;
 import games.boardless.in_sync.dtos.PlayerNameDto;
+import games.boardless.in_sync.dtos.SongSettingsDto;
 import games.boardless.in_sync.exceptions.BadRequestException;
 import games.boardless.in_sync.exceptions.ServiceUnavailableException;
 import games.boardless.in_sync.services.InSyncService;
@@ -76,7 +76,7 @@ public class InSyncController {
     return inSyncService.newPlayer(gameCode, name);
   }
 
-  @Operation(summary = "Start a game.")
+  @Operation(summary = "Generate a new song and start the game.")
   @ApiResponse(responseCode = "200", content = @Content)
   @ApiResponse(
       responseCode = "400",
@@ -90,12 +90,12 @@ public class InSyncController {
       })
   @PostMapping("/game/{gameCode}/start")
   public DeferredResult<ResponseEntity<Void>> startGame(
-      @PathVariable final String gameCode, @RequestBody final GameSettingsDto gameSettings)
+      @PathVariable final String gameCode, @RequestBody final SongSettingsDto gameSettings)
       throws BadRequestException, ServiceUnavailableException {
     return inSyncService.startGame(gameCode, gameSettings);
   }
 
-  @Operation(summary = "Quit a game.")
+  @Operation(summary = "Quit a game and return to the lobby.")
   @ApiResponse(responseCode = "200", content = @Content)
   @ApiResponse(
       responseCode = "400",

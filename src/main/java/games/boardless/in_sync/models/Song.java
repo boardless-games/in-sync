@@ -1,83 +1,106 @@
 package games.boardless.in_sync.models;
 
-import games.boardless.in_sync.constants.GameDifficulty;
-import games.boardless.in_sync.constants.GameType;
 import games.boardless.in_sync.constants.NoteFrequency;
 import games.boardless.in_sync.constants.NoteSound;
 import games.boardless.in_sync.constants.NoteType;
+import games.boardless.in_sync.constants.SongDuration;
 import games.boardless.in_sync.constants.SongTempo;
+import games.boardless.in_sync.constants.SongType;
+import games.boardless.in_sync.dtos.SongSettingsDto;
+import games.boardless.in_sync.exceptions.BadRequestException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
 public class Song {
+  private final SongType type;
   private final SongTempo tempo;
+  private final SongDuration duration;
+  private final boolean randomPlayerOrder;
   private final ArrayList<Note> notes = new ArrayList<>();
 
-  public Song(
-      final GameType type, final GameDifficulty difficulty, final ArrayList<String> playerNames) {
-    int duration; // Milliseconds
-    boolean randomPlayerOrder;
-    if (difficulty == GameDifficulty.EASY) {
-      this.tempo = SongTempo.LARGO;
-      duration = 10000;
-      randomPlayerOrder = false;
-    } else if (difficulty == GameDifficulty.MEDIUM) {
-      this.tempo = SongTempo.MODERATO;
-      duration = 8000;
-      randomPlayerOrder = false;
-    } else if (difficulty == GameDifficulty.HARD) {
-      this.tempo = SongTempo.ALLEGRO;
-      duration = 7000;
-      randomPlayerOrder = true;
-    } else if (difficulty == GameDifficulty.EXPERT) {
-      this.tempo = SongTempo.PRESTO;
-      duration = 6000;
-      randomPlayerOrder = true;
+  public Song(final SongSettingsDto settings, final String[] playerNames)
+      throws BadRequestException {
+    this.type = settings.songType();
+    this.tempo = settings.songTempo();
+    this.duration = settings.songDuration();
+    this.randomPlayerOrder = settings.randomPlayerOrder();
+
+    if (this.type == SongType.ORIGINAL) {
+      this.createOriginalSong(playerNames);
     } else {
-      throw new IllegalArgumentException("Invalid game difficulty.");
+      throw new BadRequestException("Invalid song type.");
     }
+  }
 
-    final Map<NoteType, Float> millisPerNote = new HashMap<>();
-    for (final NoteType noteType : NoteType.values()) {
-      millisPerNote.put(noteType, tempo.getMillisPerBeat() * noteType.getBeats());
-    }
-
-    // Create notes
-    int playerIndex = 0;
-    ArrayList<String> playersAvailable = new ArrayList<>(playerNames);
-    final Random rand = new Random();
-    for (int currentDuration = 0; currentDuration < duration; ) {
-      final NoteType noteType = NoteType.values()[rand.nextInt(NoteType.values().length)];
-      final NoteSound noteSound = NoteSound.MAIN;
-      final NoteFrequency noteFrequency = NoteFrequency.C4;
-
-      String playerAssignment;
-      if (randomPlayerOrder) {
-        if (playersAvailable.size() == 0) {
-          playersAvailable = new ArrayList<>(playerNames);
-        }
-        playerIndex = rand.nextInt(playersAvailable.size());
-        playerAssignment = playersAvailable.remove(playerIndex);
-      } else {
-        if (playerIndex >= playersAvailable.size()) {
-          playerIndex = 0;
-        }
-        playerAssignment = playersAvailable.get(playerIndex++);
-      }
-      this.notes.add(
-          new Note(noteType, noteSound, noteFrequency, currentDuration, playerAssignment));
-      currentDuration += millisPerNote.get(noteType);
-    }
+  public SongType getType() {
+    return this.type;
   }
 
   public SongTempo getTempo() {
     return this.tempo;
   }
 
+  public SongDuration getDuration() {
+    return this.duration;
+  }
+
+  public boolean isRandomPlayerOrder() {
+    return this.randomPlayerOrder;
+  }
+
   public List<Note> getNotes() {
     return List.copyOf(this.notes);
+  }
+
+  private <T> ArrayList<T> toArrayList(T[] array) {
+    return new ArrayList<>(Arrays.asList(array));
+  }
+
+  private Map<NoteType, Integer> getMillisPerNoteType() {
+    final int millisPerBeat = this.tempo.getMillisPerBeat();
+
+    final Map<NoteType, Integer> millisPerNote = new HashMap<>();
+    for (final NoteType noteType : NoteType.values()) {
+      millisPerNote.put(noteType, (int) (millisPerBeat * noteType.getBeats()));
+    }
+
+    return millisPerNote;
+  }
+
+  private void createOriginalSong(final String[] playerNames) {
+    final Map<NoteType, Integer> millisPerNoteType = this.getMillisPerNoteType();
+    final Random rand = new Random();
+    final int songDuration = this.duration.getDuration();
+
+    int playerIndex = 0;
+    ArrayList<String> playersAvailable = this.toArrayList(playerNames);
+
+    for (int currentDuration = 0; currentDuration < songDuration; ) {
+      final NoteType noteType = NoteType.values()[rand.nextInt(NoteType.values().length)];
+      final NoteSound noteSound = NoteSound.MAIN;
+      final NoteFrequency noteFrequency = NoteFrequency.C4;
+
+      String playerAssignment;
+      if (this.randomPlayerOrder) {
+        if (playersAvailable.size() == 0) {
+          playersAvailable = this.toArrayList(playerNames);
+        }
+        playerAssignment = playersAvailable.remove(rand.nextInt(playersAvailable.size()));
+      } else {
+        if (playerIndex >= playersAvailable.size()) {
+          playerIndex = 0;
+        }
+        playerAssignment = playersAvailable.get(playerIndex++);
+      }
+
+      this.notes.add(
+          new Note(noteType, noteSound, noteFrequency, currentDuration, playerAssignment));
+
+      currentDuration += millisPerNoteType.get(noteType);
+    }
   }
 }

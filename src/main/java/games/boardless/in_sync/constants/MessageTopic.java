@@ -5,5 +5,6 @@ public enum MessageTopic {
   QUIT,
   SONG,
   SCHEDULE,
-  CANCEL_SCHEDULE
+  CANCEL_SCHEDULE,
+  PERFORMANCE_RESULTS
 }
