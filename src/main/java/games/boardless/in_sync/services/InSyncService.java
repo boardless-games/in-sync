@@ -107,7 +107,7 @@ public class InSyncService {
     return ResponseEntity.status(HttpStatus.CREATED).build();
   }
 
-  public DeferredResult<ResponseEntity<Void>> startGame(
+  public DeferredResult<ResponseEntity<Void>> newSong(
       final String gameCode, final SongSettingsDto gameSettings)
       throws BadRequestException, ServiceUnavailableException {
     final Optional<String> gameCodeValidation = InputValidation.validateGameCode(gameCode);
@@ -126,12 +126,13 @@ public class InSyncService {
         new DeferredResult<>(
             WAIT_PLAYER_READY_TIME + 5_000L,
             new ServiceUnavailableException(
-                String.format("Request timed out while starting game %s.", game.getGameCode())));
+                String.format(
+                    "Request timed out while creating new song in game %s.", game.getGameCode())));
 
     this.taskScheduler.schedule(
         () -> {
           try {
-            autoStartGame(gameCode, gameSettings);
+            autoNewSong(gameCode, gameSettings);
             deferredResult.setResult(ResponseEntity.ok().build());
           } catch (Exception e) {
             deferredResult.setErrorResult(e);
@@ -431,10 +432,10 @@ public class InSyncService {
     }
   }
 
-  void autoStartGame(final String gameCode, final SongSettingsDto gameSettings)
+  void autoNewSong(final String gameCode, final SongSettingsDto songSettings)
       throws BadRequestException, ServiceUnavailableException {
 
-    if (gameCode == null || gameSettings == null) {
+    if (gameCode == null || songSettings == null) {
       throw new BadRequestException("Game code and game settings must be provided.");
     }
 
@@ -443,7 +444,7 @@ public class InSyncService {
       throw new BadRequestException(String.format("Game %s was deleted while starting.", gameCode));
     }
 
-    game.start(gameSettings);
+    game.newSong(songSettings);
   }
 
   void autoVerifyScheduleAcknowledgement(final String gameCode)

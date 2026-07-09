@@ -75,7 +75,7 @@ public class Game {
 
   public void cancelSchedule() {
     this.clearSchedule();
-    this.status = GameStatus.IN_GAME;
+    this.status = GameStatus.LISTENING;
     this.messagePlayers(MessageTopic.CANCEL_SCHEDULE, null);
     logger.info("The schedule for game {} was cleared because it was canceled.", this.gameCode);
   }
@@ -221,9 +221,9 @@ public class Game {
   }
 
   public synchronized void initialize() throws ServiceUnavailableException {
-    if (this.status != GameStatus.LOBBY) {
+    if (this.status != GameStatus.LOBBY && this.status != GameStatus.LISTENING) {
       throw new ServiceUnavailableException(
-          String.format("Game %s has already started.", this.gameCode));
+          String.format("Cannot create a new song in game %s right now.", this.gameCode));
     }
 
     this.status = GameStatus.INITIALIZING;
@@ -231,7 +231,7 @@ public class Game {
     this.pingPlayers();
   }
 
-  public synchronized void start(final SongSettingsDto songSettings)
+  public synchronized void newSong(final SongSettingsDto songSettings)
       throws ServiceUnavailableException, BadRequestException {
     if (this.status == GameStatus.LOBBY) {
       throw new ServiceUnavailableException(
@@ -246,8 +246,8 @@ public class Game {
           String.format("Players in game %s are not ready.", gameCode));
     }
 
-    logger.info("Starting game {}.", gameCode);
-    this.status = GameStatus.IN_GAME;
+    logger.info("Created a new song in game {}.", gameCode);
+    this.status = GameStatus.LISTENING;
 
     this.song = new Song(songSettings, this.getPlayers());
 
@@ -255,7 +255,7 @@ public class Game {
   }
 
   public synchronized void quit() throws ServiceUnavailableException {
-    if (this.status != GameStatus.IN_GAME) {
+    if (this.status != GameStatus.LISTENING) {
       throw new ServiceUnavailableException(
           String.format("Game %s cannot be quit right now.", this.gameCode));
     }
@@ -270,7 +270,7 @@ public class Game {
 
   public synchronized long schedule(final ScheduleType scheduleType)
       throws ServiceUnavailableException {
-    if (this.status != GameStatus.IN_GAME) {
+    if (this.status != GameStatus.LISTENING) {
       throw new ServiceUnavailableException(
           String.format("Game %s has not been started.", this.gameCode));
     }
@@ -288,6 +288,7 @@ public class Game {
 
     if (scheduleType == ScheduleType.PERFORMANCE) {
       this.status = GameStatus.PERFORMING;
+      this.performances.clear();
     }
 
     this.messagePlayers(MessageTopic.SCHEDULE, new ScheduleDto(scheduleType, this.schedule));
@@ -352,9 +353,8 @@ public class Game {
 
     if (this.performances.size() == this.players.size()) {
       this.messagePlayers(MessageTopic.PERFORMANCE_RESULTS, this.performances.values().toArray());
-      this.status = GameStatus.IN_GAME;
+      this.status = GameStatus.LISTENING;
       this.clearSchedule();
-      this.performances.clear();
     }
   }
 }
