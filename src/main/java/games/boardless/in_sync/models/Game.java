@@ -254,18 +254,20 @@ public class Game {
     this.messagePlayers(MessageTopic.SONG, this.song);
   }
 
-  public synchronized void quit() throws ServiceUnavailableException {
+  public synchronized void toLobby() throws ServiceUnavailableException {
     if (this.status != GameStatus.LISTENING) {
       throw new ServiceUnavailableException(
-          String.format("Game %s cannot be quit right now.", this.gameCode));
+          String.format("Cannot return to lobby in game %s right now.", this.gameCode));
     }
 
-    logger.info("Quitting game {}.", gameCode);
+    logger.info("Returning to lobby in game {}.", gameCode);
     this.status = GameStatus.LOBBY;
     this.clearSchedule();
     this.song = null;
 
-    this.messagePlayers(MessageTopic.QUIT, null);
+    this.players.values().removeIf((player) -> !player.isConnected());
+
+    this.messagePlayers(MessageTopic.LOBBY, this.getPlayers());
   }
 
   public synchronized long schedule(final ScheduleType scheduleType)

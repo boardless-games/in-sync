@@ -95,7 +95,7 @@ public class InSyncController {
     return inSyncService.newSong(gameCode, gameSettings);
   }
 
-  @Operation(summary = "Quit a game and return to the lobby.")
+  @Operation(summary = "Return to the lobby.")
   @ApiResponse(responseCode = "200", content = @Content)
   @ApiResponse(
       responseCode = "400",
@@ -107,10 +107,10 @@ public class InSyncController {
       content = {
         @Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json")
       })
-  @PostMapping("/game/{gameCode}/quit")
-  public ResponseEntity<Void> quitGame(@PathVariable final String gameCode)
+  @PostMapping("/game/{gameCode}/lobby")
+  public ResponseEntity<Void> toLobby(@PathVariable final String gameCode)
       throws BadRequestException, ServiceUnavailableException {
-    return inSyncService.quitGame(gameCode);
+    return inSyncService.toLobby(gameCode);
   }
 
   @Operation(summary = "Schedule a performance.")

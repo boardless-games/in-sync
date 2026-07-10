@@ -143,7 +143,7 @@ public class InSyncService {
     return deferredResult;
   }
 
-  public ResponseEntity<Void> quitGame(final String gameCode)
+  public ResponseEntity<Void> toLobby(final String gameCode)
       throws BadRequestException, ServiceUnavailableException {
     final Optional<String> gameCodeValidation = InputValidation.validateGameCode(gameCode);
     if (gameCodeValidation.isPresent()) {
@@ -155,7 +155,7 @@ public class InSyncService {
       throw new BadRequestException(String.format("Game %s not found.", gameCode));
     }
 
-    game.quit();
+    game.toLobby();
 
     return ResponseEntity.ok().build();
   }
