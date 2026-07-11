@@ -1,0 +1,31 @@
+info:
+  name: Schedule Performance
+  type: http
+  seq: 7
+
+http:
+  method: POST
+  url: "{{SERVER_PROTOCOL}}://{{SERVER_DOMAIN}}:{{SERVER_PORT}}/in-sync/game/:gameCode/performance/schedule"
+  params:
+    - name: gameCode
+      value: "{{gameCode}}"
+      type: path
+  auth: inherit
+
+runtime:
+  scripts:
+    - type: after-response
+      code: |-
+        async function acknowledgeSchedule() {
+          await bru.runRequest("Get Schedule");
+          await bru.runRequest("Acknowledge Schedule");
+        }
+        if (res.status === 201) {
+          acknowledgeSchedule();
+        }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

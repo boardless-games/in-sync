@@ -1,0 +1,26 @@
+info:
+  name: Acknowledge Schedule
+  type: http
+  seq: 11
+
+http:
+  method: POST
+  url: "{{SERVER_PROTOCOL}}://{{SERVER_DOMAIN}}:{{SERVER_PORT}}/in-sync/game/:gameCode/schedule/acknowledge"
+  params:
+    - name: gameCode
+      value: "{{gameCode}}"
+      type: path
+  body:
+    type: json
+    data: |-
+      {
+        "playerName": "{{playerName}}",
+        "schedule": {{schedule}}
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

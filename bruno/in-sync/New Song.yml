@@ -1,0 +1,28 @@
+info:
+  name: New Song
+  type: http
+  seq: 5
+
+http:
+  method: POST
+  url: "{{SERVER_PROTOCOL}}://{{SERVER_DOMAIN}}:{{SERVER_PORT}}/in-sync/game/:gameCode/song"
+  params:
+    - name: gameCode
+      value: "{{gameCode}}"
+      type: path
+  body:
+    type: json
+    data: |-
+      {
+        "songType": "{{process.env.SONG_TYPE}}",
+        "songTempo": "{{process.env.SONG_TEMPO}}",
+        "songDuration": "{{process.env.SONG_DURATION}}",
+        "randomPlayerOrder": {{process.env.RANDOM_PLAYER_ORDER}}
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
