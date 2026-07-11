@@ -1,7 +1,8 @@
-package games.boardless.in_sync.config;
+package games.boardless.in_sync.handlers;
 
 import games.boardless.in_sync.dtos.ErrorDto;
 import games.boardless.in_sync.exceptions.BadRequestException;
+import games.boardless.in_sync.exceptions.NotFoundException;
 import games.boardless.in_sync.exceptions.ServiceUnavailableException;
 import games.boardless.in_sync.utils.ToString;
 import org.slf4j.Logger;
@@ -32,6 +33,12 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ErrorDto> handleServiceUnavailable(Exception e) {
     logger.info(ToString.toString(e, 1));
     return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(new ErrorDto(e.getMessage()));
+  }
+
+  @ExceptionHandler(exception = {NotFoundException.class})
+  public ResponseEntity<ErrorDto> handleNotFound(Exception e) {
+    logger.info(ToString.toString(e, 1));
+    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorDto(e.getMessage()));
   }
 
   @ExceptionHandler(exception = RuntimeException.class)

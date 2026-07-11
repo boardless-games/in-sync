@@ -6,8 +6,10 @@ import games.boardless.in_sync.dtos.ErrorDto;
 import games.boardless.in_sync.dtos.GameCodeDto;
 import games.boardless.in_sync.dtos.PerformanceDto;
 import games.boardless.in_sync.dtos.PlayerNameDto;
+import games.boardless.in_sync.dtos.ScheduleDto;
 import games.boardless.in_sync.dtos.SongSettingsDto;
 import games.boardless.in_sync.exceptions.BadRequestException;
+import games.boardless.in_sync.exceptions.NotFoundException;
 import games.boardless.in_sync.exceptions.ServiceUnavailableException;
 import games.boardless.in_sync.services.InSyncService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -16,6 +18,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -76,7 +79,7 @@ public class InSyncController {
     return inSyncService.newPlayer(gameCode, name);
   }
 
-  @Operation(summary = "Generate a new song and start the game.")
+  @Operation(summary = "Generate a new song and start listening/performing.")
   @ApiResponse(responseCode = "200", content = @Content)
   @ApiResponse(
       responseCode = "400",
@@ -90,9 +93,9 @@ public class InSyncController {
       })
   @PostMapping("/game/{gameCode}/song")
   public DeferredResult<ResponseEntity<Void>> newSong(
-      @PathVariable final String gameCode, @RequestBody final SongSettingsDto gameSettings)
+      @PathVariable final String gameCode, @RequestBody final SongSettingsDto songSettings)
       throws BadRequestException, ServiceUnavailableException {
-    return inSyncService.newSong(gameCode, gameSettings);
+    return inSyncService.newSong(gameCode, songSettings);
   }
 
   @Operation(summary = "Return to the lobby.")
@@ -126,8 +129,8 @@ public class InSyncController {
         @Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json")
       })
   @PostMapping("/game/{gameCode}/performance/schedule")
-  public DeferredResult<ResponseEntity<Void>> schedulePerformance(
-      @PathVariable final String gameCode) throws BadRequestException, ServiceUnavailableException {
+  public ResponseEntity<Void> schedulePerformance(@PathVariable final String gameCode)
+      throws BadRequestException, ServiceUnavailableException {
     return inSyncService.schedule(gameCode, ScheduleType.PERFORMANCE);
   }
 
@@ -163,9 +166,27 @@ public class InSyncController {
         @Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json")
       })
   @PostMapping("/game/{gameCode}/playback/schedule")
-  public DeferredResult<ResponseEntity<Void>> schedulePlayback(@PathVariable final String gameCode)
+  public ResponseEntity<Void> schedulePlayback(@PathVariable final String gameCode)
       throws BadRequestException, ServiceUnavailableException {
     return inSyncService.schedule(gameCode, ScheduleType.PLAYBACK);
+  }
+
+  @Operation(summary = "Get a game's current schedule.")
+  @ApiResponse(responseCode = "200", content = @Content)
+  @ApiResponse(
+      responseCode = "400",
+      content = {
+        @Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json")
+      })
+  @ApiResponse(
+      responseCode = "503",
+      content = {
+        @Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json")
+      })
+  @GetMapping("/game/{gameCode}/schedule")
+  public ResponseEntity<ScheduleDto> getSchedule(@PathVariable final String gameCode)
+      throws BadRequestException, ServiceUnavailableException, NotFoundException {
+    return inSyncService.getSchedule(gameCode);
   }
 
   @Operation(summary = "Acknowledge a schedule.")

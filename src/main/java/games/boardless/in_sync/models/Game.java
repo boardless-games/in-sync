@@ -8,6 +8,7 @@ import static games.boardless.in_sync.constants.Constants.SCHEDULE_OFFSET;
 import games.boardless.in_sync.constants.GameStatus;
 import games.boardless.in_sync.constants.MessageTopic;
 import games.boardless.in_sync.constants.ScheduleType;
+import games.boardless.in_sync.dtos.ErrorDto;
 import games.boardless.in_sync.dtos.PerformanceDto;
 import games.boardless.in_sync.dtos.ScheduleDto;
 import games.boardless.in_sync.dtos.SongSettingsDto;
@@ -73,11 +74,11 @@ public class Game {
     logger.info("The schedule for game {} was cleared.", this.gameCode);
   }
 
-  public void cancelSchedule() {
+  public void cancelSchedule(final String reason) {
     this.clearSchedule();
     this.status = GameStatus.LISTENING;
-    this.messagePlayers(MessageTopic.CANCEL_SCHEDULE, null);
-    logger.info("The schedule for game {} was cleared because it was canceled.", this.gameCode);
+    this.messagePlayers(MessageTopic.CANCEL_SCHEDULE, new ErrorDto(reason));
+    logger.info("The schedule for game {} was cleared because \"{}\".", this.gameCode, reason);
   }
 
   @Override
@@ -220,7 +221,7 @@ public class Game {
     logger.info("{} is ready in game {}.", playerName, this.gameCode);
   }
 
-  public synchronized void initialize() throws ServiceUnavailableException {
+  public synchronized void initializeNewSong() throws ServiceUnavailableException {
     if (this.status != GameStatus.LOBBY && this.status != GameStatus.LISTENING) {
       throw new ServiceUnavailableException(
           String.format("Cannot create a new song in game %s right now.", this.gameCode));

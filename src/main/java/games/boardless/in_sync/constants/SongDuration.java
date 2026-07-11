@@ -3,11 +3,11 @@ package games.boardless.in_sync.constants;
 import java.util.stream.Stream;
 
 public enum SongDuration {
-  X_SHORT(5000),
-  SHORT(10000),
-  MEDIUM(15000),
-  LONG(20000),
-  X_LONG(25000);
+  X_SHORT(10_000),
+  SHORT(15_000),
+  MEDIUM(20_000),
+  LONG(25_000),
+  X_LONG(30_000);
 
   private final int duration;
 

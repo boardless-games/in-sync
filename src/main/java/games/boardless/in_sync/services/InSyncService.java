@@ -12,8 +12,10 @@ import games.boardless.in_sync.dtos.AcknowledgeScheduleDto;
 import games.boardless.in_sync.dtos.GameCodeDto;
 import games.boardless.in_sync.dtos.PerformanceDto;
 import games.boardless.in_sync.dtos.PlayerNameDto;
+import games.boardless.in_sync.dtos.ScheduleDto;
 import games.boardless.in_sync.dtos.SongSettingsDto;
 import games.boardless.in_sync.exceptions.BadRequestException;
+import games.boardless.in_sync.exceptions.NotFoundException;
 import games.boardless.in_sync.exceptions.ServiceUnavailableException;
 import games.boardless.in_sync.models.Game;
 import games.boardless.in_sync.utils.InputValidation;
@@ -26,6 +28,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.TaskScheduler;
@@ -40,12 +43,15 @@ import org.springframework.web.util.UriComponentsBuilder;
 public class InSyncService {
   private static final Logger logger = LoggerFactory.getLogger(InSyncService.class);
   private final TaskScheduler taskScheduler;
+  private final Environment environment;
   private final Clock clock;
   final Map<String, Game> games = new ConcurrentHashMap<>();
 
   @Autowired
-  public InSyncService(final TaskScheduler taskScheduler, final Clock clock) {
+  public InSyncService(
+      final TaskScheduler taskScheduler, final Environment environment, final Clock clock) {
     this.taskScheduler = taskScheduler;
+    this.environment = environment;
     this.clock = clock;
   }
 
@@ -120,7 +126,7 @@ public class InSyncService {
       throw new BadRequestException(String.format("Game %s not found.", gameCode));
     }
 
-    game.initialize();
+    game.initializeNewSong();
 
     final DeferredResult<ResponseEntity<Void>> deferredResult =
         new DeferredResult<>(
@@ -133,7 +139,7 @@ public class InSyncService {
         () -> {
           try {
             autoNewSong(gameCode, gameSettings);
-            deferredResult.setResult(ResponseEntity.ok().build());
+            deferredResult.setResult(ResponseEntity.status(HttpStatus.CREATED).build());
           } catch (Exception e) {
             deferredResult.setErrorResult(e);
           }
@@ -160,8 +166,36 @@ public class InSyncService {
     return ResponseEntity.ok().build();
   }
 
-  public DeferredResult<ResponseEntity<Void>> schedule(
-      final String gameCode, final ScheduleType scheduleType)
+  public ResponseEntity<ScheduleDto> getSchedule(final String gameCode)
+      throws NotFoundException, BadRequestException, ServiceUnavailableException {
+    if (!this.environment.matchesProfiles("dev")) {
+      throw new ServiceUnavailableException("This endpoint is currently not available.");
+    }
+
+    final Optional<String> gameCodeValidation = InputValidation.validateGameCode(gameCode);
+    if (gameCodeValidation.isPresent()) {
+      throw new BadRequestException(gameCodeValidation.get());
+    }
+
+    final Game game = this.games.get(gameCode);
+    if (game == null) {
+      throw new BadRequestException(String.format("Game %s not found.", gameCode));
+    }
+
+    if (!game.isScheduled()) {
+      throw new NotFoundException(
+          String.format("No schedule found for game %s.", game.getGameCode()));
+    }
+
+    return ResponseEntity.ok(
+        new ScheduleDto(
+            game.getStatus() == GameStatus.PERFORMING
+                ? ScheduleType.PERFORMANCE
+                : ScheduleType.PLAYBACK,
+            game.getSchedule()));
+  }
+
+  public ResponseEntity<Void> schedule(final String gameCode, final ScheduleType scheduleType)
       throws BadRequestException, ServiceUnavailableException {
 
     final Optional<String> gameCodeValidation = InputValidation.validateGameCode(gameCode);
@@ -176,20 +210,12 @@ public class InSyncService {
 
     final long schedule = game.schedule(scheduleType);
 
-    final DeferredResult<ResponseEntity<Void>> deferredResult =
-        new DeferredResult<>(
-            WAIT_PLAYER_READY_TIME + 5_000L,
-            new ServiceUnavailableException(
-                String.format(
-                    "Request timed out while scheduling for game %s.", game.getGameCode())));
-
     this.taskScheduler.schedule(
         () -> {
           try {
             autoVerifyScheduleAcknowledgement(gameCode);
-            deferredResult.setResult(ResponseEntity.ok().build());
           } catch (Exception e) {
-            deferredResult.setErrorResult(e);
+            game.cancelSchedule(e.getMessage());
           }
         },
         this.clock.instant().plusMillis(WAIT_PLAYER_READY_TIME));
@@ -204,7 +230,7 @@ public class InSyncService {
         },
         this.clock.instant().plusMillis(SCHEDULE_OFFSET));
 
-    return deferredResult;
+    return ResponseEntity.status(HttpStatus.CREATED).build();
   }
 
   public ResponseEntity<Void> acknowledgeSchedule(
@@ -460,13 +486,12 @@ public class InSyncService {
           String.format("Game %s was deleted while scheduling.", gameCode));
     }
 
-    if (game.isScheduled()) {
+    if (!game.isScheduled()) {
       throw new ServiceUnavailableException(
           String.format("Failed to schedule in game %s.", gameCode));
     }
 
     if (!game.arePlayersReady()) {
-      game.cancelSchedule();
       throw new ServiceUnavailableException(
           String.format("Players in game %s have not acknowledged the schedule.", gameCode));
     }
