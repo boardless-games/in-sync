@@ -24,12 +24,14 @@ if ! git diff-index --quiet HEAD -- || [ -n "$(git ls-files --others --exclude-s
   stash_ref=$(git stash list | head -n 1 | awk -F: '{print $1}')
 fi
 
+success "SERVER CHECKS"
 cd server
-success "server: \"mvn verify\""
+success "mvn verify"
 ./mvnw verify || { error "Server compilation and/or test cases failed."; exit 1; }
-success "server: \"mvn spotless:check\""
+success "mvn spotless:check"
 ./mvnw spotless:check || { error "Server code is not formatted correctly. Run './mvnw spotless:apply' in the server directory."; exit 1; }
 
 cd ..
+success "CLIENT CHECKS"
 
 success "All checks passed. Proceeding with push."
