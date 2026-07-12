@@ -1,0 +1,8 @@
+{
+  "name": "in-sync",
+  "version": "1.0.0",
+  "description": "A group rhythm game.",
+  "devDependencies": {
+    "husky": "^9.1.7"
+  }
+}
