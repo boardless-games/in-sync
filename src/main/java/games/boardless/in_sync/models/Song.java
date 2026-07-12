@@ -29,8 +29,8 @@ public class Song {
     this.duration = settings.songDuration();
     this.randomPlayerOrder = settings.randomPlayerOrder();
 
-    if (this.type == SongType.ORIGINAL) {
-      this.createOriginalSong(playerNames);
+    if (this.type == SongType.RANDOM) {
+      this.createRandomSong(playerNames);
     } else {
       throw new BadRequestException("Invalid song type.");
     }
@@ -71,7 +71,7 @@ public class Song {
     return millisPerNote;
   }
 
-  private void createOriginalSong(final String[] playerNames) {
+  private void createRandomSong(final String[] playerNames) {
     final Map<NoteType, Integer> millisPerNoteType = this.getMillisPerNoteType();
     final Random rand = new Random();
     final int songDuration = this.duration.getDuration();
