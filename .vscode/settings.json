@@ -1,0 +1,10 @@
+{
+  "java.compile.nullAnalysis.mode": "automatic",
+  "[java]": {
+    "editor.suggest.snippetsPreventQuickSuggestions": false,
+    "editor.defaultFormatter": "redhat.java",
+    "editor.formatOnSave": false,
+    "editor.formatOnSaveMode": "modifications"
+  },
+  "java.configuration.updateBuildConfiguration": "interactive"
+}
