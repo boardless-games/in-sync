@@ -1,17 +1,17 @@
 #!/usr/bin/env sh
 error() {
-  printf '\033[1;31m%s\033[0m\n' "$1"
+  printf '\n\n\033[1;31m%s\033[0m\n\n' "$1"
 }
 success() {
-  printf '\033[1;32m%s\033[0m\n' "$1"
+  printf '\n\n\033[1;32m%s\033[0m\n\n' "$1"
 }
 
 stash_ref=""
 
 pop_stash() {
   if [ -n "$stash_ref" ]; then
-    success "Restoring uncommitted changes."
-    git stash pop "$stash_ref" || error "Warning: Could not apply stashed changes. Please resolve manually."
+    success "Restoring unstaged/uncommitted changes."
+    git stash pop "$stash_ref" || error "Could not apply stashed changes. Please resolve manually."
     stash_ref=""
   fi
 }
@@ -19,19 +19,17 @@ pop_stash() {
 trap 'pop_stash' EXIT
 
 if ! git diff-index --quiet HEAD -- || [ -n "$(git ls-files --others --exclude-standard)" ]; then
-  success "Stashing changes."
+  success "Unstaged/uncommitted changes detected. Stashing changes."
   git stash push -u -m "Stashed changes before push on $(date)." || { error "Failed to stash changes."; exit 1; }
   stash_ref=$(git stash list | head -n 1 | awk -F: '{print $1}')
 fi
 
-success "SERVER CHECKS"
+success "Checking server code."
 cd server
-success "mvn verify"
 ./mvnw verify || { error "Server compilation and/or test cases failed."; exit 1; }
-success "mvn spotless:check"
 ./mvnw spotless:check || { error "Server code is not formatted correctly. Run './mvnw spotless:apply' in the server directory."; exit 1; }
 
 cd ..
-success "CLIENT CHECKS"
+success "Checking client code."
 
 success "All checks passed. Proceeding with push."
