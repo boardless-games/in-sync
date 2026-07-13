@@ -27,8 +27,7 @@ fi
 (
   success "Checking server code."
   cd server || { error "No server directory found."; exit 1; }
-  ./mvnw verify || { error "Server compilation and/or test cases failed."; exit 1; }
-  ./mvnw spotless:check || { error "Server code is not formatted correctly. Run './mvnw spotless:apply' in the server directory."; exit 1; }
+  ./mvnw verify || { error "Server check failed."; exit 1; }
 ) || exit 1
 
 
