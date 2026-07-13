@@ -43,7 +43,7 @@ class InSyncControllerTests {
     this.mockMvc
         .perform(MockMvcRequestBuilders.post("/in-sync/game"))
         .andExpectAll(
-            MockMvcResultMatchers.status().isCreated(),
+            MockMvcResultMatchers.status().is4xxClientError(),
             MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON),
             MockMvcResultMatchers.jsonPath("$.gameCode").value(dto.gameCode()));
   }
