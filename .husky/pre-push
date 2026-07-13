@@ -24,12 +24,18 @@ if ! git diff-index --quiet HEAD -- || [ -n "$(git ls-files --others --exclude-s
   stash_ref=$(git stash list | head -n 1 | awk -F: '{print $1}')
 fi
 
-success "Checking server code."
-cd server
-./mvnw verify || { error "Server compilation and/or test cases failed."; exit 1; }
-./mvnw spotless:check || { error "Server code is not formatted correctly. Run './mvnw spotless:apply' in the server directory."; exit 1; }
+(
+  success "Checking server code."
+  cd server || { error "No server directory found."; exit 1; }
+  ./mvnw verify || { error "Server compilation and/or test cases failed."; exit 1; }
+  ./mvnw spotless:check || { error "Server code is not formatted correctly. Run './mvnw spotless:apply' in the server directory."; exit 1; }
+) || exit 1
 
-cd ..
-success "Checking client code."
+
+(
+  success "Checking client code."
+  cd client || { error "No client directory found."; exit 1; }
+) || exit 1
+
 
 success "All checks passed. Proceeding with push."
