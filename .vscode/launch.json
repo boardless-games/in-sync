@@ -8,7 +8,7 @@
       "type": "java",
       "name": "InSyncApplication",
       "request": "launch",
-      "mainClass": "games.boardless.in_sync.InSyncApplication",
+      "mainClass": "games.boardless.in_sync_server.InSyncApplication",
       "projectName": "in-sync",
       "env": {
         "spring.profiles.active": "dev"
