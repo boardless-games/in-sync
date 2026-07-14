@@ -1,6 +1,49 @@
+@font-face {
+  font-family: "Rubik Spray Paint";
+  src: url("/In-Sync/fonts/RubikSprayPaint-Regular.ttf") format("truetype");
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: "Original Surfer";
+  src: url("/In-Sync/fonts/OriginalSurfer-Regular.ttf") format("truetype");
+  font-weight: 400;
+}
+
+html {
+  /* https://colorhunt.co/palettes/neon */
+  --background-color: #e4ffd1;
+  --primary-highlight-color: #00ff9f;
+  --secondary-highlight-color: #00ff9f;
+  --text-color: #000000;
+  background-color: var(----background-color) !important;
+  color: var(--text-color) !important;
+}
+
 html,
 body {
+  font-family: "Original Surfer", sans-serif !important;
   height: 100%;
   padding: 0;
   margin: 0;
+}
+
+.overflow {
+  overflow: auto;
+}
+
+.flex-row {
+  display: flex;
+}
+
+.flex-column {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+}
+
+input,
+button,
+textarea {
+  font-family: "Original Surfer", sans-serif !important;
 }
