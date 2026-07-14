@@ -26,15 +26,18 @@ fi
 
 (
   success "Checking server code."
-  cd server || { error "No server directory found."; exit 1; }
-  ./mvnw verify || { error "Server check failed."; exit 1; }
-) || exit 1
+  cd server || exit 1
+  ./mvnw verify || exit 1
+) || { error "Server validation failed. See details above."; exit 1; }
 
 
 (
   success "Checking client code."
-  cd client || { error "No client directory found."; exit 1; }
-) || exit 1
+  cd client || exit 1
+  npm run prettier:check || exit 1
+  npm run lint || exit 1
+  npm run test:coverage || exit 1
+) || { error "Client validation failed. See details above."; exit 1; }
 
 
 success "All checks passed. Proceeding with push."

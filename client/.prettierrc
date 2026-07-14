@@ -1,6 +1,12 @@
 {
   "printWidth": 100,
-  "singleQuote": true,
+  "arrowParens": "always",
+  "bracketSameLine": true,
+  "singleQuote": false,
+  "quoteProps": "consistent",
+  "semi": true,
+  "tabWidth": 2,
+  "trailingComma": "none",
   "overrides": [
     {
       "files": "*.html",

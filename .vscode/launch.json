@@ -9,7 +9,7 @@
       "name": "InSyncApplication",
       "request": "launch",
       "mainClass": "games.boardless.in_sync_server.InSyncApplication",
-      "projectName": "in-sync",
+      "projectName": "in-sync-server",
       "env": {
         "spring.profiles.active": "dev"
       }
