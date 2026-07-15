@@ -3,15 +3,8 @@
   src: url("/In-Sync/fonts/DynaPuff-Variable.ttf") format("truetype");
 }
 
-@font-face {
-  font-family: "Original Surfer";
-  src: url("/In-Sync/fonts/OriginalSurfer-Regular.ttf") format("truetype");
-  font-weight: 400;
-}
-
 html,
 body {
-  font-family: "Original Surfer", sans-serif !important;
   height: 100%;
   padding: 0;
   margin: 0;
@@ -19,17 +12,14 @@ body {
 
 body {
   /* https://colorhunt.co/palettes/neon */
-  --background-color: #39b1d1;
-  --primary-highlight-color: #f6850c;
-  --secondary-highlight-color: #de3e3e;
-  --text-color: #d6fb61;
+  --font-family: "DynaPuff", sans-serif;
+  --background-color: #160f2f;
+  --primary-highlight-color: #008bff;
+  --secondary-highlight-color: #f6850c;
+  --text-color: #e4ff30;
+  font-family: var(--font-family) !important;
   background-color: var(--background-color) !important;
   color: var(--text-color) !important;
-}
-
-.dynapuff {
-  font-family: "DynaPuff", "Original Surfer", sans-serif !important;
-  font-weight: bold;
 }
 
 .overflow {
@@ -49,5 +39,5 @@ body {
 input,
 button,
 textarea {
-  font-family: "Original Surfer", sans-serif !important;
+  font-family: var(--font-family) !important;
 }
