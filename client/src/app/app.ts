@@ -1,4 +1,4 @@
-import { Component, DOCUMENT, inject, OnInit, signal } from "@angular/core";
+import { Component, DOCUMENT, inject, signal } from "@angular/core";
 
 @Component({
   selector: "app-root",
@@ -6,7 +6,7 @@ import { Component, DOCUMENT, inject, OnInit, signal } from "@angular/core";
   templateUrl: "./app.html",
   styleUrl: "./app.css"
 })
-export class App implements OnInit {
+export class App {
   private readonly document = inject(DOCUMENT);
 
   protected readonly initialized = signal(false);
@@ -14,8 +14,6 @@ export class App implements OnInit {
   constructor() {
     this.document.addEventListener("click", this.initialize);
   }
-
-  ngOnInit(): void {}
 
   private initialize = () => {
     this.initialized.set(true);
