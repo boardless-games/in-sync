@@ -36,6 +36,11 @@ body {
   flex-wrap: nowrap;
 }
 
+.h1 {
+  font-weight: bold;
+  font-size: 75px;
+}
+
 input,
 button,
 textarea {
