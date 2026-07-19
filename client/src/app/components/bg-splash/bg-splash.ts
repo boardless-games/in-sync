@@ -6,20 +6,20 @@ import { Component, DOCUMENT, EventEmitter, inject, OnInit, Output } from "@angu
   templateUrl: "./bg-splash.html",
   styleUrl: "./bg-splash.css",
   host: {
-    class: "flex-column"
+    class: "flex-column full-size"
   }
 })
 export class BgSplash implements OnInit {
-  @Output() clicked: EventEmitter<void> = new EventEmitter();
-
   private readonly document = inject(DOCUMENT);
+
+  @Output() clicked = new EventEmitter<void>();
 
   ngOnInit(): void {
     this.document.addEventListener("click", this.emitClick);
   }
 
-  private emitClick() {
+  private emitClick = () => {
     this.document.removeEventListener("click", this.emitClick);
     this.clicked.emit();
-  }
+  };
 }

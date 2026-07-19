@@ -22,6 +22,11 @@ body {
   color: var(--text-color) !important;
 }
 
+.full-size {
+  width: 100%;
+  height: 100%;
+}
+
 .overflow {
   overflow: auto;
 }
