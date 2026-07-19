@@ -36,10 +36,6 @@ body {
   flex-wrap: nowrap;
 }
 
-.monospace {
-  font-family: monospace !important;
-}
-
 .h1 {
   font-weight: bold;
   font-size: 75px;

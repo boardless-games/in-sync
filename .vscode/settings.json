@@ -6,5 +6,6 @@
     "editor.formatOnSave": false,
     "editor.formatOnSaveMode": "modifications"
   },
-  "java.configuration.updateBuildConfiguration": "interactive"
+  "java.configuration.updateBuildConfiguration": "interactive",
+  "workbench.browser.openLocalhostLinks": false
 }

@@ -1,8 +1,9 @@
 import { Component, DOCUMENT, inject, signal } from "@angular/core";
+import { BgSplash } from "./components/bg-splash/bg-splash";
 
 @Component({
   selector: "app-root",
-  imports: [],
+  imports: [BgSplash],
   templateUrl: "./app.html",
   styleUrl: "./app.css"
 })
