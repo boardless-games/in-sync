@@ -3,9 +3,9 @@ import { BehaviorSubject } from "rxjs";
 import { AudioFile } from "../../constants/AudioFile";
 
 @Service()
-export class Audio {
+export class AudioService {
   private readonly ctx = new AudioContext();
-  private readonly nodes = new Map<AudioFile, AudioBufferSourceNode>();
+  private readonly audioBuffers = new Map<AudioFile, AudioBuffer>();
   private readonly _ready = new BehaviorSubject<boolean>(false);
   public readonly ready = this._ready.asObservable();
 
@@ -20,11 +20,9 @@ export class Audio {
         const fetchResponse = await fetch(file);
         const arrayBuffer = await fetchResponse.arrayBuffer();
 
-        const buffer = await this.ctx.decodeAudioData(arrayBuffer);
-        const node = this.ctx.createBufferSource();
-        node.buffer = buffer;
-        node.connect(this.ctx.destination);
-        this.nodes.set(file, node);
+        const audioBuffer = await this.ctx.decodeAudioData(arrayBuffer);
+
+        this.audioBuffers.set(file, audioBuffer);
       } catch (error) {
         console.error(error);
       }
@@ -32,35 +30,57 @@ export class Audio {
     this._ready.next(true);
   }
 
-  public play(file: AudioFile, when?: number, offset?: number, duration?: number) {
+  public play(
+    file: AudioFile,
+    options?: {
+      when?: number;
+      offset?: number;
+      duration?: number;
+      playbackRate?: number;
+      volume?: number;
+    }
+  ): AudioBufferSourceNode | undefined {
     try {
       if (this.ctx.state === "suspended") {
         this.ctx.resume();
       }
 
-      const node = this.nodes.get(file);
-      if (node === undefined) {
-        return;
+      const audioBuffer = this.audioBuffers.get(file);
+      if (audioBuffer === undefined) {
+        return undefined;
       }
 
-      node.start(when, offset, duration);
+      const sourceNode = this.ctx.createBufferSource();
+      sourceNode.buffer = audioBuffer;
+
+      if (options?.playbackRate) {
+        sourceNode.playbackRate.value = options.playbackRate;
+      }
+
+      if (options?.volume) {
+        const gainNode = this.ctx.createGain();
+        gainNode.gain.value = options.volume;
+        sourceNode.connect(gainNode);
+        gainNode.connect(this.ctx.destination);
+      } else {
+        sourceNode.connect(this.ctx.destination);
+      }
+
+      sourceNode.start(options?.when, options?.offset, options?.duration);
+      return sourceNode;
     } catch (error) {
       console.error(error);
+      return undefined;
     }
   }
 
-  public pause(file: AudioFile, when?: number) {
+  public pause(sourceNode: AudioBufferSourceNode, when?: number) {
     try {
       if (this.ctx.state === "suspended") {
         this.ctx.resume();
       }
 
-      const node = this.nodes.get(file);
-      if (node === undefined) {
-        return;
-      }
-
-      node.stop(when);
+      sourceNode.stop(when);
     } catch (error) {
       console.error(error);
     }
