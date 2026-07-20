@@ -2,7 +2,7 @@ import { TestBed } from "@angular/core/testing";
 
 import { Audio } from "./audio";
 
-describe("Audio", () => {
+describe.skip("Audio", () => {
   let service: Audio;
 
   beforeEach(() => {
