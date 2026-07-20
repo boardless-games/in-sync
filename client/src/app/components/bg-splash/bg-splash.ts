@@ -19,7 +19,7 @@ export class BgSplash implements OnInit {
     merge(
       this.audioService.ready.pipe(
         filter((ready) => ready),
-        map(() => {}),
+        map(() => undefined),
         take(1)
       )
     )

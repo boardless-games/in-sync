@@ -1,6 +1,5 @@
 import { Component, inject, signal } from "@angular/core";
 import { BgSplash } from "./components/bg-splash/bg-splash";
-import { environment } from "../environments/environment";
 import { AudioService } from "./services/audio/audio";
 import { AudioFile } from "./constants/AudioFile";
 
