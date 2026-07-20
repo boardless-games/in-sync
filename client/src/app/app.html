@@ -1,6 +1,9 @@
 @if (!initialized()) {
   <app-bg-splash (clicked)="splashClicked()"></app-bg-splash>
 } @else {
-  <span id="title">In Sync</span>
-  <img src="logos/in-sync.gif" alt="In Sync logo." />
+  <div id="title" class="flex-row">
+    <span>In&nbsp;</span>
+    <span>Sync</span>
+  </div>
+  <img id="in-sync-logo" src="logos/in-sync.gif" alt="In Sync logo." />
 }

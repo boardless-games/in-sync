@@ -1,5 +1,6 @@
 import { Component, signal } from "@angular/core";
 import { BgSplash } from "./components/bg-splash/bg-splash";
+import { environment } from "../environments/environment";
 
 @Component({
   selector: "app-root",
@@ -11,7 +12,7 @@ import { BgSplash } from "./components/bg-splash/bg-splash";
   }
 })
 export class App {
-  protected readonly initialized = signal(false);
+  protected readonly initialized = signal(!environment.production);
 
   protected splashClicked() {
     this.initialized.set(true);

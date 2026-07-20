@@ -1,6 +1,6 @@
 @font-face {
   font-family: "DynaPuff";
-  src: url("/In-Sync/fonts/DynaPuff-Variable.ttf") format("truetype");
+  src: url("/fonts/DynaPuff-Variable.ttf") format("truetype");
 }
 
 html,
@@ -39,11 +39,6 @@ body {
   display: flex;
   flex-direction: column;
   flex-wrap: nowrap;
-}
-
-.h1 {
-  font-weight: bold;
-  font-size: 75px;
 }
 
 input,
