@@ -13,13 +13,16 @@ body {
 body {
   /* https://colorhunt.co/palettes/neon */
   --font-family: "DynaPuff", sans-serif;
-  --background-color: #160f2f;
-  --primary-highlight-color: #008bff;
-  --secondary-highlight-color: #f6850c;
-  --text-color: #e4ff30;
+  --dark-blue: #160f2f;
+  --yellow: #e4ff30;
+  --blue: #008bff;
+  --orange: #f6850c;
+  --red: #de3e3e;
+  --green: #06d001;
+  --pink: #ff3483;
   font-family: var(--font-family) !important;
-  background-color: var(--background-color) !important;
-  color: var(--text-color) !important;
+  background-color: var(--dark-blue) !important;
+  color: var(--yellow) !important;
 }
 
 .full-size {
@@ -41,8 +44,52 @@ body {
   flex-wrap: nowrap;
 }
 
+input {
+  text-align: center;
+}
+
+label {
+  font-size: small;
+  text-align: left;
+}
+
 input,
 button,
 textarea {
+  font-size: large;
   font-family: var(--font-family) !important;
+  padding: 5px;
+  border-radius: 10px;
+  border: none;
+}
+
+input,
+textarea {
+  color: var(--pink);
+}
+
+input:focus-visible,
+textarea:focus-visible {
+  outline: none;
+  box-shadow:
+    inset 0 0 0 1px white,
+    inset 0 0 0 2px var(--dark-blue);
+}
+
+button {
+  cursor: pointer;
+  background-color: var(--blue) !important;
+  color: white !important;
+}
+
+button:focus-visible {
+  outline: none;
+  box-shadow:
+    inset 0 0 0 1px var(--blue),
+    inset 0 0 0 2px var(--dark-blue);
+}
+
+button:disabled {
+  opacity: 0.3;
+  cursor: default;
 }

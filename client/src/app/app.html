@@ -7,11 +7,18 @@
     <span>Sync</span>
   </div>
   <div id="main-menu" class="flex-column">
+    <div id="menu-info" class="flex-column">
+      <span>v{{ version() }}</span>
+    </div>
     <button id="new-game-button">New Game</button>
-    <form #form="ngForm" (ngSubmit)="joinGame(form)" class="flex-column">
-      <label for="game-code-input">Game Code</label>
-      <input id="game-code-input" name="gameCode" ngModel required />
-      <button id="join-game-button" type="submit" [disabled]="form.invalid">Join Game</button>
+    <form [formGroup]="joinGameForm" (ngSubmit)="joinGame()" class="flex-column">
+      <div class="flex-column">
+        <label for="game-code-input">Game Code</label>
+        <input id="game-code-input" [formControl]="joinGameForm.controls.gameCode" />
+      </div>
+      <button id="join-game-button" type="submit" [disabled]="joinGameForm.invalid">
+        Join Game
+      </button>
     </form>
   </div>
 }
