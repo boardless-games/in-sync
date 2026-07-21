@@ -13,15 +13,21 @@ import { AudioFile } from "./constants/AudioFile";
   }
 })
 export class App {
-  private readonly audioService = inject(AudioService);
+  protected readonly audioService = inject(AudioService);
   // protected readonly initialized = signal(!environment.production);
   protected readonly initialized = signal(false);
 
-  protected splashClicked() {
+  protected continue() {
     this.initialized.set(true);
-    this.audioService.play(AudioFile.INFLATE_BALLOON, { playbackRate: 1.63, volume: 0.25 });
+    this.audioService.playAudioFile(AudioFile.INFLATE_BALLOON, {
+      playbackRate: 1.63,
+      volume: 0.25
+    });
     setTimeout(() => {
-      this.audioService.play(AudioFile.INFLATE_BALLOON, { playbackRate: 1.63, volume: 0.25 });
+      this.audioService.playAudioFile(AudioFile.INFLATE_BALLOON, {
+        playbackRate: 1.63,
+        volume: 0.25
+      });
     }, 1250);
   }
 }

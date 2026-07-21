@@ -1,6 +1,5 @@
-import { Component, DOCUMENT, EventEmitter, inject, OnInit, Output, signal } from "@angular/core";
-import { filter, map, merge, take } from "rxjs";
-import { AudioService } from "../../services/audio/audio";
+import { Component, DOCUMENT, inject, input, OnInit, output, signal } from "@angular/core";
+import { filter, map, merge, Observable, take } from "rxjs";
 
 @Component({
   selector: "app-bg-splash",
@@ -9,29 +8,31 @@ import { AudioService } from "../../services/audio/audio";
 })
 export class BgSplash implements OnInit {
   private readonly document = inject(DOCUMENT);
-  private readonly audioService = inject(AudioService);
-
-  @Output() clicked = new EventEmitter<void>();
-
-  protected readonly ready = signal(false);
+  protected readonly loading = signal(true);
+  ready = input(new Array<Observable<boolean>>());
+  continue = output();
 
   ngOnInit(): void {
     merge(
-      this.audioService.ready.pipe(
-        filter((ready) => ready),
-        map(() => undefined),
-        take(1)
+      ...this.ready().map((o) =>
+        o.pipe(
+          filter((ready) => ready),
+          map(() => undefined),
+          take(1)
+        )
       )
-    )
-      .pipe(take(1))
-      .subscribe(() => {
-        this.document.addEventListener("click", this.emitClick);
-        this.ready.set(true);
-      });
+    ).subscribe({
+      complete: () => {
+        setTimeout(() => {
+          this.loading.set(false);
+          this.document.addEventListener("click", this.clickHandler);
+        }, 1000);
+      }
+    });
   }
 
-  private emitClick = () => {
-    this.document.removeEventListener("click", this.emitClick);
-    this.clicked.emit();
+  private clickHandler = () => {
+    this.document.removeEventListener("click", this.clickHandler);
+    this.continue.emit();
   };
 }

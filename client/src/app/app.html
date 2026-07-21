@@ -1,5 +1,5 @@
 @if (!initialized()) {
-  <app-bg-splash (clicked)="splashClicked()"></app-bg-splash>
+  <app-bg-splash [ready]="[audioService.ready]" (continue)="continue()"></app-bg-splash>
 } @else {
   <div id="title" class="flex-row">
     <span>In&nbsp;</span>

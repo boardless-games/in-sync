@@ -1,9 +1,8 @@
 <div id="padding-top"></div>
-<img id="bg-logo" src="logos/boardless-games.gif" alt="boardless.games logo." />
-@if (ready()) {
-  <span>Click to continue</span>
-} @else {
+@if (loading()) {
   <div id="loading"></div>
+} @else {
+  <img id="bg-logo" src="logos/boardless-games.gif" alt="boardless.games logo." />
+  <span id="continue-message">Click to continue</span>
 }
-
 <div id="padding-bottom"></div>

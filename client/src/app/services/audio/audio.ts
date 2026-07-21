@@ -4,6 +4,8 @@ import { AudioFile } from "../../constants/AudioFile";
 
 @Service()
 export class AudioService {
+  private static readonly PLAY_AUDIO_DELAY = 0.01;
+
   private readonly ctx = new AudioContext();
   private readonly audioBuffers = new Map<AudioFile, AudioBuffer>();
   private readonly _ready = new BehaviorSubject<boolean>(false);
@@ -30,7 +32,7 @@ export class AudioService {
     this._ready.next(true);
   }
 
-  public play(
+  public async playAudioFile(
     file: AudioFile,
     options?: {
       when?: number;
@@ -39,10 +41,14 @@ export class AudioService {
       playbackRate?: number;
       volume?: number;
     }
-  ): AudioBufferSourceNode | undefined {
+  ): Promise<AudioBufferSourceNode | undefined> {
     try {
+      if (!this._ready.value) {
+        return undefined;
+      }
+
       if (this.ctx.state === "suspended") {
-        this.ctx.resume();
+        await this.ctx.resume();
       }
 
       const audioBuffer = this.audioBuffers.get(file);
@@ -50,37 +56,45 @@ export class AudioService {
         return undefined;
       }
 
-      const sourceNode = this.ctx.createBufferSource();
-      sourceNode.buffer = audioBuffer;
+      const audioSourceNode = this.ctx.createBufferSource();
+      audioSourceNode.buffer = audioBuffer;
+      let audioNode: AudioNode = audioSourceNode;
 
       if (options?.playbackRate) {
-        sourceNode.playbackRate.value = options.playbackRate;
+        audioSourceNode.playbackRate.value = options.playbackRate;
       }
 
-      if (options?.volume) {
+      if (options?.volume !== undefined) {
         const gainNode = this.ctx.createGain();
         gainNode.gain.value = options.volume;
-        sourceNode.connect(gainNode);
-        gainNode.connect(this.ctx.destination);
-      } else {
-        sourceNode.connect(this.ctx.destination);
+        audioSourceNode.connect(gainNode);
+        audioNode = gainNode;
       }
 
-      sourceNode.start(options?.when, options?.offset, options?.duration);
-      return sourceNode;
+      audioNode.connect(this.ctx.destination);
+      audioSourceNode.start(
+        this.ctx.currentTime + (options?.when || 0) + AudioService.PLAY_AUDIO_DELAY,
+        options?.offset,
+        options?.duration
+      );
+      return audioSourceNode;
     } catch (error) {
       console.error(error);
       return undefined;
     }
   }
 
-  public pause(sourceNode: AudioBufferSourceNode, when?: number) {
+  public async pause(sourceNode: AudioBufferSourceNode, when?: number) {
     try {
-      if (this.ctx.state === "suspended") {
-        this.ctx.resume();
+      if (!this._ready.value) {
+        return undefined;
       }
 
-      sourceNode.stop(when);
+      if (this.ctx.state === "suspended") {
+        await this.ctx.resume();
+      }
+
+      sourceNode.stop(this.ctx.currentTime + (when || 0) + AudioService.PLAY_AUDIO_DELAY);
     } catch (error) {
       console.error(error);
     }
