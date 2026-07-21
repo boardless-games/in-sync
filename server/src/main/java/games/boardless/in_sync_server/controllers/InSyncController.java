@@ -60,6 +60,25 @@ public class InSyncController {
     return inSyncService.newGame();
   }
 
+  @Operation(summary = "Get a game.")
+  @ApiResponse(
+      responseCode = "200",
+      content = {
+        @Content(
+            schema = @Schema(implementation = GameCodeDto.class),
+            mediaType = "application/json")
+      })
+  @ApiResponse(
+      responseCode = "400",
+      content = {
+        @Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json")
+      })
+  @GetMapping("/game/{gameCode}")
+  public ResponseEntity<GameCodeDto> getGame(@PathVariable final String gameCode)
+      throws BadRequestException {
+    return inSyncService.getGame(gameCode);
+  }
+
   @Operation(summary = "Add a player to a game.")
   @ApiResponse(responseCode = "201", content = @Content)
   @ApiResponse(

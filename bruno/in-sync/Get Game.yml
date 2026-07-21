@@ -1,11 +1,11 @@
 info:
-  name: To Lobby
+  name: Get Game
   type: http
-  seq: 7
+  seq: 3
 
 http:
-  method: POST
-  url: "{{SERVER_PROTOCOL}}://{{SERVER_DOMAIN}}:{{SERVER_PORT}}/in-sync/game/:gameCode/lobby"
+  method: GET
+  url: "{{SERVER_PROTOCOL}}://{{SERVER_DOMAIN}}:{{SERVER_PORT}}/in-sync/game/:gameCode"
   params:
     - name: gameCode
       value: "{{gameCode}}"

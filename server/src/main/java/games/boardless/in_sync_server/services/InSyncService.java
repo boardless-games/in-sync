@@ -81,6 +81,21 @@ public class InSyncService {
     return ResponseEntity.status(HttpStatus.CREATED).body(new GameCodeDto(gameCode));
   }
 
+  public synchronized ResponseEntity<GameCodeDto> getGame(final String gameCode)
+      throws BadRequestException {
+    final Optional<String> gameCodeValidation = InputValidation.validateGameCode(gameCode);
+    if (gameCodeValidation.isPresent()) {
+      throw new BadRequestException(gameCodeValidation.get());
+    }
+
+    final Game game = this.games.get(gameCode);
+    if (game == null) {
+      throw new BadRequestException(String.format("Game %s not found.", gameCode));
+    }
+
+    return ResponseEntity.ok(new GameCodeDto(game.getGameCode()));
+  }
+
   public ResponseEntity<Void> newPlayer(final String gameCode, final PlayerNameDto name)
       throws BadRequestException, ServiceUnavailableException {
     final Optional<String> gameCodeValidation = InputValidation.validateGameCode(gameCode);
