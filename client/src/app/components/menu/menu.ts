@@ -7,7 +7,10 @@ import { JoinGameForm } from "../../models/JoinGameForm";
   selector: "app-menu",
   imports: [ReactiveFormsModule],
   templateUrl: "./menu.html",
-  styleUrl: "./menu.css"
+  styleUrl: "./menu.css",
+  host: {
+    class: "full-size flex-column overflow"
+  }
 })
 export class Menu {
   private readonly document = inject(DOCUMENT);
