@@ -7,12 +7,14 @@ import { filter, map, merge, Observable, take } from "rxjs";
   styleUrl: "./bg-splash.css"
 })
 export class BgSplash implements OnInit {
+  private static readonly MIN_LOADING_TIME = 2000; // Millis
   private readonly document = inject(DOCUMENT);
   protected readonly loading = signal(true);
   ready = input(new Array<Observable<boolean>>());
   continue = output();
 
   ngOnInit(): void {
+    const start = Date.now();
     merge(
       ...this.ready().map((o) =>
         o.pipe(
@@ -23,10 +25,14 @@ export class BgSplash implements OnInit {
       )
     ).subscribe({
       complete: () => {
-        setTimeout(() => {
-          this.loading.set(false);
-          this.document.addEventListener("click", this.clickHandler);
-        }, 1000);
+        const elapsed = Date.now() - start;
+        setTimeout(
+          () => {
+            this.loading.set(false);
+            this.document.addEventListener("click", this.clickHandler);
+          },
+          elapsed >= BgSplash.MIN_LOADING_TIME ? 0 : BgSplash.MIN_LOADING_TIME - elapsed
+        );
       }
     });
   }

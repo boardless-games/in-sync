@@ -1,5 +1,6 @@
-@if (!initialized()) {
-  <app-bg-splash [ready]="[audioService.ready]" (continue)="continue()"></app-bg-splash>
-} @else {
+@if (alert() !== null) {}
+@if (initialized()) {
   <router-outlet></router-outlet>
+} @else {
+  <app-bg-splash [ready]="[audioService.ready]" (continue)="continue()"></app-bg-splash>
 }

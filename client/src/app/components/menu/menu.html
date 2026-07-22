@@ -4,7 +4,7 @@
   <span>Sync</span>
 </div>
 <div id="main-menu" class="flex-column">
-  <button id="new-game-button">New Game</button>
+  <button id="new-game-button" (click)="newGame()">New Game</button>
   <form [formGroup]="joinGameForm" (ngSubmit)="joinGame()" class="flex-column">
     <div class="flex-column">
       <label for="game-code-input">Game Code</label>
@@ -12,5 +12,4 @@
     </div>
     <button id="join-game-button" type="submit" [disabled]="joinGameForm.invalid">Join Game</button>
   </form>
-  <button id="boardless-games-button" (click)="boardlessGames()">Home</button>
 </div>

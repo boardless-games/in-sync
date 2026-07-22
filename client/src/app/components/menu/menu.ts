@@ -23,11 +23,11 @@ export class Menu {
     })
   });
 
-  protected joinGame() {
-    console.log(this.joinGameForm.getRawValue());
+  protected newGame() {
+    console.log("New game.");
   }
 
-  protected boardlessGames() {
-    this.document.location.assign("https://boardless.games");
+  protected joinGame() {
+    console.log(this.joinGameForm.getRawValue());
   }
 }
