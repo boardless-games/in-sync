@@ -1,24 +1,5 @@
 @if (!initialized()) {
   <app-bg-splash [ready]="[audioService.ready]" (continue)="continue()"></app-bg-splash>
 } @else {
-  <img id="in-sync-logo" src="logos/in-sync.gif" alt="In Sync logo." />
-  <div id="title" class="flex-row">
-    <span>In&nbsp;</span>
-    <span>Sync</span>
-  </div>
-  <div id="main-menu" class="flex-column">
-    <div id="menu-info" class="flex-column">
-      <span>v{{ version() }}</span>
-    </div>
-    <button id="new-game-button">New Game</button>
-    <form [formGroup]="joinGameForm" (ngSubmit)="joinGame()" class="flex-column">
-      <div class="flex-column">
-        <label for="game-code-input">Game Code</label>
-        <input id="game-code-input" [formControl]="joinGameForm.controls.gameCode" />
-      </div>
-      <button id="join-game-button" type="submit" [disabled]="joinGameForm.invalid">
-        Join Game
-      </button>
-    </form>
-  </div>
+  <router-outlet></router-outlet>
 }
