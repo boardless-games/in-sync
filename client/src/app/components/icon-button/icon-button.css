@@ -1,0 +1,7 @@
+button {
+  background: url(/icons/close.svg);
+  background-size: cover;
+  width: var(--button-size, 24px);
+  height: var(--button-size, 24px);
+  border-radius: 10px;
+}

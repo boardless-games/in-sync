@@ -1,4 +1,9 @@
-@if (alert() !== null) {}
+@if (alert() !== null) {
+  <div id="alert-container" class="flex-row">
+    <span>{{ alert() }}</span>
+    <app-icon-button [icon]="icons.CLOSE"></app-icon-button>
+  </div>
+}
 @if (initialized()) {
   <router-outlet></router-outlet>
 } @else {

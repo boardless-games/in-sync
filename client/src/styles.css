@@ -20,6 +20,7 @@ body {
   --red: #de3e3e;
   --green: #06d001;
   --pink: #ff3483;
+  --white: #e3e3e3;
   font-family: var(--font-family) !important;
   background-color: var(--dark-blue) !important;
   color: var(--yellow) !important;
