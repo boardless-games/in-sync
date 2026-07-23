@@ -1,7 +1,10 @@
-@if (alert() !== null) {
+@if (alert().length > 0) {
   <div id="alert-container" class="flex-row">
     <span>{{ alert() }}</span>
-    <app-icon-button [icon]="icons.CLOSE"></app-icon-button>
+    <app-icon-button
+      id="close-alert-button"
+      [icon]="icons.CLOSE"
+      (clicked)="showNextAlert()"></app-icon-button>
   </div>
 }
 @if (initialized()) {

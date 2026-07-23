@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, inject, signal, WritableSignal } from "@angular/core";
+import { Component, inject, signal, WritableSignal } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { RouterOutlet } from "@angular/router";
 import { BgSplash } from "./components/bg-splash/bg-splash";
@@ -16,36 +16,35 @@ import { AudioService } from "./services/audio/audio";
     class: "full-size"
   }
 })
-export class App implements AfterViewInit {
+export class App {
   protected readonly audioService = inject(AudioService);
   private readonly alertService = inject(Alert);
   protected readonly initialized = signal(false);
 
   private readonly alerts: string[] = [];
-  protected alert: WritableSignal<string | null> = signal(null);
+  protected alert: WritableSignal<string> = signal("");
+  private alertTimeout: number | undefined = undefined;
 
   protected readonly icons = Icon;
 
   constructor() {
     this.alertService.alerts.pipe(takeUntilDestroyed()).subscribe((alert: string) => {
       this.alerts.push(alert);
-      if (this.alert() === null) {
-        this.alertTimeoutHandler();
+      if (this.alert().length === 0) {
+        this.showNextAlert();
       }
     });
   }
 
-  ngAfterViewInit(): void {
-    this.alertService.alert("Lorem ipsum dolor sit amet.");
-  }
-
-  private alertTimeoutHandler = () => {
+  protected showNextAlert = () => {
     const nextAlert = this.alerts.shift();
     if (nextAlert === undefined) {
-      this.alert.set(null);
+      this.alert.set("");
+      this.alertTimeout = undefined;
     } else {
+      clearTimeout(this.alertTimeout);
       this.alert.set(nextAlert);
-      setTimeout(this.alertTimeoutHandler, 100000);
+      this.alertTimeout = setTimeout(this.showNextAlert, 10000);
     }
   };
 

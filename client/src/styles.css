@@ -60,6 +60,7 @@ button,
 textarea {
   font-size: large;
   font-family: var(--font-family) !important;
+  box-sizing: border-box;
   padding: 5px;
   border-radius: 10px;
   border: none;

@@ -7,13 +7,15 @@ import { Icon } from "../../constants/Icon";
   templateUrl: "./icon-button.html",
   styleUrl: "./icon-button.css",
   host: {
-    "[style.--button-size]": 'size() + "px"',
-    "[style.--icon-color]": "color()"
+    "[style.--button-color]": "buttonColor()"
   }
 })
 export class IconButton {
   icon = input<Icon | null>(null);
-  size = input(24);
-  color = input("#FFFFFF");
+  size = input("24px");
+  iconColor = input("#FFFFFF");
+  buttonColor = input("var(--blue)");
   clicked = output();
+
+  protected readonly icons = Icon;
 }

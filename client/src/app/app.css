@@ -1,0 +1,19 @@
+#alert-container {
+  background-color: var(--blue);
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  align-items: center;
+  gap: 5px;
+  box-sizing: border-box;
+  padding: 5px 10px;
+  border-radius: 10px;
+  z-index: 1;
+  max-width: min(90%, 500px);
+  overflow-wrap: anywhere;
+}
+
+#close-alert-button {
+  align-self: flex-start;
+}

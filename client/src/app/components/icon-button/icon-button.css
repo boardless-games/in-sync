@@ -1,7 +1,6 @@
 button {
-  background: url(/icons/close.svg);
-  background-size: cover;
-  width: var(--button-size, 24px);
-  height: var(--button-size, 24px);
-  border-radius: 10px;
+  background-color: var(--button-color, var(--blue)) !important;
+  justify-content: center;
+  align-items: center;
+  padding: 2px !important;
 }
