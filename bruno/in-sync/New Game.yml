@@ -5,7 +5,7 @@ info:
 
 http:
   method: POST
-  url: "{{SERVER_PROTOCOL}}://{{SERVER_DOMAIN}}:{{SERVER_PORT}}/in-sync/game"
+  url: "{{SERVER_PROTOCOL}}://{{SERVER_DOMAIN}}:{{SERVER_PORT}}/in-sync-api/game"
   auth: inherit
 
 runtime:

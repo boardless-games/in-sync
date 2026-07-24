@@ -5,7 +5,7 @@ info:
 
 http:
   method: GET
-  url: "{{SERVER_PROTOCOL}}://{{SERVER_DOMAIN}}:{{SERVER_PORT}}/health"
+  url: "{{SERVER_PROTOCOL}}://{{SERVER_DOMAIN}}:{{SERVER_PORT}}/in-sync-api/health"
   auth: inherit
 
 settings:

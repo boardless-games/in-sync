@@ -5,7 +5,7 @@ info:
 
 http:
   method: GET
-  url: "{{SERVER_PROTOCOL}}://{{SERVER_DOMAIN}}:{{SERVER_PORT}}/in-sync/game/:gameCode"
+  url: "{{SERVER_PROTOCOL}}://{{SERVER_DOMAIN}}:{{SERVER_PORT}}/in-sync-api/game/:gameCode"
   params:
     - name: gameCode
       value: "{{gameCode}}"

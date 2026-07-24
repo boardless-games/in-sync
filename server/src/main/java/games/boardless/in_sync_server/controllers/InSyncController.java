@@ -27,13 +27,20 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.async.DeferredResult;
 
 @RestController
-@RequestMapping("/in-sync")
+@RequestMapping("/in-sync-api")
 public class InSyncController {
   private final InSyncService inSyncService;
 
   @Autowired
   public InSyncController(final InSyncService inSyncService) {
     this.inSyncService = inSyncService;
+  }
+
+  @Operation(summary = "Returns the server's health.")
+  @ApiResponse(responseCode = "200", description = "The server is up!", content = @Content)
+  @GetMapping("/health")
+  public ResponseEntity<Void> health() {
+    return ResponseEntity.ok().build();
   }
 
   @Operation(summary = "Create a new game.")
