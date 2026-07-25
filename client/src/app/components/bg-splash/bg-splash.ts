@@ -28,8 +28,8 @@ export class BgSplash implements OnInit {
         const elapsed = Date.now() - start;
         setTimeout(
           () => {
-            //this.loading.set(false);
-            //this.document.addEventListener("click", this.clickHandler);
+            this.loading.set(false);
+            this.document.addEventListener("click", this.clickHandler);
           },
           elapsed >= BgSplash.MIN_LOADING_TIME ? 0 : BgSplash.MIN_LOADING_TIME - elapsed
         );
