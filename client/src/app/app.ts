@@ -30,19 +30,19 @@ export class App {
   constructor() {
     this.alertService.alerts.pipe(takeUntilDestroyed()).subscribe((alert: string) => {
       this.alerts.push(alert);
-      if (this.alert().length === 0) {
+      if (this.alertTimeout === undefined) {
         this.showNextAlert();
       }
     });
   }
 
   protected showNextAlert = () => {
+    clearTimeout(this.alertTimeout);
     const nextAlert = this.alerts.shift();
     if (nextAlert === undefined) {
       this.alert.set("");
       this.alertTimeout = undefined;
     } else {
-      clearTimeout(this.alertTimeout);
       this.alert.set(nextAlert);
       this.alertTimeout = setTimeout(this.showNextAlert, 10000);
     }
