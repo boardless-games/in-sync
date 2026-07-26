@@ -1,7 +1,7 @@
 import { Component, inject, signal } from "@angular/core";
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from "@angular/forms";
 import { Router } from "@angular/router";
-import { finalize } from "rxjs";
+import { finalize, from, switchMap } from "rxjs";
 import { GameCodeDto } from "../../dtos/GameCodeDto";
 import { JoinGameForm } from "../../models/JoinGameForm";
 import { AudioService } from "../../services/audio/audio";
@@ -37,13 +37,14 @@ export class Menu {
     this.inSyncApi
       .newGame()
       .pipe(
+        switchMap((response: GameCodeDto) =>
+          from(this.router.navigate(["game", response.gameCode]))
+        ),
         finalize(() => {
           this.loading.set(false);
         })
       )
-      .subscribe(async (response: GameCodeDto) => {
-        await this.router.navigate(["game", response.gameCode]);
-      });
+      .subscribe();
   }
 
   protected joinGame() {

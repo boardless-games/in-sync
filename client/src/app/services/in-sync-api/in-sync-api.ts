@@ -3,7 +3,7 @@ import { inject, Service } from "@angular/core";
 import { GameCodeDto } from "../../dtos/GameCodeDto";
 import { Alert } from "../alert/alert";
 import { ErrorDto } from "../../dtos/ErrorDto";
-import { catchError, EMPTY } from "rxjs";
+import { catchError, EMPTY, Observable } from "rxjs";
 
 @Service()
 export class InSyncApi {
@@ -22,11 +22,21 @@ export class InSyncApi {
     return EMPTY;
   };
 
-  public newGame() {
-    return this.http.post<GameCodeDto>(`${InSyncApi.BASE_PATH}/game`, null);
+  private applyGenericCatchError<T>(request: Observable<T>, apply = true) {
+    return apply ? request.pipe(catchError(this.genericCatchError)) : request;
   }
 
-  public getGame(gameCode: string) {
-    return this.http.get<GameCodeDto>(`${InSyncApi.BASE_PATH}/game/${gameCode}`);
+  public newGame(useGenericCatchError = true) {
+    return this.applyGenericCatchError(
+      this.http.post<GameCodeDto>(`${InSyncApi.BASE_PATH}/game`, null),
+      useGenericCatchError
+    );
+  }
+
+  public getGame(gameCode: string, useGenericCatchError = true) {
+    return this.applyGenericCatchError(
+      this.http.get<GameCodeDto>(`${InSyncApi.BASE_PATH}/game/${gameCode}`),
+      useGenericCatchError
+    );
   }
 }
