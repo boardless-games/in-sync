@@ -1,4 +1,4 @@
-import { inject, Injectable } from "@angular/core";
+import { inject, Service } from "@angular/core";
 import {
   ActivatedRouteSnapshot,
   CanActivate,
@@ -13,7 +13,7 @@ import { Alert } from "../../services/alert/alert";
 import { InSyncApi } from "../../services/in-sync-api/in-sync-api";
 import { Validation } from "../../services/validation/validation";
 
-@Injectable()
+@Service()
 export class GameGuard implements CanActivate {
   private readonly router = inject(Router);
   private readonly validationService = inject(Validation);
