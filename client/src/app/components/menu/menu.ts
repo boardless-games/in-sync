@@ -1,9 +1,9 @@
 import { Component, inject, signal } from "@angular/core";
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from "@angular/forms";
+import { Router } from "@angular/router";
 import { finalize } from "rxjs";
 import { GameCodeDto } from "../../dtos/GameCodeDto";
 import { JoinGameForm } from "../../models/JoinGameForm";
-import { Alert } from "../../services/alert/alert";
 import { AudioService } from "../../services/audio/audio";
 import { InSyncApi } from "../../services/in-sync-api/in-sync-api";
 
@@ -18,7 +18,7 @@ import { InSyncApi } from "../../services/in-sync-api/in-sync-api";
 })
 export class Menu {
   private readonly inSyncApi = inject(InSyncApi);
-  private readonly alertService = inject(Alert);
+  private readonly router = inject(Router);
   private readonly formBuilder = inject(FormBuilder);
   protected readonly audioService = inject(AudioService);
   protected readonly joinGameForm = this.formBuilder.group<JoinGameForm>({
@@ -41,15 +41,18 @@ export class Menu {
           this.loading.set(false);
         })
       )
-      .subscribe((response: GameCodeDto) => {
-        console.log(response.gameCode);
+      .subscribe(async (response: GameCodeDto) => {
+        await this.router.navigate(["game", response.gameCode]);
       });
   }
 
   protected joinGame() {
-    if (this.loading()) {
+    if (this.loading() || this.joinGameForm.invalid) {
       return;
     }
     this.loading.set(true);
+    this.router.navigate(["game", this.joinGameForm.controls.gameCode.value]).finally(() => {
+      this.loading.set(false);
+    });
   }
 }

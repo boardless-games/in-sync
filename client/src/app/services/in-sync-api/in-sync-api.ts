@@ -11,7 +11,7 @@ export class InSyncApi {
   private readonly http = inject(HttpClient);
   private static readonly BASE_PATH = "/in-sync-api";
 
-  private errorHandler = (errorResponse: HttpErrorResponse) => {
+  public genericCatchError = (errorResponse: HttpErrorResponse) => {
     let message: string;
     if (errorResponse.status !== 0) {
       message = (errorResponse.error as ErrorDto).error;
@@ -23,14 +23,10 @@ export class InSyncApi {
   };
 
   public newGame() {
-    return this.http
-      .post<GameCodeDto>(`${InSyncApi.BASE_PATH}/game`, null)
-      .pipe(catchError(this.errorHandler));
+    return this.http.post<GameCodeDto>(`${InSyncApi.BASE_PATH}/game`, null);
   }
 
   public getGame(gameCode: string) {
-    return this.http
-      .get<GameCodeDto>(`${InSyncApi.BASE_PATH}/game/${gameCode}`)
-      .pipe(catchError(this.errorHandler));
+    return this.http.get<GameCodeDto>(`${InSyncApi.BASE_PATH}/game/${gameCode}`);
   }
 }
