@@ -1,8 +1,10 @@
 package games.boardless.in_sync_server.services;
 
+import static games.boardless.in_sync_server.constants.Constants.DEV_PROFILE;
 import static games.boardless.in_sync_server.constants.Constants.GAME_AUTO_DELETE_TIME;
 import static games.boardless.in_sync_server.constants.Constants.MAX_NUM_GAMES;
 import static games.boardless.in_sync_server.constants.Constants.PLAYER_AUTO_REMOVE_TIME;
+import static games.boardless.in_sync_server.constants.Constants.PROD_PROFILE;
 import static games.boardless.in_sync_server.constants.Constants.SCHEDULE_OFFSET;
 import static games.boardless.in_sync_server.constants.Constants.WAIT_PLAYER_READY_TIME;
 
@@ -53,11 +55,16 @@ public class InSyncService {
     this.taskScheduler = taskScheduler;
     this.environment = environment;
     this.clock = clock;
+
+    if (this.environment.matchesProfiles(DEV_PROFILE)) {
+      final Game newGame = new Game("123456");
+      this.games.put(newGame.getGameCode(), newGame);
+    }
   }
 
   public synchronized ResponseEntity<GameCodeDto> newGame()
       throws BadRequestException, ServiceUnavailableException {
-    if (this.games.size() >= MAX_NUM_GAMES) {
+    if (this.games.size() >= MAX_NUM_GAMES && this.environment.matchesProfiles(PROD_PROFILE)) {
       throw new ServiceUnavailableException(
           "The server is at max capacity. Please try again later.");
     }
@@ -183,7 +190,7 @@ public class InSyncService {
 
   public ResponseEntity<ScheduleDto> getSchedule(final String gameCode)
       throws NotFoundException, BadRequestException, ServiceUnavailableException {
-    if (!this.environment.matchesProfiles("dev")) {
+    if (!this.environment.matchesProfiles(DEV_PROFILE)) {
       throw new ServiceUnavailableException("This endpoint is currently not available.");
     }
 

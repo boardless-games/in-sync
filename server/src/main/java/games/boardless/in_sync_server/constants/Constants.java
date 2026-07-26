@@ -16,4 +16,6 @@ public class Constants {
   public static final String[] ALLOWED_ORIGINS = {"http://localhost:4200"};
   public static final int MILLIS_PER_MINUTE = 60_000;
   public static final long SCHEDULE_OFFSET = 4_000l;
+  public static final String DEV_PROFILE = "dev";
+  public static final String PROD_PROFILE = "prod";
 }
