@@ -4,6 +4,7 @@ import { GameCodeDto } from "../../dtos/GameCodeDto";
 import { Alert } from "../alert/alert";
 import { ErrorDto } from "../../dtos/ErrorDto";
 import { catchError, EMPTY, Observable } from "rxjs";
+import { PlayerNameDto } from "../../dtos/PlayerNameDto";
 
 @Service()
 export class InSyncApi {
@@ -36,6 +37,16 @@ export class InSyncApi {
   public getGame(gameCode: string, useGenericCatchError = true) {
     return this.applyGenericCatchError(
       this.http.get<GameCodeDto>(`${InSyncApi.BASE_PATH}/game/${gameCode}`),
+      useGenericCatchError
+    );
+  }
+
+  public newPlayer(gameCode: string, playerName: string, useGenericCatchError = true) {
+    return this.applyGenericCatchError(
+      this.http.post<PlayerNameDto>(
+        `${InSyncApi.BASE_PATH}/game/${gameCode}/player`,
+        new PlayerNameDto(playerName)
+      ),
       useGenericCatchError
     );
   }

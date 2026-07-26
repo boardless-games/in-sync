@@ -1,5 +1,8 @@
 export class ErrorDto {
-  constructor(private _error: string) {
+  private readonly _error: string;
+
+  constructor(error: string) {
+    this._error = error;
     Object.freeze(this);
   }
 

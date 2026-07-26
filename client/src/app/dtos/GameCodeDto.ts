@@ -1,5 +1,8 @@
 export class GameCodeDto {
-  constructor(private _gameCode: string) {
+  private readonly _gameCode: string;
+
+  constructor(gameCode: string) {
+    this._gameCode = gameCode;
     Object.freeze(this);
   }
 
