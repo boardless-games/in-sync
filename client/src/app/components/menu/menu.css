@@ -13,8 +13,6 @@
 }
 
 #title {
-  color: var(--yellow);
-  font-size: 75px;
   font-weight: 100;
   z-index: 1;
   flex-wrap: wrap;

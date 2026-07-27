@@ -8,7 +8,7 @@ import {
   Router
 } from "@angular/router";
 import { catchError } from "rxjs";
-import { GameCodeDto } from "../../dtos/GameCodeDto";
+import { GameCodeDto } from "../../interfaces/dtos/GameCodeDto";
 import { Alert } from "../../services/alert/alert";
 import { InSyncApi } from "../../services/in-sync-api/in-sync-api";
 import { Validation } from "../../services/validation/validation";

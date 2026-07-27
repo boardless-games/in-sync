@@ -1,0 +1,22 @@
+:host {
+  justify-content: flex-start;
+  align-items: center;
+  text-align: center;
+  gap: 20px;
+}
+
+:host > .padding:first-child {
+  flex: 1 1 auto;
+}
+
+:host > .padding:last-child {
+  flex: 4 1 auto;
+}
+
+#player-form-container {
+  gap: 20px;
+}
+
+#player-form {
+  gap: 10px;
+}

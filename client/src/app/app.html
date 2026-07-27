@@ -10,5 +10,5 @@
 @if (initialized()) {
   <router-outlet></router-outlet>
 } @else {
-  <app-bg-splash [ready]="[audioService.ready]" (continue)="continue()"></app-bg-splash>
+  <app-bg-splash [ready]="[audioService.ready]" (continued)="continue()"></app-bg-splash>
 }

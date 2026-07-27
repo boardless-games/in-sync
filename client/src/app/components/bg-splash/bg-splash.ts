@@ -11,7 +11,7 @@ export class BgSplash implements OnInit {
   private readonly document = inject(DOCUMENT);
   protected readonly loading = signal(true);
   ready = input(new Array<Observable<boolean>>());
-  continue = output();
+  continued = output();
 
   ngOnInit(): void {
     const start = Date.now();
@@ -39,6 +39,6 @@ export class BgSplash implements OnInit {
 
   private clickHandler = () => {
     this.document.removeEventListener("click", this.clickHandler);
-    this.continue.emit();
+    this.continued.emit();
   };
 }

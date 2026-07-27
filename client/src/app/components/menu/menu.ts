@@ -2,10 +2,11 @@ import { Component, inject, signal } from "@angular/core";
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from "@angular/forms";
 import { Router } from "@angular/router";
 import { finalize, from, switchMap } from "rxjs";
-import { GameCodeDto } from "../../dtos/GameCodeDto";
-import { JoinGameForm } from "../../models/JoinGameForm";
+import { GameCodeDto } from "../../interfaces/dtos/GameCodeDto";
+import { JoinGameForm } from "../../interfaces/JoinGameForm";
 import { AudioService } from "../../services/audio/audio";
 import { InSyncApi } from "../../services/in-sync-api/in-sync-api";
+import { Validation } from "../../services/validation/validation";
 
 @Component({
   selector: "app-menu",
@@ -20,11 +21,12 @@ export class Menu {
   private readonly inSyncApi = inject(InSyncApi);
   private readonly router = inject(Router);
   private readonly formBuilder = inject(FormBuilder);
+  private readonly validationService = inject(Validation);
   protected readonly audioService = inject(AudioService);
   protected readonly joinGameForm = this.formBuilder.group<JoinGameForm>({
     gameCode: new FormControl("", {
       nonNullable: true,
-      validators: [Validators.required, Validators.pattern(/^[0-9]{6}$/)]
+      validators: [Validators.required, Validators.pattern(this.validationService.gameCodeRegex)]
     })
   });
   protected readonly loading = signal(false);

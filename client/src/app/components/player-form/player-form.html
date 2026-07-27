@@ -1,0 +1,19 @@
+<div class="padding"></div>
+<span class="h2">Player Info</span>
+<div id="player-form-container" class="flex-column">
+  <form id="player-form" [formGroup]="playerForm" (ngSubmit)="continue()" class="flex-column">
+    <div class="flex-column">
+      <label for="player-name-input">Name</label>
+      <input
+        id="player-name-input"
+        [formControl]="playerForm.controls.playerName"
+        spellcheck="false" />
+    </div>
+    <button id="continue-button" type="submit" [disabled]="playerForm.invalid || loading()">
+      Continue
+    </button>
+  </form>
+  <button id="back-button" (click)="back()">Back</button>
+</div>
+
+<div class="padding"></div>

@@ -1,10 +1,10 @@
 import { HttpClient, HttpErrorResponse } from "@angular/common/http";
 import { inject, Service } from "@angular/core";
-import { GameCodeDto } from "../../dtos/GameCodeDto";
+import { GameCodeDto } from "../../interfaces/dtos/GameCodeDto";
 import { Alert } from "../alert/alert";
-import { ErrorDto } from "../../dtos/ErrorDto";
+import { ErrorDto } from "../../interfaces/dtos/ErrorDto";
 import { catchError, EMPTY, Observable } from "rxjs";
-import { PlayerNameDto } from "../../dtos/PlayerNameDto";
+import { PlayerNameDto } from "../../interfaces/dtos/PlayerNameDto";
 
 @Service()
 export class InSyncApi {
@@ -41,12 +41,9 @@ export class InSyncApi {
     );
   }
 
-  public newPlayer(gameCode: string, playerName: string, useGenericCatchError = true) {
+  public newPlayer(gameCode: string, playerName: PlayerNameDto, useGenericCatchError = true) {
     return this.applyGenericCatchError(
-      this.http.post<PlayerNameDto>(
-        `${InSyncApi.BASE_PATH}/game/${gameCode}/player`,
-        new PlayerNameDto(playerName)
-      ),
+      this.http.post(`${InSyncApi.BASE_PATH}/game/${gameCode}/player`, playerName),
       useGenericCatchError
     );
   }

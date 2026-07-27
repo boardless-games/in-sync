@@ -1,9 +1,8 @@
 @if (playerName().length === 0) {
-  <form [formGroup]="playerNameForm" class="flex-column">
-    <div class="flex-column">
-      <label for="player-name-input">Player Name</label>
-      <input id="player-name-input" [formControl]="playerNameForm.controls.playerName" />
-    </div>
-    <button id="join-button" type="submit" [disabled]="playerNameForm.invalid">Join</button>
-  </form>
-} @else {}
+  <app-player-form
+    [gameCode]="gameCode()"
+    (submitted)="playerFormSubmitted($event)"></app-player-form>
+} @else {
+  <span>{{ gameCode() }}</span>
+  <span>{{ playerName() }}</span>
+}

@@ -30,7 +30,8 @@ module.exports = defineConfig([
           prefix: "app",
           style: "kebab-case"
         }
-      ]
+      ],
+      "no-param-reassign": ["error", { props: true }]
     }
   },
   {
