@@ -10,7 +10,7 @@ import { PlayerNameDto } from "../../interfaces/dtos/PlayerNameDto";
 export class InSyncApi {
   private readonly alertService = inject(Alert);
   private readonly http = inject(HttpClient);
-  private static readonly BASE_PATH = "/in-sync-api";
+  private readonly BASE_PATH = "/in-sync-api";
 
   public genericCatchError = (errorResponse: HttpErrorResponse) => {
     let message: string;
@@ -29,21 +29,21 @@ export class InSyncApi {
 
   public newGame(useGenericCatchError = true) {
     return this.applyGenericCatchError(
-      this.http.post<GameCodeDto>(`${InSyncApi.BASE_PATH}/game`, null),
+      this.http.post<GameCodeDto>(`${this.BASE_PATH}/game`, null),
       useGenericCatchError
     );
   }
 
   public getGame(gameCode: string, useGenericCatchError = true) {
     return this.applyGenericCatchError(
-      this.http.get<GameCodeDto>(`${InSyncApi.BASE_PATH}/game/${gameCode}`),
+      this.http.get<GameCodeDto>(`${this.BASE_PATH}/game/${gameCode}`),
       useGenericCatchError
     );
   }
 
   public newPlayer(gameCode: string, playerName: PlayerNameDto, useGenericCatchError = true) {
     return this.applyGenericCatchError(
-      this.http.post(`${InSyncApi.BASE_PATH}/game/${gameCode}/player`, playerName),
+      this.http.post(`${this.BASE_PATH}/game/${gameCode}/player`, playerName),
       useGenericCatchError
     );
   }

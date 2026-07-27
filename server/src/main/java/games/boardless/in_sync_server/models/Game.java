@@ -9,6 +9,7 @@ import games.boardless.in_sync_server.constants.GameStatus;
 import games.boardless.in_sync_server.constants.MessageTopic;
 import games.boardless.in_sync_server.constants.ScheduleType;
 import games.boardless.in_sync_server.dtos.ErrorDto;
+import games.boardless.in_sync_server.dtos.MessageDto;
 import games.boardless.in_sync_server.dtos.PerformanceDto;
 import games.boardless.in_sync_server.dtos.ScheduleDto;
 import games.boardless.in_sync_server.dtos.SongSettingsDto;
@@ -205,7 +206,7 @@ public class Game {
   public synchronized void messagePlayers(final MessageTopic topic, final Object data) {
     logger.info("Messaging {} to {} in game {}.", topic, this.getPlayers(), this.gameCode);
     final TextMessage textMessage =
-        new TextMessage(Game.objectMapper.writeValueAsString((new Message(topic, data))));
+        new TextMessage(Game.objectMapper.writeValueAsString((new MessageDto(topic, data))));
     for (final Player player : this.players.values()) {
       player.message(textMessage);
     }

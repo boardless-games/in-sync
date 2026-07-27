@@ -1,0 +1,7 @@
+export enum MessageTopic {
+  LOBBY,
+  SONG,
+  SCHEDULE,
+  CANCEL_SCHEDULE,
+  PERFORMANCE_RESULTS
+}

@@ -4,6 +4,7 @@ import { InSyncApi } from "../../services/in-sync-api/in-sync-api";
 import { PlayerFormComponent } from "../player-form/player-form";
 import { FormValues } from "../../types/FormValues";
 import { PlayerForm } from "../../interfaces/PlayerForm";
+import { InSyncWs } from "../../services/in-sync-ws/in-sync-ws";
 
 @Component({
   selector: "app-game",
@@ -16,6 +17,7 @@ import { PlayerForm } from "../../interfaces/PlayerForm";
 })
 export class Game {
   private readonly inSyncApi = inject(InSyncApi);
+  private readonly wsService = inject(InSyncWs);
 
   gameCode = input("");
 
@@ -23,5 +25,6 @@ export class Game {
 
   protected playerFormSubmitted(playerForm: FormValues<PlayerForm>) {
     this.playerName.set(playerForm.playerName);
+    this.wsService.connect(this.gameCode(), this.playerName());
   }
 }
