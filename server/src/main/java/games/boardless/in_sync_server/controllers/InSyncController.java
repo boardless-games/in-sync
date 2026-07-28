@@ -117,11 +117,11 @@ public class InSyncController {
       content = {
         @Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json")
       })
-  @PostMapping("/game/{gameCode}/song")
-  public DeferredResult<ResponseEntity<Void>> newSong(
+  @PostMapping("/game/{gameCode}/start")
+  public DeferredResult<ResponseEntity<Void>> start(
       @PathVariable final String gameCode, @RequestBody final SongSettingsDto songSettings)
       throws BadRequestException, ServiceUnavailableException {
-    return inSyncService.newSong(gameCode, songSettings);
+    return inSyncService.start(gameCode, songSettings);
   }
 
   @Operation(summary = "Return to the lobby.")

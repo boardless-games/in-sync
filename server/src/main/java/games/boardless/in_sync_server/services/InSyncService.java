@@ -135,7 +135,7 @@ public class InSyncService {
     return ResponseEntity.status(HttpStatus.CREATED).build();
   }
 
-  public DeferredResult<ResponseEntity<Void>> newSong(
+  public DeferredResult<ResponseEntity<Void>> start(
       final String gameCode, final SongSettingsDto gameSettings)
       throws BadRequestException, ServiceUnavailableException {
     final Optional<String> gameCodeValidation = InputValidation.validateGameCode(gameCode);
@@ -148,14 +148,14 @@ public class InSyncService {
       throw new BadRequestException(String.format("Game %s not found.", gameCode));
     }
 
-    game.initializeNewSong();
+    game.prepare();
 
     final DeferredResult<ResponseEntity<Void>> deferredResult =
         new DeferredResult<>(
             WAIT_PLAYER_READY_TIME + 5_000L,
             new ServiceUnavailableException(
                 String.format(
-                    "Request timed out while creating new song in game %s.", game.getGameCode())));
+                    "Request timed out while starting game %s.", game.getGameCode())));
 
     this.taskScheduler.schedule(
         () -> {
@@ -245,7 +245,7 @@ public class InSyncService {
     this.taskScheduler.schedule(
         () -> {
           try {
-            autoClearSchedule(gameCode, scheduleType, schedule);
+            autoClearSchedule(gameCode, schedule);
           } catch (Exception e) {
             logger.error("Failed to auto clear schedule.", e);
           }
@@ -492,7 +492,7 @@ public class InSyncService {
       throw new BadRequestException(String.format("Game %s was deleted while starting.", gameCode));
     }
 
-    game.newSong(songSettings);
+    game.start(songSettings);
   }
 
   void autoVerifyScheduleAcknowledgement(final String gameCode)
@@ -520,7 +520,7 @@ public class InSyncService {
   }
 
   void autoClearSchedule(
-      final String gameCode, final ScheduleType scheduleType, final long schedule)
+      final String gameCode, final long schedule)
       throws BadRequestException {
     if (gameCode == null) {
       throw new BadRequestException("Game code must be provided.");
@@ -532,7 +532,7 @@ public class InSyncService {
           String.format("Game %s was deleted while scheduling.", gameCode));
     }
 
-    if (scheduleType == ScheduleType.PLAYBACK && game.getSchedule() == schedule) {
+    if (game.getSchedule() == schedule) {
       game.clearSchedule();
     }
   }

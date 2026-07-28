@@ -72,12 +72,12 @@ public class Game {
 
   public void clearSchedule() {
     this.schedule = 0l;
+    this.status = GameStatus.IN_GAME;
     logger.info("The schedule for game {} was cleared.", this.gameCode);
   }
 
   public void cancelSchedule(final String reason) {
     this.clearSchedule();
-    this.status = GameStatus.LISTENING;
     this.messagePlayers(MessageTopic.CANCEL_SCHEDULE, new ErrorDto(reason));
     logger.info("The schedule for game {} was cleared because \"{}\".", this.gameCode, reason);
   }
@@ -222,26 +222,22 @@ public class Game {
     logger.info("{} is ready in game {}.", playerName, this.gameCode);
   }
 
-  public synchronized void initializeNewSong() throws ServiceUnavailableException {
-    if (this.status != GameStatus.LOBBY && this.status != GameStatus.LISTENING) {
+  public synchronized void prepare() throws ServiceUnavailableException {
+    if (this.status != GameStatus.LOBBY) {
       throw new ServiceUnavailableException(
-          String.format("Cannot create a new song in game %s right now.", this.gameCode));
+          String.format("Cannot prepare game %s right now.", this.gameCode));
     }
 
-    this.status = GameStatus.IN_GAME;
+    this.status = GameStatus.PREPARING;
 
     this.pingPlayers();
   }
 
-  public synchronized void newSong(final SongSettingsDto songSettings)
+  public synchronized void start(final SongSettingsDto songSettings)
       throws ServiceUnavailableException, BadRequestException {
-    if (this.status == GameStatus.LOBBY) {
+    if (this.status != GameStatus.PREPARING) {
       throw new ServiceUnavailableException(
-          String.format("Game %s has not been initialized.", this.gameCode));
-    }
-    if (this.status != GameStatus.IN_GAME) {
-      throw new ServiceUnavailableException(
-          String.format("Game %s has already started.", this.gameCode));
+          String.format("Game %s has not been prepared.", this.gameCode));
     }
     if (!this.arePlayersReady()) {
       throw new ServiceUnavailableException(
@@ -249,7 +245,7 @@ public class Game {
     }
 
     logger.info("Created a new song in game {}.", gameCode);
-    this.status = GameStatus.LISTENING;
+    this.status = GameStatus.IN_GAME;
 
     this.song = new Song(songSettings, this.getPlayers());
 
@@ -257,7 +253,7 @@ public class Game {
   }
 
   public synchronized void toLobby() throws ServiceUnavailableException {
-    if (this.status != GameStatus.LISTENING) {
+    if (this.status != GameStatus.IN_GAME) {
       throw new ServiceUnavailableException(
           String.format("Cannot return to lobby in game %s right now.", this.gameCode));
     }
@@ -274,9 +270,9 @@ public class Game {
 
   public synchronized long schedule(final ScheduleType scheduleType)
       throws ServiceUnavailableException {
-    if (this.status != GameStatus.LISTENING) {
+    if (this.status != GameStatus.IN_GAME) {
       throw new ServiceUnavailableException(
-          String.format("Game %s has not been started.", this.gameCode));
+          String.format("Cannot schedule in game %s right now.", this.gameCode));
     }
 
     if (this.isScheduled()) {
@@ -357,7 +353,7 @@ public class Game {
 
     if (this.performances.size() == this.players.size()) {
       this.messagePlayers(MessageTopic.PERFORMANCE_RESULTS, this.performances.values().toArray());
-      this.status = GameStatus.LISTENING;
+      this.status = GameStatus.IN_GAME;
       this.clearSchedule();
     }
   }
