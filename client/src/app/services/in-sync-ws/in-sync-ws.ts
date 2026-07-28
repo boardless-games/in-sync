@@ -1,14 +1,15 @@
 import { EventEmitter, Service } from "@angular/core";
 import { BehaviorSubject } from "rxjs";
+import { MessageDto } from "../../interfaces/dtos/MessageDto";
 
 @Service()
 export class InSyncWs {
   private readonly BASE_PATH = "/in-sync-ws";
   private webSocket?: WebSocket;
-  private readonly _open = new BehaviorSubject(false);
-  public readonly open = this._open.asObservable();
-  private readonly _message = new EventEmitter<string>();
-  public readonly message = this._message.asObservable();
+  private readonly _connected = new BehaviorSubject(false);
+  public readonly connected = this._connected.asObservable();
+  private readonly _messaged = new EventEmitter<MessageDto>();
+  public readonly messaged = this._messaged.asObservable();
 
   public connect(gameCode: string, playerName: string) {
     if (
@@ -41,7 +42,7 @@ export class InSyncWs {
 
   private closeHandler = (event: CloseEvent) => {
     console.log("Web socket connection closed.", event);
-    this._open.next(false);
+    this._connected.next(false);
   };
 
   private errorHandler = (event: Event) => {
@@ -50,11 +51,15 @@ export class InSyncWs {
 
   private messageHandler = (event: MessageEvent) => {
     console.log("Web socket connection message.", event);
-    this._message.emit(event.data);
+    try {
+      this._messaged.emit(JSON.parse(event.data));
+    } catch (error) {
+      console.error("Invalid message received: ", event.data, error);
+    }
   };
 
   private openHandler = (event: Event) => {
     console.log("Web socket connection opened.", event);
-    this._open.next(true);
+    this._connected.next(true);
   };
 }
