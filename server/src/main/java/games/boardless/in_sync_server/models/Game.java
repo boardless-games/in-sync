@@ -228,7 +228,7 @@ public class Game {
           String.format("Cannot create a new song in game %s right now.", this.gameCode));
     }
 
-    this.status = GameStatus.INITIALIZING;
+    this.status = GameStatus.IN_GAME;
 
     this.pingPlayers();
   }
@@ -239,7 +239,7 @@ public class Game {
       throw new ServiceUnavailableException(
           String.format("Game %s has not been initialized.", this.gameCode));
     }
-    if (this.status != GameStatus.INITIALIZING) {
+    if (this.status != GameStatus.IN_GAME) {
       throw new ServiceUnavailableException(
           String.format("Game %s has already started.", this.gameCode));
     }

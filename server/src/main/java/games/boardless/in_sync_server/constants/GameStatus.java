@@ -2,7 +2,7 @@ package games.boardless.in_sync_server.constants;
 
 public enum GameStatus {
   LOBBY,
-  INITIALIZING,
+  IN_GAME,
   LISTENING,
   PERFORMING
 }
