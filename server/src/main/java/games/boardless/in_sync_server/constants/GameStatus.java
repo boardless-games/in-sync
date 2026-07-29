@@ -4,6 +4,6 @@ public enum GameStatus {
   LOBBY,
   PREPARING,
   IN_GAME,
-  LISTENING,
+  PLAYINGBACK,
   PERFORMING
 }

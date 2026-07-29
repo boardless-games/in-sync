@@ -1,7 +1,6 @@
 package games.boardless.in_sync_server.handlers;
 
 import games.boardless.in_sync_server.services.InSyncService;
-import games.boardless.in_sync_server.utils.ToString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +14,10 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 @Component
 public class InSyncWebSocketHandler extends TextWebSocketHandler {
   private static final Logger logger = LoggerFactory.getLogger(InSyncWebSocketHandler.class);
+
+  public static final String getWebSocketSessionString(final WebSocketSession session) {
+    return String.format("WebSocketSession[id=%s, uri=%s]", session.getId(), session.getUri());
+  }
 
   private final InSyncService inSyncService;
 
@@ -30,7 +33,7 @@ public class InSyncWebSocketHandler extends TextWebSocketHandler {
 
   @Override
   protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-    logger.info("{} sent {}.", ToString.toString(session), message.getPayload());
+    logger.info("{} sent {}.", getWebSocketSessionString(session), message.getPayload());
   }
 
   @Override
@@ -40,7 +43,8 @@ public class InSyncWebSocketHandler extends TextWebSocketHandler {
 
   @Override
   public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
-    logger.error("Web socket transport error on {}.", ToString.toString(session), exception);
+    logger.error(
+        "Web socket transport error on {}.", getWebSocketSessionString(session), exception);
   }
 
   @Override

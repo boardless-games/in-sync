@@ -4,7 +4,6 @@ import games.boardless.in_sync_server.dtos.ErrorDto;
 import games.boardless.in_sync_server.exceptions.BadRequestException;
 import games.boardless.in_sync_server.exceptions.NotFoundException;
 import games.boardless.in_sync_server.exceptions.ServiceUnavailableException;
-import games.boardless.in_sync_server.utils.ToString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -18,6 +17,17 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class GlobalExceptionHandler {
   private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
+  public static String getExceptionString(final Exception exception, final int stackTraceLimit) {
+    final StringBuilder sb = new StringBuilder();
+    sb.append(exception);
+    final StackTraceElement[] stackTraceElements = exception.getStackTrace();
+    final int limit = Math.min(stackTraceElements.length, stackTraceLimit);
+    for (int i = 0; i < limit; ++i) {
+      sb.append("\n\tat ").append(stackTraceElements[i]);
+    }
+    return sb.toString();
+  }
+
   @ExceptionHandler(
       exception = {
         BadRequestException.class,
@@ -25,19 +35,19 @@ public class GlobalExceptionHandler {
         HttpMessageConversionException.class
       })
   public ResponseEntity<ErrorDto> handleBadRequest(Exception e) {
-    logger.info(ToString.toString(e, 1));
+    logger.info(getExceptionString(e, 1));
     return ResponseEntity.badRequest().body(new ErrorDto(e.getMessage()));
   }
 
   @ExceptionHandler(exception = {ServiceUnavailableException.class})
   public ResponseEntity<ErrorDto> handleServiceUnavailable(Exception e) {
-    logger.info(ToString.toString(e, 1));
+    logger.info(getExceptionString(e, 1));
     return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(new ErrorDto(e.getMessage()));
   }
 
   @ExceptionHandler(exception = {NotFoundException.class})
   public ResponseEntity<ErrorDto> handleNotFound(Exception e) {
-    logger.info(ToString.toString(e, 1));
+    logger.info(getExceptionString(e, 1));
     return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorDto(e.getMessage()));
   }
 

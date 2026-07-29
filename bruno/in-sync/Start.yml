@@ -1,11 +1,11 @@
 info:
-  name: New Song
+  name: Start
   type: http
   seq: 6
 
 http:
   method: POST
-  url: "{{SERVER_PROTOCOL}}://{{SERVER_DOMAIN}}:{{SERVER_PORT}}/in-sync-api/game/:gameCode/song"
+  url: "{{SERVER_PROTOCOL}}://{{SERVER_DOMAIN}}:{{SERVER_PORT}}/in-sync-api/game/:gameCode/start"
   params:
     - name: gameCode
       value: "{{gameCode}}"

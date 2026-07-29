@@ -105,7 +105,7 @@ public class InSyncController {
     return inSyncService.newPlayer(gameCode, name);
   }
 
-  @Operation(summary = "Generate a new song and start listening/performing.")
+  @Operation(summary = "Start a game and generate a new song.")
   @ApiResponse(responseCode = "200", content = @Content)
   @ApiResponse(
       responseCode = "400",
@@ -155,8 +155,8 @@ public class InSyncController {
         @Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json")
       })
   @PostMapping("/game/{gameCode}/performance/schedule")
-  public ResponseEntity<Void> schedulePerformance(@PathVariable final String gameCode)
-      throws BadRequestException, ServiceUnavailableException {
+  public DeferredResult<ResponseEntity<Void>> schedulePerformance(
+      @PathVariable final String gameCode) throws BadRequestException, ServiceUnavailableException {
     return inSyncService.schedule(gameCode, ScheduleType.PERFORMANCE);
   }
 
@@ -192,7 +192,7 @@ public class InSyncController {
         @Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json")
       })
   @PostMapping("/game/{gameCode}/playback/schedule")
-  public ResponseEntity<Void> schedulePlayback(@PathVariable final String gameCode)
+  public DeferredResult<ResponseEntity<Void>> schedulePlayback(@PathVariable final String gameCode)
       throws BadRequestException, ServiceUnavailableException {
     return inSyncService.schedule(gameCode, ScheduleType.PLAYBACK);
   }

@@ -1,6 +1,6 @@
 package games.boardless.in_sync_server.models;
 
-import games.boardless.in_sync_server.utils.ToString;
+import games.boardless.in_sync_server.handlers.InSyncWebSocketHandler;
 import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,7 +64,7 @@ public class Player implements Comparable<Player> {
         + ", position="
         + position
         + ", session="
-        + ToString.toString(session)
+        + InSyncWebSocketHandler.getWebSocketSessionString(session)
         + ", ready="
         + ready
         + "]";

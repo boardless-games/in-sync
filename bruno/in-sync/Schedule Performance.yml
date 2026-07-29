@@ -1,7 +1,7 @@
 info:
   name: Schedule Performance
   type: http
-  seq: 8
+  seq: 9
 
 http:
   method: POST
@@ -20,7 +20,7 @@ runtime:
           await bru.runRequest("Get Schedule");
           await bru.runRequest("Acknowledge Schedule");
         }
-        if (res.status === 201) {
+        if (res.status === 200) {
           acknowledgeSchedule();
         }
 

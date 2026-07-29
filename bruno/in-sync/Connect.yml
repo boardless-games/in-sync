@@ -4,7 +4,7 @@ info:
   seq: 5
 
 websocket:
-  url: "{{WS_PROTOCOL}}://{{SERVER_DOMAIN}}:{{SERVER_PORT}}/in-sync-api?gameCode={{gameCode}}&playerName={{playerName}}"
+  url: "{{WS_PROTOCOL}}://{{SERVER_DOMAIN}}:{{SERVER_PORT}}/in-sync-ws?gameCode={{gameCode}}&playerName={{playerName}}"
   auth: inherit
 
 settings:

@@ -1,12 +1,7 @@
 package games.boardless.in_sync_server.services;
 
 import static games.boardless.in_sync_server.constants.Constants.DEV_PROFILE;
-import static games.boardless.in_sync_server.constants.Constants.GAME_AUTO_DELETE_TIME;
-import static games.boardless.in_sync_server.constants.Constants.MAX_NUM_GAMES;
-import static games.boardless.in_sync_server.constants.Constants.PLAYER_AUTO_REMOVE_TIME;
 import static games.boardless.in_sync_server.constants.Constants.PROD_PROFILE;
-import static games.boardless.in_sync_server.constants.Constants.SCHEDULE_OFFSET;
-import static games.boardless.in_sync_server.constants.Constants.WAIT_PLAYER_READY_TIME;
 
 import games.boardless.in_sync_server.constants.GameStatus;
 import games.boardless.in_sync_server.constants.ScheduleType;
@@ -19,9 +14,8 @@ import games.boardless.in_sync_server.dtos.SongSettingsDto;
 import games.boardless.in_sync_server.exceptions.BadRequestException;
 import games.boardless.in_sync_server.exceptions.NotFoundException;
 import games.boardless.in_sync_server.exceptions.ServiceUnavailableException;
+import games.boardless.in_sync_server.handlers.InSyncWebSocketHandler;
 import games.boardless.in_sync_server.models.Game;
-import games.boardless.in_sync_server.utils.InputValidation;
-import games.boardless.in_sync_server.utils.ToString;
 import java.io.IOException;
 import java.time.Clock;
 import java.util.Map;
@@ -43,6 +37,11 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 @Service
 public class InSyncService {
+  public static final int MAX_NUM_GAMES = 1;
+  public static final int GAME_AUTO_DELETE_TIME = 60_000;
+  public static final int PLAYER_AUTO_REMOVE_TIME = 10_000;
+  public static final int WAIT_PLAYER_READY_TIME = 2_000;
+
   private static final Logger logger = LoggerFactory.getLogger(InSyncService.class);
   private final TaskScheduler taskScheduler;
   private final Environment environment;
@@ -90,7 +89,7 @@ public class InSyncService {
 
   public synchronized ResponseEntity<GameCodeDto> getGame(final String gameCode)
       throws BadRequestException {
-    final Optional<String> gameCodeValidation = InputValidation.validateGameCode(gameCode);
+    final Optional<String> gameCodeValidation = Game.validateGameCode(gameCode);
     if (gameCodeValidation.isPresent()) {
       throw new BadRequestException(gameCodeValidation.get());
     }
@@ -105,7 +104,7 @@ public class InSyncService {
 
   public ResponseEntity<Void> newPlayer(final String gameCode, final PlayerNameDto name)
       throws BadRequestException, ServiceUnavailableException {
-    final Optional<String> gameCodeValidation = InputValidation.validateGameCode(gameCode);
+    final Optional<String> gameCodeValidation = Game.validateGameCode(gameCode);
     if (gameCodeValidation.isPresent()) {
       throw new BadRequestException(gameCodeValidation.get());
     }
@@ -114,7 +113,7 @@ public class InSyncService {
       throw new BadRequestException("Name must be provided.");
     }
 
-    final Optional<String> nameValidation = InputValidation.validatePlayerName(name.playerName());
+    final Optional<String> nameValidation = Game.validatePlayerName(name.playerName());
     if (nameValidation.isPresent()) {
       throw new BadRequestException(nameValidation.get());
     }
@@ -136,9 +135,9 @@ public class InSyncService {
   }
 
   public DeferredResult<ResponseEntity<Void>> start(
-      final String gameCode, final SongSettingsDto gameSettings)
+      final String gameCode, final SongSettingsDto songSettings)
       throws BadRequestException, ServiceUnavailableException {
-    final Optional<String> gameCodeValidation = InputValidation.validateGameCode(gameCode);
+    final Optional<String> gameCodeValidation = Game.validateGameCode(gameCode);
     if (gameCodeValidation.isPresent()) {
       throw new BadRequestException(gameCodeValidation.get());
     }
@@ -148,20 +147,14 @@ public class InSyncService {
       throw new BadRequestException(String.format("Game %s not found.", gameCode));
     }
 
-    game.prepare();
+    final DeferredResult<ResponseEntity<Void>> deferredResult = new DeferredResult<>();
 
-    final DeferredResult<ResponseEntity<Void>> deferredResult =
-        new DeferredResult<>(
-            WAIT_PLAYER_READY_TIME + 5_000L,
-            new ServiceUnavailableException(
-                String.format(
-                    "Request timed out while starting game %s.", game.getGameCode())));
+    game.prepare(songSettings, deferredResult);
 
     this.taskScheduler.schedule(
         () -> {
           try {
-            autoNewSong(gameCode, gameSettings);
-            deferredResult.setResult(ResponseEntity.status(HttpStatus.CREATED).build());
+            autoVerifyStart(gameCode);
           } catch (Exception e) {
             deferredResult.setErrorResult(e);
           }
@@ -173,7 +166,7 @@ public class InSyncService {
 
   public ResponseEntity<Void> toLobby(final String gameCode)
       throws BadRequestException, ServiceUnavailableException {
-    final Optional<String> gameCodeValidation = InputValidation.validateGameCode(gameCode);
+    final Optional<String> gameCodeValidation = Game.validateGameCode(gameCode);
     if (gameCodeValidation.isPresent()) {
       throw new BadRequestException(gameCodeValidation.get());
     }
@@ -194,7 +187,7 @@ public class InSyncService {
       throw new ServiceUnavailableException("This endpoint is currently not available.");
     }
 
-    final Optional<String> gameCodeValidation = InputValidation.validateGameCode(gameCode);
+    final Optional<String> gameCodeValidation = Game.validateGameCode(gameCode);
     if (gameCodeValidation.isPresent()) {
       throw new BadRequestException(gameCodeValidation.get());
     }
@@ -205,22 +198,30 @@ public class InSyncService {
     }
 
     if (!game.isScheduled()) {
-      throw new NotFoundException(
+      throw new ServiceUnavailableException(
           String.format("No schedule found for game %s.", game.getGameCode()));
     }
 
-    return ResponseEntity.ok(
-        new ScheduleDto(
-            game.getStatus() == GameStatus.PERFORMING
-                ? ScheduleType.PERFORMANCE
-                : ScheduleType.PLAYBACK,
-            game.getSchedule()));
+    final GameStatus gameStatus = game.getStatus();
+    ScheduleType scheduleType;
+    if (gameStatus == GameStatus.PLAYINGBACK) {
+      scheduleType = ScheduleType.PLAYBACK;
+    } else if (gameStatus == GameStatus.PERFORMING) {
+      scheduleType = ScheduleType.PERFORMANCE;
+    } else {
+      logger.error("Unexpected error when getting the schedule type for game {}.", gameCode);
+      throw new ServiceUnavailableException(
+          String.format("No valid schedule found for game %s.", game.getGameCode()));
+    }
+
+    return ResponseEntity.ok(new ScheduleDto(scheduleType, game.getSchedule()));
   }
 
-  public ResponseEntity<Void> schedule(final String gameCode, final ScheduleType scheduleType)
+  public DeferredResult<ResponseEntity<Void>> schedule(
+      final String gameCode, final ScheduleType scheduleType)
       throws BadRequestException, ServiceUnavailableException {
 
-    final Optional<String> gameCodeValidation = InputValidation.validateGameCode(gameCode);
+    final Optional<String> gameCodeValidation = Game.validateGameCode(gameCode);
     if (gameCodeValidation.isPresent()) {
       throw new BadRequestException(gameCodeValidation.get());
     }
@@ -230,14 +231,16 @@ public class InSyncService {
       throw new BadRequestException(String.format("Game %s not found.", gameCode));
     }
 
-    final long schedule = game.schedule(scheduleType);
+    final DeferredResult<ResponseEntity<Void>> deferredResult = new DeferredResult<>();
+
+    game.schedule(scheduleType, deferredResult);
 
     this.taskScheduler.schedule(
         () -> {
           try {
             autoVerifyScheduleAcknowledgement(gameCode);
           } catch (Exception e) {
-            game.cancelSchedule(e.getMessage());
+            deferredResult.setErrorResult(e);
           }
         },
         this.clock.instant().plusMillis(WAIT_PLAYER_READY_TIME));
@@ -245,20 +248,25 @@ public class InSyncService {
     this.taskScheduler.schedule(
         () -> {
           try {
-            autoClearSchedule(gameCode, schedule);
+            autoClearSchedule(gameCode, scheduleType);
           } catch (Exception e) {
             logger.error("Failed to auto clear schedule.", e);
           }
         },
-        this.clock.instant().plusMillis(SCHEDULE_OFFSET));
+        this.clock
+            .instant()
+            .plusMillis(
+                Game.SCHEDULE_OFFSET_TIME
+                    + game.getSongDuration().getDuration()
+                    + WAIT_PLAYER_READY_TIME));
 
-    return ResponseEntity.status(HttpStatus.CREATED).build();
+    return deferredResult;
   }
 
   public ResponseEntity<Void> acknowledgeSchedule(
       final String gameCode, final AcknowledgeScheduleDto ack)
       throws BadRequestException, ServiceUnavailableException {
-    final Optional<String> gameCodeValidation = InputValidation.validateGameCode(gameCode);
+    final Optional<String> gameCodeValidation = Game.validateGameCode(gameCode);
     if (gameCodeValidation.isPresent()) {
       throw new BadRequestException(gameCodeValidation.get());
     }
@@ -267,7 +275,7 @@ public class InSyncService {
       throw new BadRequestException("The acknowledgment must be provided.");
     }
 
-    final Optional<String> nameValidation = InputValidation.validatePlayerName(ack.playerName());
+    final Optional<String> nameValidation = Game.validatePlayerName(ack.playerName());
     if (nameValidation.isPresent()) {
       throw new BadRequestException(nameValidation.get());
     }
@@ -285,7 +293,7 @@ public class InSyncService {
   public ResponseEntity<Void> newPerformance(
       final String gameCode, final PerformanceDto performance)
       throws BadRequestException, ServiceUnavailableException {
-    final Optional<String> gameCodeValidation = InputValidation.validateGameCode(gameCode);
+    final Optional<String> gameCodeValidation = Game.validateGameCode(gameCode);
     if (gameCodeValidation.isPresent()) {
       throw new BadRequestException(gameCodeValidation.get());
     }
@@ -294,8 +302,7 @@ public class InSyncService {
       throw new BadRequestException("The performance must be provided.");
     }
 
-    final Optional<String> nameValidation =
-        InputValidation.validatePlayerName(performance.playerName());
+    final Optional<String> nameValidation = Game.validatePlayerName(performance.playerName());
     if (nameValidation.isPresent()) {
       throw new BadRequestException(nameValidation.get());
     }
@@ -320,7 +327,7 @@ public class InSyncService {
 
     try {
       final String gameCode = queryParams.get("gameCode").getFirst();
-      final Optional<String> gameCodeValidation = InputValidation.validateGameCode(gameCode);
+      final Optional<String> gameCodeValidation = Game.validateGameCode(gameCode);
       if (gameCodeValidation.isPresent()) {
         throw new BadRequestException(gameCodeValidation.get());
       }
@@ -331,7 +338,7 @@ public class InSyncService {
       }
 
       final String playerName = queryParams.get("playerName").getFirst();
-      final Optional<String> nameValidation = InputValidation.validatePlayerName(playerName);
+      final Optional<String> nameValidation = Game.validatePlayerName(playerName);
       if (nameValidation.isPresent()) {
         throw new BadRequestException(nameValidation.get());
       }
@@ -340,14 +347,14 @@ public class InSyncService {
     } catch (NullPointerException | BadRequestException badDataException) {
       logger.info(
           "Closing {} after connection established due to bad data.",
-          ToString.toString(session),
+          InSyncWebSocketHandler.getWebSocketSessionString(session),
           badDataException);
       try {
         session.close(CloseStatus.BAD_DATA);
       } catch (IOException ioException) {
         logger.error(
             "Failed to close {} after connection established due to bad data.",
-            ToString.toString(session),
+            InSyncWebSocketHandler.getWebSocketSessionString(session),
             ioException);
       }
     } catch (Exception e) {
@@ -365,7 +372,7 @@ public class InSyncService {
 
     try {
       final String gameCode = queryParams.get("gameCode").getFirst();
-      final Optional<String> gameCodeValidation = InputValidation.validateGameCode(gameCode);
+      final Optional<String> gameCodeValidation = Game.validateGameCode(gameCode);
       if (gameCodeValidation.isPresent()) {
         throw new BadRequestException(gameCodeValidation.get());
       }
@@ -376,7 +383,7 @@ public class InSyncService {
       }
 
       final String playerName = queryParams.get("playerName").getFirst();
-      final Optional<String> nameValidation = InputValidation.validatePlayerName(playerName);
+      final Optional<String> nameValidation = Game.validatePlayerName(playerName);
       if (nameValidation.isPresent()) {
         throw new BadRequestException(nameValidation.get());
       }
@@ -391,7 +398,7 @@ public class InSyncService {
     } catch (NullPointerException | BadRequestException badDataException) {
       logger.info(
           "Failed to disconnect from {} due to bad data.",
-          ToString.toString(session),
+          InSyncWebSocketHandler.getWebSocketSessionString(session),
           badDataException);
     } catch (Exception e) {
       logger.error("Unexpected error while disconnecting.", e);
@@ -408,7 +415,7 @@ public class InSyncService {
 
     try {
       final String gameCode = queryParams.get("gameCode").getFirst();
-      final Optional<String> gameCodeValidation = InputValidation.validateGameCode(gameCode);
+      final Optional<String> gameCodeValidation = Game.validateGameCode(gameCode);
       if (gameCodeValidation.isPresent()) {
         throw new BadRequestException(gameCodeValidation.get());
       }
@@ -419,7 +426,7 @@ public class InSyncService {
       }
 
       final String playerName = queryParams.get("playerName").getFirst();
-      final Optional<String> nameValidation = InputValidation.validatePlayerName(playerName);
+      final Optional<String> nameValidation = Game.validatePlayerName(playerName);
       if (nameValidation.isPresent()) {
         throw new BadRequestException(nameValidation.get());
       }
@@ -427,10 +434,14 @@ public class InSyncService {
       game.setReady(playerName);
     } catch (NullPointerException | BadRequestException e) {
       logger.info(
-          "Failed to handle pong message from {} due to bad data.", ToString.toString(session), e);
+          "Failed to handle pong message from {} due to bad data.",
+          InSyncWebSocketHandler.getWebSocketSessionString(session),
+          e);
     } catch (Exception e) {
       logger.error(
-          "Unexpected error while handling pong message from {}.", ToString.toString(session), e);
+          "Unexpected error while handling pong message from {}.",
+          InSyncWebSocketHandler.getWebSocketSessionString(session),
+          e);
     }
   }
 
@@ -480,11 +491,11 @@ public class InSyncService {
     }
   }
 
-  void autoNewSong(final String gameCode, final SongSettingsDto songSettings)
+  void autoVerifyStart(final String gameCode)
       throws BadRequestException, ServiceUnavailableException {
 
-    if (gameCode == null || songSettings == null) {
-      throw new BadRequestException("Game code and game settings must be provided.");
+    if (gameCode == null) {
+      throw new BadRequestException("Game code must be provided.");
     }
 
     final Game game = this.games.get(gameCode);
@@ -492,7 +503,10 @@ public class InSyncService {
       throw new BadRequestException(String.format("Game %s was deleted while starting.", gameCode));
     }
 
-    game.start(songSettings);
+    if (game.getStatus() == GameStatus.PREPARING) {
+      game.toLobby();
+      throw new ServiceUnavailableException(String.format("Failed to start game %s.", gameCode));
+    }
   }
 
   void autoVerifyScheduleAcknowledgement(final String gameCode)
@@ -508,19 +522,23 @@ public class InSyncService {
           String.format("Game %s was deleted while scheduling.", gameCode));
     }
 
-    if (!game.isScheduled()) {
-      throw new ServiceUnavailableException(
-          String.format("Failed to schedule in game %s.", gameCode));
-    }
+    try {
+      if (!game.isScheduled()) {
+        throw new ServiceUnavailableException(
+            String.format("Failed to schedule in game %s.", gameCode));
+      }
 
-    if (!game.arePlayersReady()) {
-      throw new ServiceUnavailableException(
-          String.format("Players in game %s have not acknowledged the schedule.", gameCode));
+      if (!game.arePlayersReady()) {
+        throw new ServiceUnavailableException(
+            String.format("Players in game %s have not acknowledged the schedule.", gameCode));
+      }
+    } catch (Exception e) {
+      game.cancelSchedule(e.getMessage());
+      throw e;
     }
   }
 
-  void autoClearSchedule(
-      final String gameCode, final long schedule)
+  void autoClearSchedule(final String gameCode, final ScheduleType scheduleType)
       throws BadRequestException {
     if (gameCode == null) {
       throw new BadRequestException("Game code must be provided.");
@@ -532,8 +550,10 @@ public class InSyncService {
           String.format("Game %s was deleted while scheduling.", gameCode));
     }
 
-    if (game.getSchedule() == schedule) {
-      game.clearSchedule();
+    if (scheduleType == ScheduleType.PLAYBACK) {
+      game.endPlayback();
+    } else if (scheduleType == ScheduleType.PERFORMANCE) {
+      game.endPerformance();
     }
   }
 }
