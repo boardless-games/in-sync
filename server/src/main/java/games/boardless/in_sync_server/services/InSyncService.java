@@ -1,7 +1,6 @@
 package games.boardless.in_sync_server.services;
 
 import static games.boardless.in_sync_server.constants.Constants.DEV_PROFILE;
-import static games.boardless.in_sync_server.constants.Constants.PROD_PROFILE;
 
 import games.boardless.in_sync_server.constants.GameStatus;
 import games.boardless.in_sync_server.constants.ScheduleType;
@@ -24,6 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -37,10 +37,16 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 @Service
 public class InSyncService {
-  public static final int MAX_NUM_GAMES = 1;
-  public static final int GAME_AUTO_DELETE_TIME = 60_000;
-  public static final int PLAYER_AUTO_REMOVE_TIME = 10_000;
-  public static final int WAIT_PLAYER_READY_TIME = 2_000;
+  public final int GAME_AUTO_DELETE_TIME = 60_000;
+
+  @Value("${insync.max.games}")
+  public int MAX_NUM_GAMES;
+
+  @Value("${insync.player.wait.time}")
+  public int PLAYER_WAIT_TIME;
+
+  @Value("${insync.premade.games}:")
+  public String PREMADE_GAMES;
 
   private static final Logger logger = LoggerFactory.getLogger(InSyncService.class);
   private final TaskScheduler taskScheduler;
@@ -55,15 +61,17 @@ public class InSyncService {
     this.environment = environment;
     this.clock = clock;
 
-    if (this.environment.matchesProfiles(DEV_PROFILE)) {
-      final Game newGame = new Game("123456");
-      this.games.put(newGame.getGameCode(), newGame);
+    if (!this.PREMADE_GAMES.isBlank()) {
+      for (final String gameCode : this.PREMADE_GAMES.split(",")) {
+        final Game newGame = new Game(gameCode);
+        this.games.put(gameCode, newGame);
+      }
     }
   }
 
   public synchronized ResponseEntity<GameCodeDto> newGame()
       throws BadRequestException, ServiceUnavailableException {
-    if (this.games.size() >= MAX_NUM_GAMES && this.environment.matchesProfiles(PROD_PROFILE)) {
+    if (this.games.size() >= MAX_NUM_GAMES) {
       throw new ServiceUnavailableException(
           "The server is at max capacity. Please try again later.");
     }
@@ -129,7 +137,7 @@ public class InSyncService {
         () -> {
           autoRemovePlayer(game.getGameCode(), name.playerName());
         },
-        this.clock.instant().plusMillis(PLAYER_AUTO_REMOVE_TIME));
+        this.clock.instant().plusMillis(PLAYER_WAIT_TIME));
 
     return ResponseEntity.status(HttpStatus.CREATED).build();
   }
@@ -159,7 +167,7 @@ public class InSyncService {
             deferredResult.setErrorResult(e);
           }
         },
-        this.clock.instant().plusMillis(WAIT_PLAYER_READY_TIME));
+        this.clock.instant().plusMillis(PLAYER_WAIT_TIME));
 
     return deferredResult;
   }
@@ -243,7 +251,7 @@ public class InSyncService {
             deferredResult.setErrorResult(e);
           }
         },
-        this.clock.instant().plusMillis(WAIT_PLAYER_READY_TIME));
+        this.clock.instant().plusMillis(PLAYER_WAIT_TIME));
 
     this.taskScheduler.schedule(
         () -> {
@@ -258,7 +266,7 @@ public class InSyncService {
             .plusMillis(
                 Game.SCHEDULE_OFFSET_TIME
                     + game.getSongDuration().getDuration()
-                    + WAIT_PLAYER_READY_TIME));
+                    + PLAYER_WAIT_TIME));
 
     return deferredResult;
   }
