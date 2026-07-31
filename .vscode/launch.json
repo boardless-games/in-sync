@@ -10,9 +10,7 @@
       "request": "launch",
       "mainClass": "games.boardless.in_sync_server.InSyncApplication",
       "projectName": "in-sync-server",
-      "env": {
-        "insync.client.urls": "http://localhost:4200"
-      }
+      "env": {}
     },
     {
       "type": "java",
@@ -32,6 +30,8 @@
       "projectName": "in-sync-server",
       "env": {
         "spring.profiles.active": "dev",
+        "insync.max.games": 10,
+        "insync.player.wait.time": 30000,
         "insync.premade.games": "123123,123456"
       }
     }

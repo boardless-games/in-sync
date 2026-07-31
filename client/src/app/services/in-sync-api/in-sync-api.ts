@@ -36,6 +36,13 @@ export class InSyncApi {
     );
   }
 
+  public deleteOrphanGame(gameCode: string, useGenericCatchError = true) {
+    return this.applyGenericCatchError(
+      this.http.delete<void>(`${this.BASE_PATH}/game/${gameCode}`),
+      useGenericCatchError
+    );
+  }
+
   public getGame(gameCode: string, useGenericCatchError = true) {
     return this.applyGenericCatchError(
       this.http.get<GameCodeDto>(`${this.BASE_PATH}/game/${gameCode}`),

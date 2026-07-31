@@ -12,7 +12,6 @@ import games.boardless.in_sync_server.exceptions.ServiceUnavailableException;
 import games.boardless.in_sync_server.handlers.InSyncWebSocketHandler;
 import games.boardless.in_sync_server.models.Game;
 import jakarta.annotation.PostConstruct;
-
 import java.io.IOException;
 import java.time.Clock;
 import java.util.Map;
@@ -53,20 +52,21 @@ public class InSyncService {
   @Value("${insync.game.delete.time}")
   private int gameDeleteTime;
 
+  @Value("${insync.premade.games:}")
+  private String premadeGames;
+
   @Autowired
   public InSyncService(
-      final TaskScheduler taskScheduler,
-      final Environment environment,
-      final Clock clock) {
+      final TaskScheduler taskScheduler, final Environment environment, final Clock clock) {
     this.taskScheduler = taskScheduler;
     this.environment = environment;
     this.clock = clock;
   }
 
   @PostConstruct
-  public void postConstruct(@Value("${insync.premade.games:}") final String premadeGames) {
-    if (!premadeGames.isBlank()) {
-      for (final String gameCode : premadeGames.split(",")) {
+  public void postConstruct() {
+    if (!this.premadeGames.isBlank()) {
+      for (final String gameCode : this.premadeGames.split(",")) {
         try {
           this.newGame(gameCode, false);
         } catch (Exception e) {
@@ -89,7 +89,6 @@ public class InSyncService {
       final String gameCode, final boolean autoDelete)
       throws BadRequestException, ServiceUnavailableException {
     if (this.games.size() >= this.maxNumGames) {
-      logger.info("{} {}", this.games.size(), this.maxNumGames);
       throw new ServiceUnavailableException(
           "The server is at max capacity. Please try again later.");
     }
@@ -114,8 +113,25 @@ public class InSyncService {
     return ResponseEntity.status(HttpStatus.CREATED).body(new GameCodeDto(gameCode));
   }
 
-  public synchronized ResponseEntity<GameCodeDto> getGame(final String gameCode)
-      throws BadRequestException {
+  public ResponseEntity<Void> deleteOrphanGame(final String gameCode) throws BadRequestException {
+    final Optional<String> gameCodeValidation = Game.validateGameCode(gameCode);
+    if (gameCodeValidation.isPresent()) {
+      throw new BadRequestException(gameCodeValidation.get());
+    }
+
+    final Game game = this.games.get(gameCode);
+    if (game == null) {
+      throw new BadRequestException(String.format("Game %s not found.", gameCode));
+    }
+
+    if (game.numPlayers() == 0 && game.getStatus() == GameStatus.LOBBY) {
+      this.deleteGame(game.getGameCode());
+    }
+
+    return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+  }
+
+  public ResponseEntity<GameCodeDto> getGame(final String gameCode) throws BadRequestException {
     final Optional<String> gameCodeValidation = Game.validateGameCode(gameCode);
     if (gameCodeValidation.isPresent()) {
       throw new BadRequestException(gameCodeValidation.get());

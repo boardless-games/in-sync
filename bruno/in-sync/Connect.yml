@@ -1,7 +1,7 @@
 info:
   name: Connect
   type: websocket
-  seq: 5
+  seq: 6
 
 websocket:
   url: "{{WS_PROTOCOL}}://{{SERVER_DOMAIN}}:{{SERVER_PORT}}/in-sync-ws?gameCode={{gameCode}}&playerName={{playerName}}"

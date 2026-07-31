@@ -60,6 +60,7 @@ export class PlayerFormComponent {
   }
 
   protected back() {
+    this.inSyncApi.deleteOrphanGame(this.gameCode()).subscribe();
     this.router.navigate([""]);
   }
 }

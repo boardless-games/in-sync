@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -63,6 +64,19 @@ public class InSyncController {
   public ResponseEntity<GameCodeDto> newGame()
       throws BadRequestException, ServiceUnavailableException {
     return inSyncService.newGame();
+  }
+
+  @Operation(summary = "Delete a game that was created but never had any players.")
+  @ApiResponse(responseCode = "204", content = @Content)
+  @ApiResponse(
+      responseCode = "400",
+      content = {
+        @Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json")
+      })
+  @DeleteMapping("/game/{gameCode}")
+  public ResponseEntity<Void> deleteOrphanGame(@PathVariable final String gameCode)
+      throws BadRequestException {
+    return inSyncService.deleteOrphanGame(gameCode);
   }
 
   @Operation(summary = "Get a game.")
