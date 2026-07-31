@@ -2,7 +2,7 @@
   <app-player-form
     [gameCode]="gameCode()"
     (submitted)="playerFormSubmitted($event)"></app-player-form>
-} @else {
+} @else if (status === GameStatus.LOBBY) {
   <span>{{ gameCode() }}</span>
   <span>{{ playerName() }}</span>
 }
