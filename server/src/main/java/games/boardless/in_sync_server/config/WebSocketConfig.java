@@ -13,7 +13,7 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 public class WebSocketConfig implements WebSocketConfigurer {
   private final InSyncWebSocketHandler handler;
 
-  @Value("${client.urls}")
+  @Value("${insync.client.urls}")
   private String clientUrls;
 
   @Autowired

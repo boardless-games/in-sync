@@ -15,9 +15,11 @@ export class InSyncApi {
   public genericCatchError = (errorResponse: HttpErrorResponse) => {
     let message: string;
     if (errorResponse.status !== 0) {
-      message = (errorResponse.error as ErrorDto).error;
+      message =
+        (errorResponse?.error as ErrorDto)?.error ||
+        "Unknown server error. Please try again later.";
     } else {
-      message = "Error: Check device connection.";
+      message = "Unknown client error. Check device connection.";
     }
     this.alertService.alert(message);
     return EMPTY;

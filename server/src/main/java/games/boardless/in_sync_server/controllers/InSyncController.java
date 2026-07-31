@@ -6,10 +6,8 @@ import games.boardless.in_sync_server.dtos.ErrorDto;
 import games.boardless.in_sync_server.dtos.GameCodeDto;
 import games.boardless.in_sync_server.dtos.PerformanceDto;
 import games.boardless.in_sync_server.dtos.PlayerNameDto;
-import games.boardless.in_sync_server.dtos.ScheduleDto;
 import games.boardless.in_sync_server.dtos.SongSettingsDto;
 import games.boardless.in_sync_server.exceptions.BadRequestException;
-import games.boardless.in_sync_server.exceptions.NotFoundException;
 import games.boardless.in_sync_server.exceptions.ServiceUnavailableException;
 import games.boardless.in_sync_server.services.InSyncService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -195,24 +193,6 @@ public class InSyncController {
   public DeferredResult<ResponseEntity<Void>> schedulePlayback(@PathVariable final String gameCode)
       throws BadRequestException, ServiceUnavailableException {
     return inSyncService.schedule(gameCode, ScheduleType.PLAYBACK);
-  }
-
-  @Operation(summary = "Get a game's current schedule.")
-  @ApiResponse(responseCode = "200", content = @Content)
-  @ApiResponse(
-      responseCode = "400",
-      content = {
-        @Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json")
-      })
-  @ApiResponse(
-      responseCode = "503",
-      content = {
-        @Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json")
-      })
-  @GetMapping("/game/{gameCode}/schedule")
-  public ResponseEntity<ScheduleDto> getSchedule(@PathVariable final String gameCode)
-      throws BadRequestException, ServiceUnavailableException, NotFoundException {
-    return inSyncService.getSchedule(gameCode);
   }
 
   @Operation(summary = "Acknowledge a schedule.")

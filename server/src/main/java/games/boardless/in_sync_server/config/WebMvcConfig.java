@@ -7,7 +7,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
-  @Value("${client.urls}")
+  @Value("${insync.client.urls}")
   private String clientUrls;
 
   @Override

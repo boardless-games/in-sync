@@ -32,7 +32,6 @@ public class Game {
   public static final int MAX_NUM_PLAYERS = 20;
   public static final int MIN_PLAYER_NAME_LENGTH = 2;
   public static final int MAX_PLAYER_NAME_LENGTH = 15;
-  public static final int SCHEDULE_OFFSET_TIME = 4_000;
 
   private static final Logger logger = LoggerFactory.getLogger(Game.class);
   private static final Random rand = new Random();
@@ -74,6 +73,8 @@ public class Game {
   }
 
   private final String gameCode;
+  private final int playerWaitTime;
+  private final int scheduleOffsetTime;
   private GameStatus status;
   private Song song = null;
   private long schedule = 0l;
@@ -81,8 +82,10 @@ public class Game {
   private final Map<String, Performance> performances;
   private Runnable onReadyTask = null;
 
-  public Game(final String gameCode) {
+  public Game(final String gameCode, final int playerWaitTime, final int scheduleOffsetTime) {
     this.gameCode = gameCode;
+    this.playerWaitTime = playerWaitTime;
+    this.scheduleOffsetTime = scheduleOffsetTime;
     this.status = GameStatus.LOBBY;
     this.players = new ConcurrentHashMap<>();
     this.performances = new ConcurrentHashMap<>();
@@ -344,7 +347,7 @@ public class Game {
 
     this.setAllNotReady();
 
-    this.schedule = System.currentTimeMillis() + SCHEDULE_OFFSET_TIME;
+    this.schedule = System.currentTimeMillis() + this.playerWaitTime + this.scheduleOffsetTime;
 
     if (scheduleType == ScheduleType.PLAYBACK) {
       this.status = GameStatus.PLAYINGBACK;

@@ -6,12 +6,33 @@
   "configurations": [
     {
       "type": "java",
-      "name": "InSyncApplication",
+      "name": "Server - Prod",
+      "request": "launch",
+      "mainClass": "games.boardless.in_sync_server.InSyncApplication",
+      "projectName": "in-sync-server",
+      "env": {
+        "insync.client.urls": "http://localhost:4200"
+      }
+    },
+    {
+      "type": "java",
+      "name": "Server - Dev",
       "request": "launch",
       "mainClass": "games.boardless.in_sync_server.InSyncApplication",
       "projectName": "in-sync-server",
       "env": {
         "spring.profiles.active": "dev"
+      }
+    },
+    {
+      "type": "java",
+      "name": "Server - Debug",
+      "request": "launch",
+      "mainClass": "games.boardless.in_sync_server.InSyncApplication",
+      "projectName": "in-sync-server",
+      "env": {
+        "spring.profiles.active": "dev",
+        "insync.premade.games": "123123,123456"
       }
     }
   ]

@@ -1,20 +1,18 @@
 package games.boardless.in_sync_server.services;
 
-import static games.boardless.in_sync_server.constants.Constants.DEV_PROFILE;
-
 import games.boardless.in_sync_server.constants.GameStatus;
 import games.boardless.in_sync_server.constants.ScheduleType;
 import games.boardless.in_sync_server.dtos.AcknowledgeScheduleDto;
 import games.boardless.in_sync_server.dtos.GameCodeDto;
 import games.boardless.in_sync_server.dtos.PerformanceDto;
 import games.boardless.in_sync_server.dtos.PlayerNameDto;
-import games.boardless.in_sync_server.dtos.ScheduleDto;
 import games.boardless.in_sync_server.dtos.SongSettingsDto;
 import games.boardless.in_sync_server.exceptions.BadRequestException;
-import games.boardless.in_sync_server.exceptions.NotFoundException;
 import games.boardless.in_sync_server.exceptions.ServiceUnavailableException;
 import games.boardless.in_sync_server.handlers.InSyncWebSocketHandler;
 import games.boardless.in_sync_server.models.Game;
+import jakarta.annotation.PostConstruct;
+
 import java.io.IOException;
 import java.time.Clock;
 import java.util.Map;
@@ -37,58 +35,79 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 @Service
 public class InSyncService {
-  public final int GAME_AUTO_DELETE_TIME = 60_000;
-
-  @Value("${insync.max.games}")
-  public int MAX_NUM_GAMES;
-
-  @Value("${insync.player.wait.time}")
-  public int PLAYER_WAIT_TIME;
-
-  @Value("${insync.premade.games}:")
-  public String PREMADE_GAMES;
-
   private static final Logger logger = LoggerFactory.getLogger(InSyncService.class);
   private final TaskScheduler taskScheduler;
   private final Environment environment;
   private final Clock clock;
   final Map<String, Game> games = new ConcurrentHashMap<>();
 
+  @Value("${insync.max.games}")
+  private int maxNumGames;
+
+  @Value("${insync.player.wait.time}")
+  private int playerWaitTime;
+
+  @Value("${insync.schedule.offset.time}")
+  private int scheduleOffsetTime;
+
+  @Value("${insync.game.delete.time}")
+  private int gameDeleteTime;
+
   @Autowired
   public InSyncService(
-      final TaskScheduler taskScheduler, final Environment environment, final Clock clock) {
+      final TaskScheduler taskScheduler,
+      final Environment environment,
+      final Clock clock) {
     this.taskScheduler = taskScheduler;
     this.environment = environment;
     this.clock = clock;
+  }
 
-    if (!this.PREMADE_GAMES.isBlank()) {
-      for (final String gameCode : this.PREMADE_GAMES.split(",")) {
-        final Game newGame = new Game(gameCode);
-        this.games.put(gameCode, newGame);
+  @PostConstruct
+  public void postConstruct(@Value("${insync.premade.games:}") final String premadeGames) {
+    if (!premadeGames.isBlank()) {
+      for (final String gameCode : premadeGames.split(",")) {
+        try {
+          this.newGame(gameCode, false);
+        } catch (Exception e) {
+          logger.error("Failed to add premade game {}.", gameCode, e);
+        }
       }
     }
   }
 
   public synchronized ResponseEntity<GameCodeDto> newGame()
       throws BadRequestException, ServiceUnavailableException {
-    if (this.games.size() >= MAX_NUM_GAMES) {
-      throw new ServiceUnavailableException(
-          "The server is at max capacity. Please try again later.");
-    }
-
     String gameCode;
     do {
       gameCode = Game.generateGameCode();
     } while (this.games.containsKey(gameCode));
+    return this.newGame(gameCode, true);
+  }
 
-    final Game newGame = new Game(gameCode);
+  public synchronized ResponseEntity<GameCodeDto> newGame(
+      final String gameCode, final boolean autoDelete)
+      throws BadRequestException, ServiceUnavailableException {
+    if (this.games.size() >= this.maxNumGames) {
+      logger.info("{} {}", this.games.size(), this.maxNumGames);
+      throw new ServiceUnavailableException(
+          "The server is at max capacity. Please try again later.");
+    }
+
+    if (this.games.containsKey(gameCode)) {
+      throw new BadRequestException(String.format("Game %s already exists.", gameCode));
+    }
+
+    final Game newGame = new Game(gameCode, this.playerWaitTime, this.scheduleOffsetTime);
     this.games.put(gameCode, newGame);
 
-    this.taskScheduler.schedule(
-        () -> {
-          autoDeleteGame(newGame.getGameCode());
-        },
-        this.clock.instant().plusMillis(GAME_AUTO_DELETE_TIME));
+    if (autoDelete) {
+      this.taskScheduler.schedule(
+          () -> {
+            autoDeleteGame(newGame.getGameCode());
+          },
+          this.clock.instant().plusMillis(gameDeleteTime));
+    }
 
     logger.info("Created game {}.", gameCode);
 
@@ -137,7 +156,7 @@ public class InSyncService {
         () -> {
           autoRemovePlayer(game.getGameCode(), name.playerName());
         },
-        this.clock.instant().plusMillis(PLAYER_WAIT_TIME));
+        this.clock.instant().plusMillis(playerWaitTime));
 
     return ResponseEntity.status(HttpStatus.CREATED).build();
   }
@@ -167,7 +186,7 @@ public class InSyncService {
             deferredResult.setErrorResult(e);
           }
         },
-        this.clock.instant().plusMillis(PLAYER_WAIT_TIME));
+        this.clock.instant().plusMillis(playerWaitTime));
 
     return deferredResult;
   }
@@ -187,42 +206,6 @@ public class InSyncService {
     game.toLobby();
 
     return ResponseEntity.ok().build();
-  }
-
-  public ResponseEntity<ScheduleDto> getSchedule(final String gameCode)
-      throws NotFoundException, BadRequestException, ServiceUnavailableException {
-    if (!this.environment.matchesProfiles(DEV_PROFILE)) {
-      throw new ServiceUnavailableException("This endpoint is currently not available.");
-    }
-
-    final Optional<String> gameCodeValidation = Game.validateGameCode(gameCode);
-    if (gameCodeValidation.isPresent()) {
-      throw new BadRequestException(gameCodeValidation.get());
-    }
-
-    final Game game = this.games.get(gameCode);
-    if (game == null) {
-      throw new BadRequestException(String.format("Game %s not found.", gameCode));
-    }
-
-    if (!game.isScheduled()) {
-      throw new ServiceUnavailableException(
-          String.format("No schedule found for game %s.", game.getGameCode()));
-    }
-
-    final GameStatus gameStatus = game.getStatus();
-    ScheduleType scheduleType;
-    if (gameStatus == GameStatus.PLAYINGBACK) {
-      scheduleType = ScheduleType.PLAYBACK;
-    } else if (gameStatus == GameStatus.PERFORMING) {
-      scheduleType = ScheduleType.PERFORMANCE;
-    } else {
-      logger.error("Unexpected error when getting the schedule type for game {}.", gameCode);
-      throw new ServiceUnavailableException(
-          String.format("No valid schedule found for game %s.", game.getGameCode()));
-    }
-
-    return ResponseEntity.ok(new ScheduleDto(scheduleType, game.getSchedule()));
   }
 
   public DeferredResult<ResponseEntity<Void>> schedule(
@@ -251,7 +234,7 @@ public class InSyncService {
             deferredResult.setErrorResult(e);
           }
         },
-        this.clock.instant().plusMillis(PLAYER_WAIT_TIME));
+        this.clock.instant().plusMillis(playerWaitTime));
 
     this.taskScheduler.schedule(
         () -> {
@@ -264,9 +247,9 @@ public class InSyncService {
         this.clock
             .instant()
             .plusMillis(
-                Game.SCHEDULE_OFFSET_TIME
-                    + game.getSongDuration().getDuration()
-                    + PLAYER_WAIT_TIME));
+                this.playerWaitTime
+                    + this.scheduleOffsetTime
+                    + game.getSongDuration().getDuration()));
 
     return deferredResult;
   }
