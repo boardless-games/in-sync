@@ -1,5 +1,29 @@
 :host {
-  justify-content: center;
+  padding: 10px;
+  justify-content: flex-start;
   align-items: center;
   text-align: center;
+  box-sizing: border-box;
+}
+
+:host > .padding:first-child {
+  flex: 1 1 auto;
+}
+
+:host > .padding:last-child {
+  flex: 4 1 auto;
+}
+
+#lobby {
+  justify-content: flex-start;
+  align-items: center;
+  gap: 20px;
+}
+
+#lobby > .lobby-title {
+  align-items: center;
+  gap: 20px;
+}
+
+#lobby > .lobby-player {
 }

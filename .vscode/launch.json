@@ -30,6 +30,7 @@
       "projectName": "in-sync-server",
       "env": {
         "spring.profiles.active": "dev",
+        "insync.game.delete.time": 600000,
         "insync.max.games": 10,
         "insync.player.wait.time": 30000,
         "insync.premade.games": "123123,123456"

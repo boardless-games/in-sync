@@ -19,7 +19,7 @@ import { Router } from "@angular/router";
   templateUrl: "./player-form.html",
   styleUrl: "./player-form.css",
   host: {
-    class: "full-size flex-column overflow"
+    class: "flex-column"
   }
 })
 export class PlayerFormComponent {

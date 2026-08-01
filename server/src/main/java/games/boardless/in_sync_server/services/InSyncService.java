@@ -14,6 +14,7 @@ import games.boardless.in_sync_server.models.Game;
 import jakarta.annotation.PostConstruct;
 import java.io.IOException;
 import java.time.Clock;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -53,7 +54,11 @@ public class InSyncService {
   private int gameDeleteTime;
 
   @Value("${insync.premade.games:}")
-  private String premadeGames;
+  private void setPremadeGames(final String premadeGames) {
+    this.premadeGames = premadeGames.isBlank() ? new String[0] : premadeGames.split(",");
+  }
+
+  private String[] premadeGames;
 
   @Autowired
   public InSyncService(
@@ -65,13 +70,11 @@ public class InSyncService {
 
   @PostConstruct
   public void postConstruct() {
-    if (!this.premadeGames.isBlank()) {
-      for (final String gameCode : this.premadeGames.split(",")) {
-        try {
-          this.newGame(gameCode, false);
-        } catch (Exception e) {
-          logger.error("Failed to add premade game {}.", gameCode, e);
-        }
+    for (final String gameCode : this.premadeGames) {
+      try {
+        this.newGame(gameCode, false);
+      } catch (Exception e) {
+        logger.error("Failed to add premade game {}.", gameCode, e);
       }
     }
   }
@@ -453,7 +456,9 @@ public class InSyncService {
   }
 
   public void deleteGame(final String gameCode) {
-    if (gameCode == null) {
+    if (gameCode == null
+        || Arrays.stream(this.premadeGames)
+            .anyMatch((premadeGame) -> premadeGame.equals(gameCode))) {
       return;
     }
 

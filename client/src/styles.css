@@ -47,12 +47,14 @@ body {
 }
 
 .h1 {
-  font-size: 75px;
+  --font-size: 75px;
+  font-size: var(--font-size);
   font-weight: bold;
 }
 
 .h2 {
-  font-size: 55px;
+  --font-size: 55px;
+  font-size: var(--font-size);
   font-weight: bold;
 }
 
@@ -93,6 +95,8 @@ button {
   cursor: pointer;
   background-color: var(--blue) !important;
   color: white !important;
+  width: 100%;
+  max-width: 245px;
 }
 
 button:focus-visible {

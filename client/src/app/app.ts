@@ -6,6 +6,7 @@ import { IconButton } from "./components/icon-button/icon-button";
 import { Icon } from "./constants/Icon";
 import { Alert } from "./services/alert/alert";
 import { AudioService } from "./services/audio/audio";
+import { environment } from "../environments/environment";
 
 @Component({
   selector: "app-root",
@@ -19,7 +20,7 @@ import { AudioService } from "./services/audio/audio";
 export class App {
   protected readonly audioService = inject(AudioService);
   private readonly alertService = inject(Alert);
-  protected readonly initialized = signal(false);
+  protected readonly initialized = signal(!environment.production);
 
   private readonly alerts: string[] = [];
   protected alert: WritableSignal<string> = signal("");

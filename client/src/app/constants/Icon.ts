@@ -1,3 +1,4 @@
 export enum Icon {
-  CLOSE
+  CLOSE,
+  SHARE
 }

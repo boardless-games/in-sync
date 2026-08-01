@@ -1,8 +1,30 @@
-@if (status === GameStatus.PLAYER_FORM) {
+<div class="padding"></div>
+@if (status() === GameStatus.PLAYER_FORM) {
   <app-player-form
     [gameCode]="gameCode()"
     (submitted)="playerFormSubmitted($event)"></app-player-form>
-} @else if (status === GameStatus.LOBBY) {
-  <span>{{ gameCode() }}</span>
-  <span>{{ playerName() }}</span>
+} @else if (status() === GameStatus.LOBBY) {
+  <div id="lobby" class="flex-column">
+    <div class="lobby-title flex-row">
+      <span class="h2">{{ gameCode() }}</span>
+      <app-icon-button
+        [icon]="Icon.SHARE"
+        size="36px"
+        title="Copy link"
+        (clicked)="shareGameCode()"></app-icon-button>
+    </div>
+    <div class="lobby-players" class="flex-row">
+      @for (player of players(); track player) {
+        <div class="lobby-player">
+          <span>{{ player }}</span>
+        </div>
+      }
+    </div>
+    @if (isAdmin()) {
+      <div></div>
+      <button id="start-game-button">Start</button>
+    }
+    <button id="leave-lobby-button">Leave</button>
+  </div>
 }
+<div class="padding"></div>
