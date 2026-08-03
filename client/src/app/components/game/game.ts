@@ -49,7 +49,12 @@ export class Game {
       this.connected.set(connected);
       if (this.status() === GameStatus.PLAYER_FORM && connected) {
         this.status.set(GameStatus.LOBBY);
-        this.audioService.playAudioFile(AudioFile.LOBBY_RHYTHM_1, { loop: true });
+        this.audioService.playAudioFile(AudioFile.LOBBY_RHYTHM_1, {
+          volume: 0.25,
+          loop: true,
+          offset: 0,
+          duration: 10
+        });
       }
     });
     this.wsService.messaged.pipe(takeUntilDestroyed()).subscribe((message: MessageDto) => {
@@ -63,6 +68,7 @@ export class Game {
   protected playerFormSubmitted(playerForm: FormValues<PlayerForm>) {
     this.playerName.set(playerForm.playerName);
     this.wsService.connect(this.gameCode(), this.playerName());
+    this.alertService.alert("Turn your sound on!");
   }
 
   protected shareGameCode() {
