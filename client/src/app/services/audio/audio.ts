@@ -40,6 +40,7 @@ export class AudioService {
       duration?: number;
       playbackRate?: number;
       volume?: number;
+      loop?: boolean;
     }
   ): Promise<AudioBufferSourceNode | undefined> {
     try {
@@ -62,6 +63,10 @@ export class AudioService {
 
       if (options?.playbackRate) {
         audioSourceNode.playbackRate.value = options.playbackRate;
+      }
+
+      if (options?.loop) {
+        audioSourceNode.loop = options.loop;
       }
 
       if (options?.volume !== undefined) {

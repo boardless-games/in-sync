@@ -20,10 +20,114 @@
   gap: 20px;
 }
 
-#lobby > .lobby-title {
+#lobby .lobby-title {
   align-items: center;
   gap: 20px;
 }
 
-#lobby > .lobby-player {
+.lobby-players {
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.lobby-player {
+  border-radius: 50%;
+  box-sizing: border-box;
+  padding: 15px;
+}
+
+.lobby-player:nth-child(1) {
+  animation: beat 250ms 0s linear 1;
+}
+
+.lobby-player:nth-child(2) {
+  animation: beat 250ms 500ms linear 1;
+}
+
+.lobby-player:nth-child(3) {
+  animation: beat 250ms 1s linear 1;
+}
+
+.lobby-player:nth-child(4) {
+  animation: beat 250ms 1500ms linear 1;
+}
+
+.lobby-player:nth-child(5) {
+  animation: beat 250ms 2s linear 1;
+}
+
+.lobby-player:nth-child(6) {
+  animation: beat 250ms 2500ms linear 1;
+}
+
+.lobby-player:nth-child(7) {
+  animation: beat 250ms 3s linear 1;
+}
+
+.lobby-player:nth-child(8) {
+  animation: beat 250ms 3500ms linear 1;
+}
+
+.lobby-player:nth-child(9) {
+  animation: beat 250ms 4s linear 1;
+}
+
+.lobby-player:nth-child(10) {
+  animation: beat 250ms 4500ms linear 1;
+}
+
+.lobby-player:nth-child(11) {
+  animation: beat 250ms 5s linear 1;
+}
+
+.lobby-player:nth-child(12) {
+  animation: beat 250ms 5500ms linear 1;
+}
+
+.lobby-player:nth-child(7n) {
+  background-color: var(--white);
+  color: var(--blue);
+}
+
+@keyframes beat {
+  30% {
+    transform: scale(1.03);
+  }
+  70% {
+    transform: scale(1.15);
+  }
+  90% {
+    transform: scale(1.03);
+  }
+}
+
+.lobby-player:nth-child(7n + 1) {
+  background-color: var(--yellow);
+  color: var(--dark-blue);
+}
+
+.lobby-player:nth-child(7n + 2) {
+  background-color: var(--blue);
+  color: var(--yellow);
+}
+
+.lobby-player:nth-child(7n + 3) {
+  background-color: var(--orange);
+  color: var(--white);
+}
+
+.lobby-player:nth-child(7n + 4) {
+  background-color: var(--red);
+  color: var(--yellow);
+}
+
+.lobby-player:nth-child(7n + 5) {
+  background-color: var(--green);
+  color: var(--dark-blue);
+}
+
+.lobby-player:nth-child(7n + 6) {
+  background-color: var(--pink);
+  color: var(--white);
 }

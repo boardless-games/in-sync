@@ -13,6 +13,8 @@ import { IconButton } from "../icon-button/icon-button";
 import { Icon } from "../../constants/Icon";
 import { Alert } from "../../services/alert/alert";
 import { environment } from "../../../environments/environment";
+import { AudioService } from "../../services/audio/audio";
+import { AudioFile } from "../../constants/AudioFile";
 
 @Component({
   selector: "app-game",
@@ -27,6 +29,7 @@ export class Game {
   private readonly alertService = inject(Alert);
   private readonly inSyncApi = inject(InSyncApi);
   private readonly wsService = inject(InSyncWs);
+  private readonly audioService = inject(AudioService);
 
   gameCode = input("");
 
@@ -46,6 +49,7 @@ export class Game {
       this.connected.set(connected);
       if (this.status() === GameStatus.PLAYER_FORM && connected) {
         this.status.set(GameStatus.LOBBY);
+        this.audioService.playAudioFile(AudioFile.LOBBY_RHYTHM_1, { loop: true });
       }
     });
     this.wsService.messaged.pipe(takeUntilDestroyed()).subscribe((message: MessageDto) => {

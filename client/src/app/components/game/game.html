@@ -13,7 +13,64 @@
         title="Copy link"
         (clicked)="shareGameCode()"></app-icon-button>
     </div>
-    <div class="lobby-players" class="flex-row">
+    <div class="lobby-players flex-row">
+      <div class="lobby-player">
+        <span>Dave</span>
+      </div>
+      <div class="lobby-player">
+        <span>Mike</span>
+      </div>
+      <div class="lobby-player">
+        <span>Ted</span>
+      </div>
+      <div class="lobby-player">
+        <span>Daniel</span>
+      </div>
+      <div class="lobby-player">
+        <span>Bartholomew</span>
+      </div>
+      <div class="lobby-player">
+        <span>Oscar</span>
+      </div>
+      <div class="lobby-player">
+        <span>Chad</span>
+      </div>
+      <div class="lobby-player">
+        <span>Jenny</span>
+      </div>
+      <div class="lobby-player">
+        <span>Grant</span>
+      </div>
+      <div class="lobby-player">
+        <span>Kelly</span>
+      </div>
+      <div class="lobby-player">
+        <span>Dallin</span>
+      </div>
+      <div class="lobby-player">
+        <span>Trevor</span>
+      </div>
+      <div class="lobby-player">
+        <span>Heather</span>
+      </div>
+      <div class="lobby-player">
+        <span>Samuel</span>
+      </div>
+      <div class="lobby-player">
+        <span>Taylor</span>
+      </div>
+      <div class="lobby-player">
+        <span>Anna</span>
+      </div>
+      <div class="lobby-player">
+        <span>Olivia</span>
+      </div>
+      <div class="lobby-player">
+        <span>Caden</span>
+      </div>
+      <div class="lobby-player">
+        <span>Francis</span>
+      </div>
       @for (player of players(); track player) {
         <div class="lobby-player">
           <span>{{ player }}</span>
@@ -21,7 +78,9 @@
       }
     </div>
     @if (isAdmin()) {
-      <div></div>
+      <!-- <form class="flex-column">
+
+      </form> -->
       <button id="start-game-button">Start</button>
     }
     <button id="leave-lobby-button">Leave</button>
