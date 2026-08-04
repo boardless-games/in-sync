@@ -63,12 +63,14 @@ export class Game {
         this.players.set(message.data as string[]);
       }
     });
+    requestAnimationFrame(this.animationFrame);
   }
 
   protected playerJoined(lobbySettings: LobbySettingsDto) {
     this.playerName.set(lobbySettings.playerName);
     this.lobbyRhythm = lobbySettings.lobbyRhythm;
     this.wsService.connect(this.gameCode(), this.playerName());
+    this.audioService.playAudioFile(AudioFile.KICK, { volume: 0 });
   }
 
   protected shareGameCode() {
@@ -81,4 +83,24 @@ export class Game {
         this.alertService.alert("Failed to copy game link.");
       });
   }
+
+  private previousTimeStamp = 0;
+  private lobbyRhythmStartTime = 0;
+  private animationFrame = (timeStamp: number) => {
+    if (this.status() === GameStatus.LOBBY) {
+      const now = Date.now();
+      if (now >= this.lobbyRhythmStartTime) {
+        this.lobbyRhythmStartTime = now + 64000;
+        this.audioService.playAudioFile(AudioFile.LOBBY_RHYTHM_1, {
+          volume: 0.5,
+          loop: true,
+          duration: 32,
+          fadeIn: 8,
+          fadeOut: 8
+        });
+      }
+    }
+    this.previousTimeStamp = timeStamp;
+    requestAnimationFrame(this.animationFrame);
+  };
 }
