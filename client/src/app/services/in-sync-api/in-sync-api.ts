@@ -1,14 +1,15 @@
 import { HttpClient, HttpErrorResponse } from "@angular/common/http";
 import { inject, Service } from "@angular/core";
 import { GameCodeDto } from "../../interfaces/dtos/GameCodeDto";
-import { Alert } from "../alert/alert";
+import { AlertService } from "../alert/alert";
 import { ErrorDto } from "../../interfaces/dtos/ErrorDto";
 import { catchError, EMPTY, Observable } from "rxjs";
 import { PlayerNameDto } from "../../interfaces/dtos/PlayerNameDto";
+import { LobbySettingsDto } from "../../interfaces/dtos/LobbySettingsDto";
 
 @Service()
 export class InSyncApi {
-  private readonly alertService = inject(Alert);
+  private readonly alertService = inject(AlertService);
   private readonly http = inject(HttpClient);
   private readonly BASE_PATH = "/in-sync-api";
 
@@ -52,7 +53,7 @@ export class InSyncApi {
 
   public newPlayer(gameCode: string, playerName: PlayerNameDto, useGenericCatchError = true) {
     return this.applyGenericCatchError(
-      this.http.post(`${this.BASE_PATH}/game/${gameCode}/player`, playerName),
+      this.http.post<LobbySettingsDto>(`${this.BASE_PATH}/game/${gameCode}/player`, playerName),
       useGenericCatchError
     );
   }

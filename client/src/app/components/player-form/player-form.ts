@@ -12,6 +12,7 @@ import { FormValues } from "../../types/FormValues";
 import { InSyncApi } from "../../services/in-sync-api/in-sync-api";
 import { finalize } from "rxjs";
 import { Router } from "@angular/router";
+import { LobbySettingsDto } from "../../interfaces/dtos/LobbySettingsDto";
 
 @Component({
   selector: "app-player-form",
@@ -29,7 +30,7 @@ export class PlayerFormComponent {
   private readonly router = inject(Router);
 
   gameCode = input("");
-  submitted = output<FormValues<PlayerForm>>();
+  submitted = output<LobbySettingsDto>();
 
   protected readonly loading = signal(false);
 
@@ -54,8 +55,8 @@ export class PlayerFormComponent {
           this.loading.set(false);
         })
       )
-      .subscribe(() => {
-        this.submitted.emit(formValue);
+      .subscribe((lobbySettings: LobbySettingsDto) => {
+        this.submitted.emit(lobbySettings);
       });
   }
 

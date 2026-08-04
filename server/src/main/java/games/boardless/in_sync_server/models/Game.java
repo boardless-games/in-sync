@@ -32,6 +32,7 @@ public class Game {
   public static final int MAX_NUM_PLAYERS = 20;
   public static final int MIN_PLAYER_NAME_LENGTH = 2;
   public static final int MAX_PLAYER_NAME_LENGTH = 15;
+  public static final int NUM_LOBBY_RHYTHMS = 5;
 
   private static final Logger logger = LoggerFactory.getLogger(Game.class);
   private static final Random rand = new Random();
@@ -76,6 +77,7 @@ public class Game {
   private final int playerWaitTime;
   private final int scheduleOffsetTime;
   private GameStatus status;
+  private final int lobbyRhythm;
   private Song song = null;
   private long schedule = 0l;
   private final Map<String, Player> players;
@@ -87,6 +89,7 @@ public class Game {
     this.playerWaitTime = playerWaitTime;
     this.scheduleOffsetTime = scheduleOffsetTime;
     this.status = GameStatus.LOBBY;
+    this.lobbyRhythm = rand.nextInt(NUM_LOBBY_RHYTHMS) + 1;
     this.players = new ConcurrentHashMap<>();
     this.performances = new ConcurrentHashMap<>();
   }
@@ -97,6 +100,10 @@ public class Game {
 
   public GameStatus getStatus() {
     return this.status;
+  }
+
+  public int getLobbyRhythm() {
+    return this.lobbyRhythm;
   }
 
   public SongDuration getSongDuration() throws ServiceUnavailableException {

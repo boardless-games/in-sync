@@ -40,6 +40,8 @@ export class AudioService {
       duration?: number;
       playbackRate?: number;
       volume?: number;
+      fadeIn?: number;
+      fadeOut?: number;
       loop?: boolean;
     }
   ): Promise<AudioBufferSourceNode | undefined> {
@@ -52,6 +54,7 @@ export class AudioService {
         await this.ctx.resume();
       }
 
+      const startTime = this.ctx.currentTime + (options?.when || 0) + AudioService.PLAY_AUDIO_DELAY;
       const audioBuffer = this.audioBuffers.get(file);
       if (audioBuffer === undefined) {
         return undefined;
@@ -59,7 +62,6 @@ export class AudioService {
 
       const audioSourceNode = this.ctx.createBufferSource();
       audioSourceNode.buffer = audioBuffer;
-      let audioNode: AudioNode = audioSourceNode;
 
       if (options?.playbackRate) {
         audioSourceNode.playbackRate.value = options.playbackRate;
@@ -69,19 +71,31 @@ export class AudioService {
         audioSourceNode.loop = options.loop;
       }
 
+      const gainNode = this.ctx.createGain();
+      let defaultVolume = gainNode.gain.defaultValue;
       if (options?.volume !== undefined) {
-        const gainNode = this.ctx.createGain();
         gainNode.gain.value = options.volume;
-        audioSourceNode.connect(gainNode);
-        audioNode = gainNode;
+        defaultVolume = options.volume;
       }
 
-      audioNode.connect(this.ctx.destination);
-      audioSourceNode.start(
-        this.ctx.currentTime + (options?.when || 0) + AudioService.PLAY_AUDIO_DELAY,
-        options?.offset,
-        options?.duration
-      );
+      if (options?.fadeIn !== undefined) {
+        gainNode.gain.setValueCurveAtTime([0, defaultVolume], startTime, options.fadeIn);
+      }
+
+      if (options?.fadeOut !== undefined) {
+        gainNode.gain.setValueCurveAtTime(
+          [defaultVolume, 0],
+          startTime +
+            (options?.duration ?? audioBuffer.duration) -
+            options.fadeOut +
+            AudioService.PLAY_AUDIO_DELAY,
+          options.fadeOut
+        );
+      }
+      audioSourceNode.connect(gainNode);
+      gainNode.connect(this.ctx.destination);
+
+      audioSourceNode.start(startTime, options?.offset ?? 0, options?.duration);
       return audioSourceNode;
     } catch (error) {
       console.error(error);

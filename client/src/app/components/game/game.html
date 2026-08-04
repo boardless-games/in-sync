@@ -1,8 +1,6 @@
 <div class="padding"></div>
 @if (status() === GameStatus.PLAYER_FORM) {
-  <app-player-form
-    [gameCode]="gameCode()"
-    (submitted)="playerFormSubmitted($event)"></app-player-form>
+  <app-player-form [gameCode]="gameCode()" (submitted)="playerJoined($event)"></app-player-form>
 } @else if (status() === GameStatus.LOBBY) {
   <div id="lobby" class="flex-column">
     <div class="lobby-title flex-row">

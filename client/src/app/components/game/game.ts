@@ -11,10 +11,11 @@ import { MessageDto } from "../../interfaces/dtos/MessageDto";
 import { MessageTopic } from "../../constants/MessageTopic";
 import { IconButton } from "../icon-button/icon-button";
 import { Icon } from "../../constants/Icon";
-import { Alert } from "../../services/alert/alert";
+import { AlertService } from "../../services/alert/alert";
 import { environment } from "../../../environments/environment";
 import { AudioService } from "../../services/audio/audio";
 import { AudioFile } from "../../constants/AudioFile";
+import { LobbySettingsDto } from "../../interfaces/dtos/LobbySettingsDto";
 
 @Component({
   selector: "app-game",
@@ -26,7 +27,7 @@ import { AudioFile } from "../../constants/AudioFile";
   }
 })
 export class Game {
-  private readonly alertService = inject(Alert);
+  private readonly alertService = inject(AlertService);
   private readonly inSyncApi = inject(InSyncApi);
   private readonly wsService = inject(InSyncWs);
   private readonly audioService = inject(AudioService);
@@ -37,6 +38,7 @@ export class Game {
   protected readonly Icon = Icon;
   protected readonly status = signal(GameStatus.PLAYER_FORM);
   protected readonly playerName = signal("");
+  private lobbyRhythm?: number;
   protected readonly connected = signal(false);
   protected readonly players = signal<string[]>([]);
   protected readonly isAdmin = computed(() => {
@@ -47,14 +49,12 @@ export class Game {
   constructor() {
     this.wsService.connected.pipe(takeUntilDestroyed()).subscribe((connected) => {
       this.connected.set(connected);
-      if (this.status() === GameStatus.PLAYER_FORM && connected) {
-        this.status.set(GameStatus.LOBBY);
-        this.audioService.playAudioFile(AudioFile.LOBBY_RHYTHM_1, {
-          volume: 0.25,
-          loop: true,
-          offset: 0,
-          duration: 10
-        });
+      if (connected) {
+        if (this.status() === GameStatus.PLAYER_FORM) {
+          this.status.set(GameStatus.LOBBY);
+          this.alertService.alert("Sound on!");
+        }
+      } else {
       }
     });
     this.wsService.messaged.pipe(takeUntilDestroyed()).subscribe((message: MessageDto) => {
@@ -65,10 +65,10 @@ export class Game {
     });
   }
 
-  protected playerFormSubmitted(playerForm: FormValues<PlayerForm>) {
-    this.playerName.set(playerForm.playerName);
+  protected playerJoined(lobbySettings: LobbySettingsDto) {
+    this.playerName.set(lobbySettings.playerName);
+    this.lobbyRhythm = lobbySettings.lobbyRhythm;
     this.wsService.connect(this.gameCode(), this.playerName());
-    this.alertService.alert("Turn your sound on!");
   }
 
   protected shareGameCode() {

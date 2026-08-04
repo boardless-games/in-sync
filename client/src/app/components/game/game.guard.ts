@@ -9,7 +9,7 @@ import {
 } from "@angular/router";
 import { catchError } from "rxjs";
 import { GameCodeDto } from "../../interfaces/dtos/GameCodeDto";
-import { Alert } from "../../services/alert/alert";
+import { AlertService } from "../../services/alert/alert";
 import { InSyncApi } from "../../services/in-sync-api/in-sync-api";
 import { Validation } from "../../services/validation/validation";
 
@@ -17,7 +17,7 @@ import { Validation } from "../../services/validation/validation";
 export class GameGuard implements CanActivate {
   private readonly router = inject(Router);
   private readonly validationService = inject(Validation);
-  private readonly alertService = inject(Alert);
+  private readonly alertService = inject(AlertService);
   private readonly inSyncApi = inject(InSyncApi);
   private readonly redirect = new RedirectCommand(this.router.parseUrl(""));
 

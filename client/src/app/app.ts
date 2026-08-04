@@ -4,9 +4,10 @@ import { RouterOutlet } from "@angular/router";
 import { BgSplash } from "./components/bg-splash/bg-splash";
 import { IconButton } from "./components/icon-button/icon-button";
 import { Icon } from "./constants/Icon";
-import { Alert } from "./services/alert/alert";
+import { AlertService } from "./services/alert/alert";
 import { AudioService } from "./services/audio/audio";
 import { environment } from "../environments/environment";
+import { Alert } from "./interfaces/Alert";
 
 @Component({
   selector: "app-root",
@@ -19,17 +20,17 @@ import { environment } from "../environments/environment";
 })
 export class App {
   protected readonly audioService = inject(AudioService);
-  private readonly alertService = inject(Alert);
+  private readonly alertService = inject(AlertService);
   protected readonly initialized = signal(!environment.production);
 
-  private readonly alerts: string[] = [];
+  private readonly alerts: Alert[] = [];
   protected alert: WritableSignal<string> = signal("");
   private alertTimeout: number | undefined = undefined;
 
   protected readonly icons = Icon;
 
   constructor() {
-    this.alertService.alerts.pipe(takeUntilDestroyed()).subscribe((alert: string) => {
+    this.alertService.alerts.pipe(takeUntilDestroyed()).subscribe((alert: Alert) => {
       this.alerts.push(alert);
       if (this.alertTimeout === undefined) {
         this.showNextAlert();
@@ -44,8 +45,8 @@ export class App {
       this.alert.set("");
       this.alertTimeout = undefined;
     } else {
-      this.alert.set(nextAlert);
-      this.alertTimeout = setTimeout(this.showNextAlert, 10000);
+      this.alert.set(nextAlert.alert);
+      this.alertTimeout = setTimeout(this.showNextAlert, nextAlert.duration);
     }
   };
 

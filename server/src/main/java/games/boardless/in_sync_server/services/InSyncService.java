@@ -4,6 +4,7 @@ import games.boardless.in_sync_server.constants.GameStatus;
 import games.boardless.in_sync_server.constants.ScheduleType;
 import games.boardless.in_sync_server.dtos.AcknowledgeScheduleDto;
 import games.boardless.in_sync_server.dtos.GameCodeDto;
+import games.boardless.in_sync_server.dtos.LobbySettingsDto;
 import games.boardless.in_sync_server.dtos.PerformanceDto;
 import games.boardless.in_sync_server.dtos.PlayerNameDto;
 import games.boardless.in_sync_server.dtos.SongSettingsDto;
@@ -148,7 +149,7 @@ public class InSyncService {
     return ResponseEntity.ok(new GameCodeDto(game.getGameCode()));
   }
 
-  public ResponseEntity<Void> newPlayer(final String gameCode, final PlayerNameDto name)
+  public ResponseEntity<LobbySettingsDto> newPlayer(final String gameCode, final PlayerNameDto name)
       throws BadRequestException, ServiceUnavailableException {
     final Optional<String> gameCodeValidation = Game.validateGameCode(gameCode);
     if (gameCodeValidation.isPresent()) {
@@ -177,7 +178,8 @@ public class InSyncService {
         },
         this.clock.instant().plusMillis(playerWaitTime));
 
-    return ResponseEntity.status(HttpStatus.CREATED).build();
+    return ResponseEntity.status(HttpStatus.CREATED)
+        .body(new LobbySettingsDto(name.playerName(), game.getLobbyRhythm()));
   }
 
   public DeferredResult<ResponseEntity<Void>> start(
