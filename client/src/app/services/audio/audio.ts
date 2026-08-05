@@ -5,6 +5,7 @@ import { AudioFile } from "../../constants/AudioFile";
 @Service()
 export class AudioService {
   private static readonly PLAY_AUDIO_DELAY = 0.01;
+  private static readonly AUDIO_FILE_PREFIX = "/audio/";
 
   private readonly ctx = new AudioContext();
   private readonly audioBuffers = new Map<AudioFile, AudioBuffer>();
@@ -19,7 +20,7 @@ export class AudioService {
     const files = Object.values(AudioFile);
     for (const file of files) {
       try {
-        const fetchResponse = await fetch(file);
+        const fetchResponse = await fetch(`${AudioService.AUDIO_FILE_PREFIX}${file}`);
         const arrayBuffer = await fetchResponse.arrayBuffer();
 
         const audioBuffer = await this.ctx.decodeAudioData(arrayBuffer);
@@ -32,6 +33,9 @@ export class AudioService {
     this._ready.next(true);
   }
 
+  /**
+   * All time options should be given in seconds.
+   */
   public async playAudioFile(
     file: AudioFile,
     options?: {
@@ -54,7 +58,6 @@ export class AudioService {
         await this.ctx.resume();
       }
 
-      const startTime = this.ctx.currentTime + (options?.when || 0) + AudioService.PLAY_AUDIO_DELAY;
       const audioBuffer = this.audioBuffers.get(file);
       if (audioBuffer === undefined) {
         return undefined;
@@ -78,6 +81,7 @@ export class AudioService {
         defaultVolume = options.volume;
       }
 
+      const startTime = this.ctx.currentTime + (options?.when || 0) + AudioService.PLAY_AUDIO_DELAY;
       if (options?.fadeIn !== undefined) {
         gainNode.gain.setValueCurveAtTime([0, defaultVolume], startTime, options.fadeIn);
       }

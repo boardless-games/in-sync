@@ -89,7 +89,7 @@ public class Game {
     this.playerWaitTime = playerWaitTime;
     this.scheduleOffsetTime = scheduleOffsetTime;
     this.status = GameStatus.LOBBY;
-    this.lobbyRhythm = rand.nextInt(NUM_LOBBY_RHYTHMS) + 1;
+    this.lobbyRhythm = rand.nextInt(NUM_LOBBY_RHYTHMS);
     this.players = new ConcurrentHashMap<>();
     this.performances = new ConcurrentHashMap<>();
   }
