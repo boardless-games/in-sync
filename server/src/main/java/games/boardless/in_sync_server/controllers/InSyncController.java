@@ -4,7 +4,6 @@ import games.boardless.in_sync_server.constants.ScheduleType;
 import games.boardless.in_sync_server.dtos.AcknowledgeScheduleDto;
 import games.boardless.in_sync_server.dtos.ErrorDto;
 import games.boardless.in_sync_server.dtos.GameCodeDto;
-import games.boardless.in_sync_server.dtos.LobbySettingsDto;
 import games.boardless.in_sync_server.dtos.PerformanceDto;
 import games.boardless.in_sync_server.dtos.PlayerNameDto;
 import games.boardless.in_sync_server.dtos.SongSettingsDto;
@@ -104,7 +103,7 @@ public class InSyncController {
       responseCode = "201",
       content = {
         @Content(
-            schema = @Schema(implementation = LobbySettingsDto.class),
+            schema = @Schema(implementation = PlayerNameDto.class),
             mediaType = "application/json")
       })
   @ApiResponse(
@@ -118,7 +117,7 @@ public class InSyncController {
         @Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json")
       })
   @PostMapping("/game/{gameCode}/player")
-  public ResponseEntity<LobbySettingsDto> newPlayer(
+  public ResponseEntity<PlayerNameDto> newPlayer(
       @PathVariable final String gameCode, @RequestBody final PlayerNameDto name)
       throws BadRequestException, ServiceUnavailableException {
     return inSyncService.newPlayer(gameCode, name);

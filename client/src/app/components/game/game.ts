@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, signal } from "@angular/core";
+import { Component, computed, inject, input, OnDestroy, signal } from "@angular/core";
 import { ReactiveFormsModule } from "@angular/forms";
 import { InSyncApi } from "../../services/in-sync-api/in-sync-api";
 import { PlayerFormComponent } from "../player-form/player-form";
@@ -13,8 +13,9 @@ import { AlertService } from "../../services/alert/alert";
 import { environment } from "../../../environments/environment";
 import { AudioService } from "../../services/audio/audio";
 import { AudioFile } from "../../constants/AudioFile";
-import { LobbySettingsDto } from "../../interfaces/dtos/LobbySettingsDto";
 import { Router } from "@angular/router";
+import { PlayerNameDto } from "../../interfaces/dtos/PlayerNameDto";
+import { timestamp } from "rxjs";
 
 @Component({
   selector: "app-game",
@@ -25,7 +26,7 @@ import { Router } from "@angular/router";
     class: "full-size flex-column overflow"
   }
 })
-export class Game {
+export class Game implements OnDestroy {
   private readonly alertService = inject(AlertService);
   private readonly inSyncApi = inject(InSyncApi);
   private readonly wsService = inject(InSyncWs);
@@ -47,13 +48,13 @@ export class Game {
   protected readonly Icon = Icon;
   protected readonly status = signal(GameStatus.PLAYER_FORM);
   protected readonly playerName = signal("");
-  private lobbyRhythm = 0;
   protected readonly connected = signal(false);
   protected readonly players = signal<string[]>([]);
   protected readonly isAdmin = computed(() => {
     const currentPlayers = this.players();
     return currentPlayers.length > 0 && currentPlayers[0] === this.playerName();
   });
+  private currentAnimationFrame = 0;
 
   constructor() {
     this.wsService.connected.pipe(takeUntilDestroyed()).subscribe((connected) => {
@@ -72,12 +73,15 @@ export class Game {
         this.players.set(message.data as string[]);
       }
     });
-    requestAnimationFrame(this.animationFrame);
+    this.currentAnimationFrame = requestAnimationFrame(this.animationFrame);
   }
 
-  protected playerJoined(lobbySettings: LobbySettingsDto) {
-    this.playerName.set(lobbySettings.playerName);
-    this.lobbyRhythm = lobbySettings.lobbyRhythm;
+  ngOnDestroy(): void {
+    cancelAnimationFrame(this.currentAnimationFrame);
+  }
+
+  protected playerJoined(playerName: string) {
+    this.playerName.set(playerName);
     this.wsService.connect(this.gameCode(), this.playerName());
     this.audioService.playAudioFile(AudioFile.KICK, { volume: 0 });
   }
@@ -98,25 +102,28 @@ export class Game {
     this.router.navigate([""]);
   }
 
-  private previousTimeStamp = 0;
-  private lobbyRhythmStartTime = 0;
+  private previousTimeStamp?: number;
+  private lobbyRhythmDelta = Game.LOBBY_RHYTHM_LOOP / 2;
   private animationFrame = (timeStamp: number) => {
+    const delta = timeStamp - (this.previousTimeStamp ?? timeStamp);
     if (this.status() === GameStatus.LOBBY) {
-      if (timeStamp >= this.lobbyRhythmStartTime) {
-        this.lobbyRhythmStartTime = timeStamp + Game.LOBBY_RHYTHM_LOOP;
-        this.audioService.playAudioFile(Game.LOBBY_RHYTHMS[this.lobbyRhythm++], {
-          volume: 0.5,
-          loop: true,
-          duration: Game.LOBBY_RHYTHM_LOOP / 2000,
-          fadeIn: 10,
-          fadeOut: 10
-        });
-        if (this.lobbyRhythm >= Game.LOBBY_RHYTHMS.length) {
-          this.lobbyRhythm = 0;
+      if (this.isAdmin()) {
+        this.lobbyRhythmDelta += delta;
+        if (this.lobbyRhythmDelta >= Game.LOBBY_RHYTHM_LOOP) {
+          this.lobbyRhythmDelta = 0;
+          const nextLobbyRhythm = Math.floor(Math.random() * Game.LOBBY_RHYTHMS.length);
+          console.log(nextLobbyRhythm);
+          this.audioService.playAudioFile(Game.LOBBY_RHYTHMS[nextLobbyRhythm], {
+            volume: 0.5,
+            loop: true,
+            duration: Game.LOBBY_RHYTHM_LOOP / 2000,
+            fadeIn: Game.LOBBY_RHYTHM_LOOP * 0.0001,
+            fadeOut: Game.LOBBY_RHYTHM_LOOP * 0.0001
+          });
         }
       }
     }
     this.previousTimeStamp = timeStamp;
-    requestAnimationFrame(this.animationFrame);
+    this.currentAnimationFrame = requestAnimationFrame(this.animationFrame);
   };
 }

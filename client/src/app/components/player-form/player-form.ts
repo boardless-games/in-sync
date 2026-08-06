@@ -8,11 +8,10 @@ import {
 } from "@angular/forms";
 import { PlayerForm } from "../../interfaces/PlayerForm";
 import { Validation } from "../../services/validation/validation";
-import { FormValues } from "../../types/FormValues";
 import { InSyncApi } from "../../services/in-sync-api/in-sync-api";
 import { finalize } from "rxjs";
 import { Router } from "@angular/router";
-import { LobbySettingsDto } from "../../interfaces/dtos/LobbySettingsDto";
+import { PlayerNameDto } from "../../interfaces/dtos/PlayerNameDto";
 
 @Component({
   selector: "app-player-form",
@@ -30,7 +29,7 @@ export class PlayerFormComponent {
   private readonly router = inject(Router);
 
   gameCode = input("");
-  submitted = output<LobbySettingsDto>();
+  submitted = output<string>();
 
   protected readonly loading = signal(false);
 
@@ -55,8 +54,8 @@ export class PlayerFormComponent {
           this.loading.set(false);
         })
       )
-      .subscribe((lobbySettings: LobbySettingsDto) => {
-        this.submitted.emit(lobbySettings);
+      .subscribe((playerName: PlayerNameDto) => {
+        this.submitted.emit(playerName.playerName);
       });
   }
 
