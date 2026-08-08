@@ -3,4 +3,5 @@ button {
   justify-content: center;
   align-items: center;
   padding: 2px !important;
+  min-width: 0px !important;
 }

@@ -28,13 +28,15 @@ export class PlayerFormComponent {
   private readonly inSyncApi = inject(InSyncApi);
   private readonly router = inject(Router);
 
+  private static readonly PLAYER_NAME = "playerName";
+
   gameCode = input("");
   submitted = output<string>();
 
   protected readonly loading = signal(false);
 
   protected readonly playerForm: FormGroup<PlayerForm> = this.formBuilder.group<PlayerForm>({
-    playerName: new FormControl("", {
+    playerName: new FormControl(localStorage.getItem(PlayerFormComponent.PLAYER_NAME) || "", {
       nonNullable: true,
       validators: [Validators.required, Validators.pattern(this.validationService.playerNameRegex)]
     })
@@ -55,6 +57,7 @@ export class PlayerFormComponent {
         })
       )
       .subscribe((playerName: PlayerNameDto) => {
+        localStorage.setItem(PlayerFormComponent.PLAYER_NAME, playerName.playerName);
         this.submitted.emit(playerName.playerName);
       });
   }

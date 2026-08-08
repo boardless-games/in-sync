@@ -58,6 +58,18 @@ body {
   font-weight: bold;
 }
 
+.h3 {
+  --font-size: 35px;
+  font-size: var(--font-size);
+  font-weight: bold;
+}
+
+.h4 {
+  --font-size: 25px;
+  font-size: var(--font-size);
+  font-weight: bold;
+}
+
 input {
   text-align: center;
 }
@@ -67,24 +79,28 @@ label {
   text-align: left;
 }
 
-input,
+input:not([type="checkbox"]):not([type="radio"]),
 button,
-textarea {
+textarea,
+select {
   font-size: large;
   font-family: var(--font-family) !important;
   box-sizing: border-box;
   padding: 5px;
   border-radius: 10px;
   border: none;
+  min-width: 245px;
 }
 
 input,
-textarea {
+textarea,
+select {
   color: var(--pink);
 }
 
 input:focus-visible,
-textarea:focus-visible {
+textarea:focus-visible,
+select:focus-visible {
   outline: none;
   box-shadow:
     inset 0 0 0 1px white,
