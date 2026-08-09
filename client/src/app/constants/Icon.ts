@@ -1,4 +1,5 @@
 export enum Icon {
   CLOSE,
-  SHARE
+  SHARE,
+  SETTINGS
 }

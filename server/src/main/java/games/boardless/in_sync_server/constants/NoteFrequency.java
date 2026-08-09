@@ -2,6 +2,8 @@ package games.boardless.in_sync_server.constants;
 
 import java.util.stream.Stream;
 
+import com.fasterxml.jackson.annotation.JsonValue;
+
 public enum NoteFrequency {
   C1(32.2032f),
   C2(65.40639f),
@@ -18,6 +20,7 @@ public enum NoteFrequency {
     this.frequency = frequency;
   }
 
+  @JsonValue
   public float getFrequency() {
     return this.frequency;
   }

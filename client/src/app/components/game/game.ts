@@ -1,4 +1,13 @@
-import { Component, computed, inject, input, OnDestroy, signal } from "@angular/core";
+import {
+  Component,
+  computed,
+  inject,
+  input,
+  OnDestroy,
+  Signal,
+  signal,
+  WritableSignal
+} from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormBuilder, FormControl, ReactiveFormsModule } from "@angular/forms";
 import { Router } from "@angular/router";
@@ -16,10 +25,12 @@ import { InSyncApi } from "../../services/in-sync-api/in-sync-api";
 import { InSyncWs } from "../../services/in-sync-ws/in-sync-ws";
 import { IconButton } from "../icon-button/icon-button";
 import { PlayerFormComponent } from "../player-form/player-form";
-import { SongType } from "../../constants/SongType";
+import { SongType, SongTypeDescriptions } from "../../constants/SongType";
 import { SongTempo } from "../../constants/SongTempo";
 import { SongDuration } from "../../constants/SongDuration";
 import { LobbySettingsForm } from "../../interfaces/LobbySettingsForm";
+import { Option } from "../../types/Option";
+import { NgClass } from "../../../../node_modules/@angular/common/types/_common_module-chunk";
 
 @Component({
   selector: "app-game",
@@ -51,11 +62,20 @@ export class Game implements OnDestroy {
 
   gameCode = input("");
 
+  private currentAnimationFrame = 0;
+  private currentLobbyRhythm?: AudioBufferSourceNode;
   protected readonly GameStatus = GameStatus;
   protected readonly Icon = Icon;
-  protected readonly SongType = SongType;
-  protected readonly SongTempo = SongTempo;
-  protected readonly SongDuration = SongDuration;
+  protected readonly songTypeOptions: Signal<Option[]> = signal(
+    this.getEnumOptions(SongType).map((option) => ({
+      ...option,
+      text: `${option.text}: ${SongTypeDescriptions[option.value as SongType]}`
+    }))
+  );
+  protected readonly songTempoOptions: Signal<Option[]> = signal(this.getEnumOptions(SongTempo));
+  protected readonly songDurationOptions: Signal<Option[]> = signal(
+    this.getEnumOptions(SongDuration)
+  );
   protected readonly status = signal(GameStatus.PLAYER_FORM);
   protected readonly playerName = signal("");
   protected readonly connected = signal(false);
@@ -64,7 +84,7 @@ export class Game implements OnDestroy {
     const currentPlayers = this.players();
     return currentPlayers.length > 0 && currentPlayers[0] === this.playerName();
   });
-  private currentAnimationFrame = 0;
+  protected readonly showSettings = signal(false);
   protected readonly lobbySettingsForm;
   protected readonly gameSettingsForm;
 
@@ -75,7 +95,6 @@ export class Game implements OnDestroy {
         if (this.status() === GameStatus.PLAYER_FORM) {
           this.status.set(GameStatus.LOBBY);
           this.alertService.alert("Turn volume up!");
-          this.alertService.alert("Do not let device fall asleep!");
         }
       } else {
       }
@@ -92,13 +111,16 @@ export class Game implements OnDestroy {
       ? JSON.parse(storedLobbySettings)
       : {};
     this.lobbySettingsForm = this.formBuilder.group<LobbySettingsForm>({
-      playLobbyRhythms: new FormControl(initialLobbySettings?.playLobbyRhythms ?? false, {
+      playLobbyRhythms: new FormControl(initialLobbySettings?.playLobbyRhythms ?? true, {
         nonNullable: true
       })
     });
     this.lobbySettingsForm.valueChanges
       .pipe(takeUntilDestroyed(), debounceTime(100))
-      .subscribe(() => {
+      .subscribe((changes) => {
+        if (changes.playLobbyRhythms === false && this.currentLobbyRhythm) {
+          this.audioService.stop(this.currentLobbyRhythm);
+        }
         localStorage.setItem(
           Game.LOBBY_SETTINGS_FORM,
           JSON.stringify(this.lobbySettingsForm.getRawValue())
@@ -125,7 +147,7 @@ export class Game implements OnDestroy {
     });
     this.gameSettingsForm.valueChanges
       .pipe(takeUntilDestroyed(), debounceTime(100))
-      .subscribe(() => {
+      .subscribe((changes) => {
         localStorage.setItem(
           Game.GAME_SETTINGS_FORM,
           JSON.stringify(this.gameSettingsForm.getRawValue())
@@ -166,6 +188,10 @@ export class Game implements OnDestroy {
 
   protected start() {}
 
+  protected toggleSettings() {
+    this.showSettings.update((current) => !current);
+  }
+
   private previousTimeStamp?: number;
   private lobbyRhythmDelta = Game.LOBBY_RHYTHM_LOOP / 2;
   private animationFrame = (timeStamp: number) => {
@@ -176,17 +202,30 @@ export class Game implements OnDestroy {
         if (this.lobbyRhythmDelta >= Game.LOBBY_RHYTHM_LOOP) {
           this.lobbyRhythmDelta = 0;
           const nextLobbyRhythm = Math.floor(Math.random() * Game.LOBBY_RHYTHMS.length);
-          this.audioService.playAudioFile(Game.LOBBY_RHYTHMS[nextLobbyRhythm], {
-            volume: 0.5,
-            loop: true,
-            duration: Game.LOBBY_RHYTHM_LOOP / 2000,
-            fadeIn: Game.LOBBY_RHYTHM_LOOP * 0.0001,
-            fadeOut: Game.LOBBY_RHYTHM_LOOP * 0.0001
-          });
+          this.audioService
+            .playAudioFile(Game.LOBBY_RHYTHMS[nextLobbyRhythm], {
+              volume: 0.2,
+              loop: true,
+              duration: Game.LOBBY_RHYTHM_LOOP / 2000,
+              fadeIn: Game.LOBBY_RHYTHM_LOOP * 0.0001,
+              fadeOut: Game.LOBBY_RHYTHM_LOOP * 0.0001
+            })
+            .then((result) => {
+              this.currentLobbyRhythm = result;
+            });
         }
       }
     }
     this.previousTimeStamp = timeStamp;
     this.currentAnimationFrame = requestAnimationFrame(this.animationFrame);
   };
+
+  private getEnumOptions(anyEnum: Record<string | number, string | number>): Option[] {
+    return (Object.keys(anyEnum) as (keyof typeof anyEnum)[])
+      .filter((key) => isNaN(Number(key)))
+      .map((key) => ({
+        value: anyEnum[key],
+        text: key as string
+      }));
+  }
 }

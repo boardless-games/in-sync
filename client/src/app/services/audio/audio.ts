@@ -107,7 +107,7 @@ export class AudioService {
     }
   }
 
-  public async pause(sourceNode: AudioBufferSourceNode, when?: number) {
+  public async stop(sourceNode: AudioBufferSourceNode, when?: number) {
     try {
       if (!this._ready.value) {
         return undefined;

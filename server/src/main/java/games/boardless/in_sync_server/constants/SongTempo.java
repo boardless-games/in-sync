@@ -2,6 +2,8 @@ package games.boardless.in_sync_server.constants;
 
 import java.util.stream.Stream;
 
+import com.fasterxml.jackson.annotation.JsonValue;
+
 public enum SongTempo {
   // All values should be divisible by 2 and 4
   LARGO(1000), // 60 bpm
@@ -15,6 +17,7 @@ public enum SongTempo {
     this.millisPerBeat = millisPerBeat;
   }
 
+  @JsonValue
   public int getMillisPerBeat() {
     return this.millisPerBeat;
   }

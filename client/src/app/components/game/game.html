@@ -1,15 +1,87 @@
-<div class="padding"></div>
+<div class="spacer-top"></div>
 @if (status() === GameStatus.PLAYER_FORM) {
   <app-player-form [gameCode]="gameCode()" (submitted)="playerJoined($event)"></app-player-form>
 } @else if (status() === GameStatus.LOBBY) {
   <div id="lobby" class="flex-column">
-    <div class="lobby-title flex-row">
+    @if (isAdmin()) {
+      <div class="modal hidden" [class]="{ appear: showSettings(), disappear: !showSettings() }">
+        <div
+          id="settings"
+          class="flex-column"
+          [class]="{ 'scroll-into-view': showSettings(), 'scroll-out-of-view': !showSettings() }">
+          <app-icon-button
+            id="close-settings-button"
+            [icon]="Icon.CLOSE"
+            size="36px"
+            title="Close settings"
+            (clicked)="toggleSettings()"></app-icon-button>
+          <span class="h4">Lobby Settings</span>
+          <form id="lobby-settings-form" class="flex-column" [formGroup]="lobbySettingsForm">
+            <div class="flex-row checkbox-container">
+              <input
+                id="play-lobby-rhythm-input"
+                type="checkbox"
+                [formControl]="lobbySettingsForm.controls.playLobbyRhythms" />
+              <label for="play-lobby-rhythm-input">Play Lobby Music</label>
+            </div>
+          </form>
+          <span class="h4">Game Settings</span>
+          <form
+            id="game-settings-form"
+            class="flex-column"
+            [formGroup]="gameSettingsForm"
+            (ngSubmit)="start()">
+            <div class="flex-row checkbox-container">
+              <input
+                id="random-player-order-input"
+                type="checkbox"
+                [formControl]="gameSettingsForm.controls.randomPlayerOrder" />
+              <label for="random-player-order-input">Random Player Order</label>
+            </div>
+            <div class="flex-column">
+              <label for="song-type-select">Song Type</label>
+              <select id="song-type-select" [formControl]="gameSettingsForm.controls.songType">
+                @for (type of songTypeOptions(); track type.value) {
+                  <option [value]="type.value">{{ type.text }}</option>
+                }
+              </select>
+            </div>
+            <div class="flex-column">
+              <label for="song-tempo-select">Song Tempo</label>
+              <select id="song-tempo-select" [formControl]="gameSettingsForm.controls.songTempo">
+                @for (type of songTempoOptions(); track type.value) {
+                  <option [value]="type.value">{{ type.text }}</option>
+                }
+              </select>
+            </div>
+            <div class="flex-column">
+              <label for="song-duration-select">Song Duration</label>
+              <select
+                id="song-duration-select"
+                [formControl]="gameSettingsForm.controls.songDuration">
+                @for (type of songDurationOptions(); track type.value) {
+                  <option [value]="type.value">{{ type.text }}</option>
+                }
+              </select>
+            </div>
+          </form>
+        </div>
+      </div>
+    }
+    <div id="lobby-title" class="flex-row">
       <span class="h2">{{ gameCode() }}</span>
-      <app-icon-button
-        [icon]="Icon.SHARE"
-        size="36px"
-        title="Copy link"
-        (clicked)="shareGameCode()"></app-icon-button>
+      <div id="lobby-icons" class="flex-row">
+        <app-icon-button
+          [icon]="Icon.SHARE"
+          size="36px"
+          title="Copy link"
+          (clicked)="shareGameCode()"></app-icon-button>
+        <app-icon-button
+          [icon]="Icon.SETTINGS"
+          size="36px"
+          title="Open settings"
+          (clicked)="toggleSettings()"></app-icon-button>
+      </div>
     </div>
     <div class="lobby-players flex-row">
       @for (player of players(); track player) {
@@ -19,35 +91,9 @@
       }
     </div>
     @if (isAdmin()) {
-      <span class="h4">Lobby Settings</span>
-      <form id="lobby-settings-form" class="flex-column" [formGroup]="lobbySettingsForm">
-        <div class="flex-row checkbox-container">
-          <input
-            id="play-lobby-rhythm-input"
-            type="checkbox"
-            [formControl]="lobbySettingsForm.controls.playLobbyRhythms" />
-          <label for="play-lobby-rhythm-input">Play Lobby Music</label>
-        </div>
-      </form>
-      <span class="h4">Game Settings</span>
-      <form id="lobby-form" class="flex-column" [formGroup]="gameSettingsForm" (ngSubmit)="start()">
-        <div class="flex-row checkbox-container">
-          <input
-            id="random-player-order-input"
-            type="checkbox"
-            [formControl]="gameSettingsForm.controls.randomPlayerOrder" />
-          <label for="random-player-order-input">Random Player Order</label>
-        </div>
-        <div class="flex-column">
-          <label for="song-type-select">Song Type</label>
-          <select id="song-type-select">
-            <!-- @for (type of Object.keys(SongType); track $index) {} -->
-          </select>
-        </div>
-      </form>
       <button id="start-game-button" type="submit">Start</button>
     }
     <button id="leave-lobby-button" (click)="leave()">Leave</button>
   </div>
 }
-<div class="padding"></div>
+<div class="spacer-bottom"></div>

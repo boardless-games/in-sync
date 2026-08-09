@@ -70,6 +70,28 @@ body {
   font-weight: bold;
 }
 
+.modal {
+  position: absolute;
+  inset: 0px;
+  background-color: rgba(0, 0, 0, 0.8) !important;
+}
+
+.hidden {
+  visibility: hidden;
+}
+
+.visible {
+  visibility: visible;
+}
+
+.spacer-top {
+  flex: 1 1 auto;
+}
+
+.spacer-bottom {
+  flex: 4 1 auto;
+}
+
 input {
   text-align: center;
 }
@@ -90,12 +112,18 @@ select {
   border-radius: 10px;
   border: none;
   min-width: 245px;
+  max-width: 245px;
 }
 
 input,
 textarea,
 select {
   color: var(--pink);
+}
+
+select {
+  text-wrap-mode: nowrap;
+  text-overflow: ellipsis;
 }
 
 input:focus-visible,
