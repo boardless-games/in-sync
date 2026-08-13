@@ -1,0 +1,7 @@
+<span
+  >{{ label() }}
+  @if (key()) {
+    &nbsp;({{ key() }})
+  }
+</span>
+<button #button (pointerdown)="play()" (keydown.enter)="play()"></button>

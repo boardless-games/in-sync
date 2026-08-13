@@ -7,6 +7,6 @@ export class AlertService {
   public readonly alerts = this._alerts.asObservable();
 
   public alert(alert: string, duration?: number) {
-    this._alerts.emit({ alert: alert, duration: duration ?? 10_000 });
+    this._alerts.emit({ alert: alert, duration: duration ?? 5_000 });
   }
 }

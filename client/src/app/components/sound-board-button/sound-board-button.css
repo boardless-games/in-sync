@@ -1,0 +1,42 @@
+button {
+  min-width: var(--button-size) !important;
+  max-width: var(--button-size) !important;
+  height: var(--button-size) !important;
+  --dark-hue: color-mix(in srgb, var(--button-color) 100%, black 50%);
+  --light-hue: color-mix(in srgb, var(--button-color) 100%, white 50%);
+  background: radial-gradient(circle at center, var(--dark-hue), var(--button-color));
+  border: 3px solid var(--dark-hue);
+}
+
+button:focus-visible {
+  box-shadow:
+    inset 0 0 0 1px var(--button-color),
+    inset 0 0 0 2px var(--dark-blue);
+}
+
+span {
+  font-size: small;
+  display: inline-block;
+  min-height: 1rem;
+  user-select: none;
+}
+
+.beat {
+  animation: beat 150ms linear 1;
+}
+
+@keyframes beat {
+  0%,
+  100% {
+    background: radial-gradient(circle at center, var(--light-hue), var(--button-color));
+  }
+  30% {
+    transform: scale(1.01);
+  }
+  70% {
+    transform: scale(1.1);
+  }
+  90% {
+    transform: scale(1.01);
+  }
+}

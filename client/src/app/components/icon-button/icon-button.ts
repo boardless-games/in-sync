@@ -1,5 +1,6 @@
 import { Component, input, output } from "@angular/core";
 import { Icon } from "../../constants/Icon";
+import { COLOR } from "../../constants/Color";
 
 @Component({
   selector: "app-icon-button",
@@ -14,7 +15,7 @@ export class IconButton {
   icon = input<Icon | null>(null);
   size = input("24px");
   iconColor = input("#FFFFFF");
-  buttonColor = input("var(--blue)");
+  buttonColor = input(COLOR.BLUE);
   clicked = output();
 
   protected readonly icons = Icon;

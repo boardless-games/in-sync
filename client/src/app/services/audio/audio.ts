@@ -1,6 +1,6 @@
 import { Service } from "@angular/core";
 import { BehaviorSubject } from "rxjs";
-import { AudioFile } from "../../constants/AudioFile";
+import { SOUND } from "../../constants/Sound";
 
 @Service()
 export class AudioService {
@@ -8,7 +8,7 @@ export class AudioService {
   private static readonly AUDIO_FILE_PREFIX = "/audio/";
 
   private readonly ctx = new AudioContext();
-  private readonly audioBuffers = new Map<AudioFile, AudioBuffer>();
+  private readonly audioBuffers = new Map<SOUND, AudioBuffer>();
   private readonly _ready = new BehaviorSubject<boolean>(false);
   public readonly ready = this._ready.asObservable();
 
@@ -17,7 +17,7 @@ export class AudioService {
   }
 
   private async init() {
-    const files = Object.values(AudioFile);
+    const files = Object.values(SOUND);
     for (const file of files) {
       try {
         const fetchResponse = await fetch(`${AudioService.AUDIO_FILE_PREFIX}${file}`);
@@ -37,7 +37,7 @@ export class AudioService {
    * All time options should be given in seconds.
    */
   public async playAudioFile(
-    file: AudioFile,
+    file: SOUND,
     options?: {
       when?: number;
       offset?: number;

@@ -1,0 +1,139 @@
+@if (isAdmin()) {
+  <div
+    class="modal hidden flex-column"
+    [class]="{ appear: showSettings(), disappear: !showSettings() }">
+    <div class="spacer-top"></div>
+    <div
+      class="modal-content flex-column"
+      [class]="{ 'scroll-into-view': showSettings(), 'scroll-out-of-view': !showSettings() }">
+      <app-icon-button
+        class="close-modal-button"
+        [icon]="Icon.CLOSE"
+        title="Close settings"
+        (clicked)="toggleSettings()"></app-icon-button>
+      <div id="settings-forms" class="flex-column overflow full-size">
+        <span class="h4">Lobby Settings</span>
+        <form class="flex-column lobby-form" [formGroup]="lobbySettingsForm">
+          <div class="flex-row">
+            <input
+              id="play-lobby-rhythm-input"
+              type="checkbox"
+              [formControl]="lobbySettingsForm.controls.playLobbyRhythms" />
+            <label for="play-lobby-rhythm-input">Play Lobby Music</label>
+          </div>
+        </form>
+        <span class="h4">Game Settings</span>
+        <form class="flex-column lobby-form" [formGroup]="gameSettingsForm">
+          <div class="flex-row">
+            <input
+              id="random-player-order-input"
+              type="checkbox"
+              [formControl]="gameSettingsForm.controls.randomPlayerOrder" />
+            <label for="random-player-order-input">Random Player Order</label>
+          </div>
+          <div class="flex-column">
+            <label for="song-type-select">Song Type</label>
+            <select id="song-type-select" [formControl]="gameSettingsForm.controls.songType">
+              @for (type of songTypeOptions(); track type.value) {
+                <option [value]="type.value">{{ type.text }}</option>
+              }
+            </select>
+          </div>
+          <div class="flex-column">
+            <label for="song-tempo-select">Song Tempo</label>
+            <select id="song-tempo-select" [formControl]="gameSettingsForm.controls.songTempo">
+              @for (type of songTempoOptions(); track type.value) {
+                <option [value]="type.value">{{ type.text }}</option>
+              }
+            </select>
+          </div>
+          <div class="flex-column">
+            <label for="song-duration-select">Song Duration</label>
+            <select
+              id="song-duration-select"
+              [formControl]="gameSettingsForm.controls.songDuration">
+              @for (type of songDurationOptions(); track type.value) {
+                <option [value]="type.value">{{ type.text }}</option>
+              }
+            </select>
+          </div>
+        </form>
+      </div>
+    </div>
+    <div class="spacer-bottom"></div>
+  </div>
+}
+<div
+  class="modal hidden flex-column"
+  [class]="{ appear: showSoundBoard(), disappear: !showSoundBoard() }">
+  <div class="spacer-top"></div>
+  <div
+    class="modal-content flex-column"
+    [class]="{ 'scroll-into-view': showSoundBoard(), 'scroll-out-of-view': !showSoundBoard() }">
+    <app-icon-button
+      class="close-modal-button"
+      [icon]="Icon.CLOSE"
+      title="Close sound board"
+      (clicked)="toggleSoundBoard()"></app-icon-button>
+    <div id="sound-board" class="flex-column overflow full-size">
+      <span class="h4">Sound Board</span>
+      <div class="flex-column">
+        <label for="sound-board-select">Type</label>
+        <select
+          id="sound-board-select"
+          (keydown)="filterKeyDown($event)"
+          [formControl]="lobbySoundBoardSettingsForm.controls.soundBoard">
+          @for (type of soundBoardOptions(); track type.value) {
+            <option [value]="type.value">{{ type.text }}</option>
+          }
+        </select>
+      </div>
+      @for (soundBoardRow of currentSoundBoardSounds(); track $index) {
+        <div class="flex-row sound-board-row">
+          @for (soundBoardSound of soundBoardRow; track soundBoardSound.sound) {
+            <app-sound-board-button
+              [sound]="soundBoardSound"
+              (played)="soundBoardPlayed()"></app-sound-board-button>
+          }
+        </div>
+      }
+    </div>
+  </div>
+  <div class="spacer-bottom"></div>
+</div>
+<div id="lobby-title" class="flex-column">
+  <span class="h2">{{ gameCode() }}</span>
+  <div id="lobby-icons" class="flex-row">
+    <app-icon-button
+      [icon]="Icon.SHARE"
+      size="36px"
+      title="Copy link"
+      (clicked)="shareGameCode()"></app-icon-button>
+    @if (isAdmin()) {
+      <app-icon-button
+        [icon]="Icon.SETTINGS"
+        size="36px"
+        title="Open settings"
+        (clicked)="toggleSettings()"></app-icon-button>
+    }
+    <app-icon-button
+      [icon]="Icon.GRID"
+      size="36px"
+      title="Open sound board"
+      (clicked)="toggleSoundBoard()"></app-icon-button>
+  </div>
+</div>
+<div class="lobby-players flex-row">
+  @for (player of players(); track player) {
+    <div class="lobby-player">
+      <span>{{ player }}</span>
+    </div>
+  }
+</div>
+
+<div id="lobby-buttons" class="flex-column">
+  @if (isAdmin()) {
+    <button id="start-game-button" (click)="start()">Start</button>
+  }
+  <button id="leave-lobby-button" (click)="leave()">Leave</button>
+</div>

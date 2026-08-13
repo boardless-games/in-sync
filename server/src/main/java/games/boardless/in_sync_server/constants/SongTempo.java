@@ -1,8 +1,7 @@
 package games.boardless.in_sync_server.constants;
 
-import java.util.stream.Stream;
-
 import com.fasterxml.jackson.annotation.JsonValue;
+import java.util.stream.Stream;
 
 public enum SongTempo {
   // All values should be divisible by 2 and 4

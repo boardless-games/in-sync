@@ -1,0 +1,132 @@
+:host {
+  justify-content: flex-start;
+  align-items: center;
+  gap: 30px;
+}
+
+.modal {
+  align-items: center;
+}
+
+.modal-content {
+  position: relative;
+  box-sizing: border-box;
+  padding-top: 40px;
+  top: -100%;
+  background-color: var(--dark-blue) !important;
+  border-radius: 10px;
+  transition: top 500ms ease;
+  max-height: 100%;
+}
+
+#settings-forms {
+  gap: 20px;
+  box-sizing: border-box;
+  padding: 0px 20px 20px;
+}
+
+.close-modal-button {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+}
+
+div:has(> input[type="checkbox"]:first-child) {
+  align-items: center;
+  gap: 5px;
+}
+
+.lobby-form {
+  align-items: center;
+  gap: 20px;
+}
+
+.appear {
+  transition: none;
+  visibility: visible !important;
+}
+
+.disappear {
+  visibility: hidden !important;
+  transition: visibility 300ms step-end;
+}
+
+.scroll-into-view {
+  top: 0px !important;
+}
+
+.scroll-out-of-view {
+  top: -100% !important;
+}
+
+#lobby-title {
+  align-items: center;
+}
+
+#lobby-icons {
+  align-items: center;
+  gap: 10px;
+}
+
+.lobby-players {
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.lobby-player {
+  border-radius: 50%;
+  box-sizing: border-box;
+  padding: 15px;
+}
+
+.lobby-player:nth-child(7n) {
+  background-color: var(--white);
+  color: var(--blue);
+}
+
+.lobby-player:nth-child(7n + 1) {
+  background-color: var(--yellow);
+  color: var(--dark-blue);
+}
+
+.lobby-player:nth-child(7n + 2) {
+  background-color: var(--blue);
+  color: var(--yellow);
+}
+
+.lobby-player:nth-child(7n + 3) {
+  background-color: var(--orange);
+  color: var(--dark-blue);
+}
+
+.lobby-player:nth-child(7n + 4) {
+  background-color: var(--red);
+  color: var(--yellow);
+}
+
+.lobby-player:nth-child(7n + 5) {
+  background-color: var(--green);
+  color: var(--dark-blue);
+}
+
+.lobby-player:nth-child(7n + 6) {
+  background-color: var(--pink);
+  color: var(--white);
+}
+
+#lobby-buttons {
+  gap: 20px;
+}
+
+#sound-board {
+  gap: 10px;
+  box-sizing: border-box;
+  padding: 0px 20px 20px;
+}
+
+.sound-board-row {
+  flex-wrap: wrap;
+  justify-content: space-evenly;
+  gap: 10px;
+}
