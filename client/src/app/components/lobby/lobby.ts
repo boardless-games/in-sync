@@ -222,12 +222,6 @@ export class Lobby {
     }
   }
 
-  protected filterKeyDown(event: KeyboardEvent) {
-    if (event.key !== "Enter" && event.key !== "Tab") {
-      event.preventDefault();
-    }
-  }
-
   private getEnumOptions(anyEnum: Record<string | number, string | number>): Option[] {
     return (Object.keys(anyEnum) as (keyof typeof anyEnum)[])
       .filter((key) => isNaN(Number(key)))

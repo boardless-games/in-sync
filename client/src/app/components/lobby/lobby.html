@@ -81,7 +81,6 @@
         <label for="sound-board-select">Type</label>
         <select
           id="sound-board-select"
-          (keydown)="filterKeyDown($event)"
           [formControl]="lobbySoundBoardSettingsForm.controls.soundBoard">
           @for (type of soundBoardOptions(); track type.value) {
             <option [value]="type.value">{{ type.text }}</option>
