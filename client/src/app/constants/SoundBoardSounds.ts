@@ -3,7 +3,10 @@ import { COLOR } from "./Color";
 import { SOUND } from "./Sound";
 import { SoundBoard } from "./SoundBoard";
 
-export const SoundBoardSounds: Record<(typeof SoundBoard)[keyof typeof SoundBoard], SoundBoardSound[][]> = {
+export const SoundBoardSounds: Record<
+  (typeof SoundBoard)[keyof typeof SoundBoard],
+  SoundBoardSound[][]
+> = {
   LOBBY: [
     [
       {
