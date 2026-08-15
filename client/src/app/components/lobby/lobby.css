@@ -121,12 +121,11 @@ div:has(> input[type="checkbox"]:first-child) {
 
 #sound-board {
   gap: 10px;
-  box-sizing: border-box;
-  padding: 0px 20px 20px;
+  overflow: visible;
 }
 
 .sound-board-row {
   flex-wrap: wrap;
-  justify-content: space-evenly;
+  justify-content: center;
   gap: 10px;
 }

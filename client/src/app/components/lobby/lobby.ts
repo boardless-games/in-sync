@@ -3,24 +3,24 @@ import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormBuilder, FormControl, ReactiveFormsModule } from "@angular/forms";
 import { debounceTime } from "rxjs";
 import { environment } from "../../../environments/environment";
-import { SOUND } from "../../constants/Sound";
 import { Icon } from "../../constants/Icon";
 import { SongDuration } from "../../constants/SongDuration";
 import { SongTempo } from "../../constants/SongTempo";
 import { SongType } from "../../constants/SongType";
+import { SongTypeDescriptions } from "../../constants/SongTypeDescriptions";
+import { SOUND } from "../../constants/Sound";
+import { SoundBoardSounds } from "../../constants/SoundBoardSounds";
 import { MessageDto } from "../../interfaces/dtos/MessageDto";
 import { GameSettingsForm } from "../../interfaces/GameSettingsForm";
 import { LobbySettingsForm } from "../../interfaces/LobbySettingsForm";
+import { SoundBoardSound } from "../../interfaces/SoundBoardSound";
 import { AlertService } from "../../services/alert/alert";
 import { AudioService } from "../../services/audio/audio";
 import { InSyncWs } from "../../services/in-sync-ws/in-sync-ws";
 import { Option } from "../../types/Option";
 import { IconButton } from "../icon-button/icon-button";
 import { SoundBoardButton } from "../sound-board-button/sound-board-button";
-import { SongTypeDescriptions } from "../../constants/SongTypeDescriptions";
-import { SoundBoard } from "../../constants/SoundBoard";
-import { LobbySoundBoardSettingsForm } from "../../interfaces/LobbySoundBoardForm";
-import { SoundBoardSounds } from "../../constants/SoundBoardSounds";
+import { PlayerSettingsForm } from "../../interfaces/PlayerSettingsForm";
 
 @Component({
   selector: "app-lobby",
@@ -34,7 +34,7 @@ import { SoundBoardSounds } from "../../constants/SoundBoardSounds";
 export class Lobby {
   private static readonly LOBBY_SETTINGS_FORM = "lobbySettings";
   private static readonly GAME_SETTINGS_FORM = "gameSettings";
-  private static readonly LOBBY_SOUND_BOARD_SETTINGS_FORM = "lobbySoundBoardSettings";
+  private static readonly PLAYER_SETTINGS_FORM = "playerSettings";
   private static readonly LOBBY_RHYTHM_LOOP = 96000;
   private static readonly LOBBY_RHYTHM_VOLUME = 0.5;
   private static readonly LOBBY_RHYTHM_FADE = Lobby.LOBBY_RHYTHM_LOOP * 0.0001;
@@ -83,6 +83,9 @@ export class Lobby {
   private currentAnimationFrame = 0;
   private currentLobbyRhythm?: AudioBufferSourceNode;
   protected readonly Icon = Icon;
+  protected readonly lobbySoundBoardSounds: Signal<SoundBoardSound[][]> = signal(
+    SoundBoardSounds.LOBBY
+  );
   protected readonly songTypeOptions: Signal<Option[]> = signal(
     this.getEnumOptions(SongType).map((option) => ({
       ...option,
@@ -93,18 +96,33 @@ export class Lobby {
   protected readonly songDurationOptions: Signal<Option[]> = signal(
     this.getEnumOptions(SongDuration)
   );
-  protected readonly soundBoardOptions: Signal<Option[]> = signal(this.getEnumOptions(SoundBoard));
   protected readonly showSettings = signal(false);
-  protected readonly showSoundBoard = signal(false);
-  protected readonly currentSoundBoardSounds;
+  protected readonly playerSettingsForm;
   protected readonly lobbySettingsForm;
   protected readonly gameSettingsForm;
-  protected readonly lobbySoundBoardSettingsForm;
 
   constructor() {
     this.wsService.messaged.pipe(takeUntilDestroyed()).subscribe((message: MessageDto) => {
       console.log("New message: ", message);
     });
+
+    const storedPlayerSettings = localStorage.getItem(Lobby.PLAYER_SETTINGS_FORM);
+    const initialPlayerSettings: Partial<PlayerSettingsForm> = storedPlayerSettings
+      ? JSON.parse(storedPlayerSettings)
+      : {};
+    this.playerSettingsForm = this.formBuilder.group<PlayerSettingsForm>({
+      enableKeyboard: new FormControl(initialPlayerSettings?.enableKeyboard ?? false, {
+        nonNullable: true
+      })
+    });
+    this.playerSettingsForm.valueChanges
+      .pipe(takeUntilDestroyed(), debounceTime(100))
+      .subscribe(() => {
+        localStorage.setItem(
+          Lobby.PLAYER_SETTINGS_FORM,
+          JSON.stringify(this.playerSettingsForm.getRawValue())
+        );
+      });
 
     const storedLobbySettings = localStorage.getItem(Lobby.LOBBY_SETTINGS_FORM);
     const initialLobbySettings: Partial<LobbySettingsForm> = storedLobbySettings
@@ -153,30 +171,6 @@ export class Lobby {
           JSON.stringify(this.gameSettingsForm.getRawValue())
         );
       });
-
-    const storedLobbySoundBoardSettings = localStorage.getItem(
-      Lobby.LOBBY_SOUND_BOARD_SETTINGS_FORM
-    );
-    const initialLobbySoundBoardSettings: Partial<LobbySoundBoardSettingsForm> =
-      storedLobbySoundBoardSettings ? JSON.parse(storedLobbySoundBoardSettings) : {};
-    this.lobbySoundBoardSettingsForm = this.formBuilder.group<LobbySoundBoardSettingsForm>({
-      soundBoard: new FormControl(
-        initialLobbySoundBoardSettings?.soundBoard ?? SoundBoard.ACOUSTIC,
-        {
-          nonNullable: true
-        }
-      )
-    });
-    this.currentSoundBoardSounds = signal(
-      SoundBoardSounds[this.lobbySoundBoardSettingsForm.controls.soundBoard.value]
-    );
-    this.lobbySoundBoardSettingsForm.valueChanges
-      .pipe(takeUntilDestroyed(), debounceTime(100))
-      .subscribe(() => {
-        const formValue = this.lobbySoundBoardSettingsForm.getRawValue();
-        this.currentSoundBoardSounds.set(SoundBoardSounds[formValue.soundBoard]);
-        localStorage.setItem(Lobby.LOBBY_SOUND_BOARD_SETTINGS_FORM, JSON.stringify(formValue));
-      });
     this.currentAnimationFrame = requestAnimationFrame(this.animationFrame);
   }
 
@@ -209,10 +203,6 @@ export class Lobby {
 
   protected toggleSettings() {
     this.showSettings.update((current) => !current);
-  }
-
-  protected toggleSoundBoard() {
-    this.showSoundBoard.update((current) => !current);
   }
 
   protected soundBoardPlayed() {

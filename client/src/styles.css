@@ -59,6 +59,13 @@ input[type="checkbox"] + label {
   user-select: none;
 }
 
+.hr {
+  width: 100%;
+  min-height: 2px;
+  max-height: 2px;
+  background-color: var(--yellow);
+}
+
 .h1 {
   --font-size: 75px;
   font-size: var(--font-size);

@@ -1,17 +1,27 @@
-@if (isAdmin()) {
+<div
+  class="modal hidden flex-column"
+  [class]="{ appear: showSettings(), disappear: !showSettings() }">
+  <div class="spacer-top"></div>
   <div
-    class="modal hidden flex-column"
-    [class]="{ appear: showSettings(), disappear: !showSettings() }">
-    <div class="spacer-top"></div>
-    <div
-      class="modal-content flex-column"
-      [class]="{ 'scroll-into-view': showSettings(), 'scroll-out-of-view': !showSettings() }">
-      <app-icon-button
-        class="close-modal-button"
-        [icon]="Icon.CLOSE"
-        title="Close settings"
-        (clicked)="toggleSettings()"></app-icon-button>
-      <div id="settings-forms" class="flex-column overflow full-size">
+    class="modal-content flex-column"
+    [class]="{ 'scroll-into-view': showSettings(), 'scroll-out-of-view': !showSettings() }">
+    <app-icon-button
+      class="close-modal-button"
+      [icon]="Icon.CLOSE"
+      title="Close settings"
+      (clicked)="toggleSettings()"></app-icon-button>
+    <div id="settings-forms" class="flex-column overflow full-size">
+      <span class="h4">Player Settings</span>
+      <form class="flex-column lobby-form" [formGroup]="playerSettingsForm">
+        <div class="flex-row">
+          <input
+            id="enable-keyboard-input"
+            type="checkbox"
+            [formControl]="playerSettingsForm.controls.enableKeyboard" />
+          <label for="enable-keyboard-input">Enable Keyboard</label>
+        </div>
+      </form>
+      @if (isAdmin()) {
         <span class="h4">Lobby Settings</span>
         <form class="flex-column lobby-form" [formGroup]="lobbySettingsForm">
           <div class="flex-row">
@@ -58,48 +68,12 @@
             </select>
           </div>
         </form>
-      </div>
-    </div>
-    <div class="spacer-bottom"></div>
-  </div>
-}
-<div
-  class="modal hidden flex-column"
-  [class]="{ appear: showSoundBoard(), disappear: !showSoundBoard() }">
-  <div class="spacer-top"></div>
-  <div
-    class="modal-content flex-column"
-    [class]="{ 'scroll-into-view': showSoundBoard(), 'scroll-out-of-view': !showSoundBoard() }">
-    <app-icon-button
-      class="close-modal-button"
-      [icon]="Icon.CLOSE"
-      title="Close sound board"
-      (clicked)="toggleSoundBoard()"></app-icon-button>
-    <div id="sound-board" class="flex-column overflow full-size">
-      <span class="h4">Sound Board</span>
-      <div class="flex-column">
-        <label for="sound-board-select">Type</label>
-        <select
-          id="sound-board-select"
-          [formControl]="lobbySoundBoardSettingsForm.controls.soundBoard">
-          @for (type of soundBoardOptions(); track type.value) {
-            <option [value]="type.value">{{ type.text }}</option>
-          }
-        </select>
-      </div>
-      @for (soundBoardRow of currentSoundBoardSounds(); track $index) {
-        <div class="flex-row sound-board-row">
-          @for (soundBoardSound of soundBoardRow; track soundBoardSound.sound) {
-            <app-sound-board-button
-              [sound]="soundBoardSound"
-              (played)="soundBoardPlayed()"></app-sound-board-button>
-          }
-        </div>
       }
     </div>
   </div>
   <div class="spacer-bottom"></div>
 </div>
+
 <div id="lobby-title" class="flex-column">
   <span class="h2">{{ gameCode() }}</span>
   <div id="lobby-icons" class="flex-row">
@@ -108,18 +82,11 @@
       size="36px"
       title="Copy link"
       (clicked)="shareGameCode()"></app-icon-button>
-    @if (isAdmin()) {
-      <app-icon-button
-        [icon]="Icon.SETTINGS"
-        size="36px"
-        title="Open settings"
-        (clicked)="toggleSettings()"></app-icon-button>
-    }
     <app-icon-button
-      [icon]="Icon.GRID"
+      [icon]="Icon.SETTINGS"
       size="36px"
-      title="Open sound board"
-      (clicked)="toggleSoundBoard()"></app-icon-button>
+      title="Open settings"
+      (clicked)="toggleSettings()"></app-icon-button>
   </div>
 </div>
 <div class="lobby-players flex-row">
@@ -135,4 +102,17 @@
     <button id="start-game-button" (click)="start()">Start</button>
   }
   <button id="leave-lobby-button" (click)="leave()">Leave</button>
+</div>
+
+<div class="hr"></div>
+<div id="sound-board" class="flex-column overflow full-size">
+  @for (soundBoardRow of lobbySoundBoardSounds(); track $index) {
+    <div class="flex-row sound-board-row">
+      @for (soundBoardSound of soundBoardRow; track soundBoardSound.sound) {
+        <app-sound-board-button
+          [sound]="soundBoardSound"
+          (played)="soundBoardPlayed()"></app-sound-board-button>
+      }
+    </div>
+  }
 </div>

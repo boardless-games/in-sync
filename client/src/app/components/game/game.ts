@@ -63,7 +63,7 @@ export class Game {
   protected playerJoined(playerName: string) {
     this.playerName.set(playerName);
     this.wsService.connect(this.gameCode(), this.playerName());
-    this.audioService.playAudioFile(SOUND.BASSDRUM_ACOUSTIC, { volume: 0 });
+    this.audioService.playAudioFile(SOUND.BASSDRUM, { volume: 0 });
   }
 
   protected leave() {
