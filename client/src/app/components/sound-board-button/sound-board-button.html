@@ -1,6 +1,6 @@
 <span
   >{{ label() }}
-  @if (key()) {
+  @if (keyboardEnabled() && key()) {
     &nbsp;({{ key() }})
   }
 </span>

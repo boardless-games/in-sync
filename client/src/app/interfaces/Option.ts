@@ -1,4 +1,4 @@
-export type Option = {
+export interface Option {
   text: string;
   value: string | number;
-};
+}

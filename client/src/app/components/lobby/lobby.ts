@@ -17,10 +17,11 @@ import { SoundBoardSound } from "../../interfaces/SoundBoardSound";
 import { AlertService } from "../../services/alert/alert";
 import { AudioService } from "../../services/audio/audio";
 import { InSyncWs } from "../../services/in-sync-ws/in-sync-ws";
-import { Option } from "../../types/Option";
+import { Option } from "../../interfaces/Option";
 import { IconButton } from "../icon-button/icon-button";
 import { SoundBoardButton } from "../sound-board-button/sound-board-button";
 import { PlayerSettingsForm } from "../../interfaces/PlayerSettingsForm";
+import { SimpleState } from "../../services/simple-state/simple-state";
 
 @Component({
   selector: "app-lobby",
@@ -46,29 +47,8 @@ export class Lobby {
     SOUND.LOBBY_RHYTHM_4,
     SOUND.LOBBY_RHYTHM_5
   ];
-  private static readonly SOUND_BOARD_SAYINGS = [
-    "Rock on!",
-    "Nice!",
-    "Groovy Mama!",
-    "Let's dance!",
-    "That's it!",
-    "Now you're getting the hang of it!",
-    "Keep going!",
-    "Don't stop now!",
-    "You call that a beat?",
-    "C'mon now!",
-    "Let's get it!",
-    "DJ drums over here!",
-    "I could get used to this!",
-    "I hear that!",
-    "Add a little something more!",
-    "Get crazy now!",
-    "This all you got?",
-    "I'd call this a warmup!",
-    "You make it look easy!",
-    "Maybe this isn't for you?"
-  ];
 
+  private readonly simpleState = inject(SimpleState);
   private readonly alertService = inject(AlertService);
   private readonly wsService = inject(InSyncWs);
   private readonly audioService = inject(AudioService);
@@ -115,13 +95,15 @@ export class Lobby {
         nonNullable: true
       })
     });
+    this.simpleState.state.keyboardEnabled.set(
+      () => this.playerSettingsForm.controls.enableKeyboard.value
+    );
     this.playerSettingsForm.valueChanges
       .pipe(takeUntilDestroyed(), debounceTime(100))
       .subscribe(() => {
-        localStorage.setItem(
-          Lobby.PLAYER_SETTINGS_FORM,
-          JSON.stringify(this.playerSettingsForm.getRawValue())
-        );
+        const formValue = this.playerSettingsForm.getRawValue();
+        this.simpleState.state.keyboardEnabled.set(() => formValue.enableKeyboard);
+        localStorage.setItem(Lobby.PLAYER_SETTINGS_FORM, JSON.stringify(formValue));
       });
 
     const storedLobbySettings = localStorage.getItem(Lobby.LOBBY_SETTINGS_FORM);
@@ -203,13 +185,6 @@ export class Lobby {
 
   protected toggleSettings() {
     this.showSettings.update((current) => !current);
-  }
-
-  protected soundBoardPlayed() {
-    if (Math.random() <= 0.05) {
-      const randomSaying = Math.floor(Math.random() * Lobby.SOUND_BOARD_SAYINGS.length);
-      this.alertService.alert(Lobby.SOUND_BOARD_SAYINGS[randomSaying], 1000);
-    }
   }
 
   private getEnumOptions(anyEnum: Record<string | number, string | number>): Option[] {

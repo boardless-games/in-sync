@@ -109,9 +109,7 @@
   @for (soundBoardRow of lobbySoundBoardSounds(); track $index) {
     <div class="flex-row sound-board-row">
       @for (soundBoardSound of soundBoardRow; track soundBoardSound.sound) {
-        <app-sound-board-button
-          [sound]="soundBoardSound"
-          (played)="soundBoardPlayed()"></app-sound-board-button>
+        <app-sound-board-button [sound]="soundBoardSound"></app-sound-board-button>
       }
     </div>
   }

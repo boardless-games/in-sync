@@ -60,7 +60,8 @@ input[type="checkbox"] + label {
 }
 
 .hr {
-  width: 100%;
+  min-width: 245px;
+  max-width: 245px;
   min-height: 2px;
   max-height: 2px;
   background-color: var(--yellow);
