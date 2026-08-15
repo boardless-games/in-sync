@@ -1,4 +1,4 @@
-import { Component, inject, input, output, Signal, signal } from "@angular/core";
+import { Component, inject, input, output, Signal, signal, OnDestroy } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormBuilder, FormControl, ReactiveFormsModule } from "@angular/forms";
 import { debounceTime } from "rxjs";
@@ -32,7 +32,7 @@ import { SimpleState } from "../../services/simple-state/simple-state";
     class: "flex-column"
   }
 })
-export class Lobby {
+export class Lobby implements OnDestroy {
   private static readonly LOBBY_SETTINGS_FORM = "lobbySettings";
   private static readonly GAME_SETTINGS_FORM = "gameSettings";
   private static readonly PLAYER_SETTINGS_FORM = "playerSettings";

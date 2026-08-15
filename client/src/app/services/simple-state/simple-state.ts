@@ -25,7 +25,7 @@ export class SimpleState {
       }
     });
     this.state = Object.fromEntries(
-      (Object.keys(this._state) as Array<keyof State>).map((key) => {
+      (Object.keys(this._state) as (keyof State)[]).map((key) => {
         return [key, createPublicState(key)];
       })
     ) as typeof this.state;

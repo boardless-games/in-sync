@@ -49,7 +49,6 @@ export class Game {
           this.status.set(GameStatus.LOBBY);
           this.alertService.alert("Turn volume up!");
         }
-      } else {
       }
     });
     this.wsService.messaged.pipe(takeUntilDestroyed()).subscribe((message: MessageDto) => {
@@ -71,5 +70,7 @@ export class Game {
     this.router.navigate([""]);
   }
 
-  protected start() {}
+  protected start() {
+    console.log("START");
+  }
 }

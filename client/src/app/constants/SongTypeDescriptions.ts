@@ -1,7 +1,5 @@
 import { SongType } from "./SongType";
 
-export const SongTypeDescriptions: {
-  [Value in (typeof SongType)[keyof typeof SongType]]: string;
-} = {
+export const SongTypeDescriptions: Record<(typeof SongType)[keyof typeof SongType], string> = {
   RANDOM: "A randomly generated rhythm."
 };
