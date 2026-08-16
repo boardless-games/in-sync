@@ -1,8 +1,7 @@
 import { TestBed } from "@angular/core/testing";
-
-import { AudioService } from "./audio";
 import { Mock } from "vitest";
-import { AudioFile } from "../../constants/AudioFile";
+import { SOUND } from "../../constants/Sound";
+import { AudioService } from "./audio";
 
 describe("AudioService", () => {
   let service: AudioService;
@@ -18,9 +17,9 @@ describe("AudioService", () => {
 
   it("should be created", () => {
     expect(service).toBeTruthy();
-    const audioFiles = Object.values(AudioFile);
-    for (let i = 0; i < audioFiles.length; ++i) {
-      expect(mockFetch).toHaveBeenNthCalledWith(i + 1, audioFiles[i]);
+    const sounds = Object.values(SOUND);
+    for (let i = 0; i < sounds.length; ++i) {
+      expect(mockFetch).toHaveBeenNthCalledWith(i + 1, `/audio/${sounds[i]}`);
     }
   });
 });
