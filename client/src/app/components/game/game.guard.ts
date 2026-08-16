@@ -11,12 +11,12 @@ import { catchError } from "rxjs";
 import { GameCodeDto } from "../../interfaces/dtos/GameCodeDto";
 import { AlertService } from "../../services/alert/alert";
 import { InSyncApi } from "../../services/in-sync-api/in-sync-api";
-import { Validation } from "../../services/validation/validation";
+import { ValidationService } from "../../services/validation/validation";
 
 @Service()
 export class GameGuard implements CanActivate {
   private readonly router = inject(Router);
-  private readonly validationService = inject(Validation);
+  private readonly validationService = inject(ValidationService);
   private readonly alertService = inject(AlertService);
   private readonly inSyncApi = inject(InSyncApi);
   private readonly redirect = new RedirectCommand(this.router.parseUrl(""));

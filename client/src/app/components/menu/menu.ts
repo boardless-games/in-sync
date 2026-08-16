@@ -6,7 +6,7 @@ import { GameCodeDto } from "../../interfaces/dtos/GameCodeDto";
 import { JoinGameForm } from "../../interfaces/JoinGameForm";
 import { AudioService } from "../../services/audio/audio";
 import { InSyncApi } from "../../services/in-sync-api/in-sync-api";
-import { Validation } from "../../services/validation/validation";
+import { ValidationService } from "../../services/validation/validation";
 
 @Component({
   selector: "app-menu",
@@ -21,8 +21,9 @@ export class Menu {
   private readonly inSyncApi = inject(InSyncApi);
   private readonly router = inject(Router);
   private readonly formBuilder = inject(FormBuilder);
-  private readonly validationService = inject(Validation);
+  private readonly validationService = inject(ValidationService);
   protected readonly audioService = inject(AudioService);
+
   protected readonly joinGameForm = this.formBuilder.group<JoinGameForm>({
     gameCode: new FormControl("", {
       nonNullable: true,

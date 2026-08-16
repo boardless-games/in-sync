@@ -1,7 +1,7 @@
 import { Service } from "@angular/core";
 
 @Service()
-export class Validation {
+export class ValidationService {
   public gameCodeRegex = new RegExp(/^[0-9]{6}$/);
   public playerNameRegex = new RegExp(/^[a-zA-Z0-9]{2,15}$/);
 

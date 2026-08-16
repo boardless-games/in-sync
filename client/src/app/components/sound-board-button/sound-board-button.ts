@@ -12,8 +12,8 @@ import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { COLOR } from "../../constants/Color";
 import { SoundBoardSound } from "../../interfaces/SoundBoardSound";
 import { AudioService } from "../../services/audio/audio";
-import { KeyPress } from "../../services/key-press/key-press";
-import { SimpleState } from "../../services/simple-state/simple-state";
+import { KeyPressService } from "../../services/key-press/key-press";
+import { SimpleStateService } from "../../services/simple-state/simple-state";
 
 @Component({
   selector: "app-sound-board-button",
@@ -27,9 +27,9 @@ import { SimpleState } from "../../services/simple-state/simple-state";
   }
 })
 export class SoundBoardButton {
-  private readonly simpleState = inject(SimpleState);
+  private readonly simpleStateService = inject(SimpleStateService);
   private readonly audioService = inject(AudioService);
-  private readonly keyPress = inject(KeyPress);
+  private readonly keyPressService = inject(KeyPressService);
 
   sound = input<SoundBoardSound>();
 
@@ -43,12 +43,13 @@ export class SoundBoardButton {
   @ViewChild("button") protected button?: ElementRef<HTMLButtonElement>;
 
   constructor() {
-    this.simpleState.state.keyboardEnabled.get
+    this.simpleStateService.state.keyboardEnabled
+      .get()
       .pipe(takeUntilDestroyed())
       .subscribe((keyboardEnabled) => {
         this.keyboardEnabled.set(keyboardEnabled);
       });
-    this.keyPress.keyPressed.pipe(takeUntilDestroyed()).subscribe((event: KeyboardEvent) => {
+    this.keyPressService.keyPressed.pipe(takeUntilDestroyed()).subscribe((event: KeyboardEvent) => {
       if (this.keyboardEnabled() && this.sound()?.key === event.key) {
         this.play();
       }

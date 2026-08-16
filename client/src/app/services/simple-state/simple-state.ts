@@ -2,7 +2,7 @@ import { Service } from "@angular/core";
 import { BehaviorSubject, Observable } from "rxjs";
 
 @Service()
-export class SimpleState {
+export class SimpleStateService {
   private readonly _state = {
     keyboardEnabled: new BehaviorSubject(false)
   };
@@ -10,7 +10,7 @@ export class SimpleState {
   public readonly state: {
     [Key in keyof typeof this._state]: (typeof this._state)[Key] extends BehaviorSubject<infer T>
       ? {
-          get: Observable<T>;
+          get: () => Observable<T>;
           set: (callback: (currentState: T) => T) => void;
         }
       : never;
@@ -26,7 +26,7 @@ export class SimpleState {
       (Object.keys(this._state) as (keyof typeof this._state)[]).map((key) => [
         key,
         {
-          get: this._state[key].asObservable(),
+          get: () => this._state[key].asObservable(),
           set: (callback: (currentState: StateValues) => StateValues): void => {
             (this._state[key] as BehaviorSubject<StateValues>).next(
               callback(this._state[key].value)

@@ -21,7 +21,7 @@ import { Option } from "../../interfaces/Option";
 import { IconButton } from "../icon-button/icon-button";
 import { SoundBoardButton } from "../sound-board-button/sound-board-button";
 import { PlayerSettingsForm } from "../../interfaces/PlayerSettingsForm";
-import { SimpleState } from "../../services/simple-state/simple-state";
+import { SimpleStateService } from "../../services/simple-state/simple-state";
 
 @Component({
   selector: "app-lobby",
@@ -48,9 +48,9 @@ export class Lobby implements OnDestroy {
     SOUND.LOBBY_RHYTHM_5
   ];
 
-  private readonly simpleState = inject(SimpleState);
+  private readonly simpleStateService = inject(SimpleStateService);
   private readonly alertService = inject(AlertService);
-  private readonly wsService = inject(InSyncWs);
+  private readonly inSyncWs = inject(InSyncWs);
   private readonly audioService = inject(AudioService);
   private readonly formBuilder = inject(FormBuilder);
 
@@ -82,7 +82,7 @@ export class Lobby implements OnDestroy {
   protected readonly gameSettingsForm;
 
   constructor() {
-    this.wsService.messaged.pipe(takeUntilDestroyed()).subscribe((message: MessageDto) => {
+    this.inSyncWs.messaged.pipe(takeUntilDestroyed()).subscribe((message: MessageDto) => {
       console.log("New message: ", message);
     });
 
@@ -95,14 +95,14 @@ export class Lobby implements OnDestroy {
         nonNullable: true
       })
     });
-    this.simpleState.state.keyboardEnabled.set(
+    this.simpleStateService.state.keyboardEnabled.set(
       () => this.playerSettingsForm.controls.enableKeyboard.value
     );
     this.playerSettingsForm.valueChanges
       .pipe(takeUntilDestroyed(), debounceTime(100))
       .subscribe(() => {
         const formValue = this.playerSettingsForm.getRawValue();
-        this.simpleState.state.keyboardEnabled.set(() => formValue.enableKeyboard);
+        this.simpleStateService.state.keyboardEnabled.set(() => formValue.enableKeyboard);
         localStorage.setItem(Lobby.PLAYER_SETTINGS_FORM, JSON.stringify(formValue));
       });
 

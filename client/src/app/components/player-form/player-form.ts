@@ -7,7 +7,7 @@ import {
   Validators
 } from "@angular/forms";
 import { PlayerForm } from "../../interfaces/PlayerForm";
-import { Validation } from "../../services/validation/validation";
+import { ValidationService } from "../../services/validation/validation";
 import { InSyncApi } from "../../services/in-sync-api/in-sync-api";
 import { finalize } from "rxjs";
 import { Router } from "@angular/router";
@@ -24,7 +24,7 @@ import { PlayerNameDto } from "../../interfaces/dtos/PlayerNameDto";
 })
 export class PlayerFormComponent {
   private readonly formBuilder = inject(FormBuilder);
-  private readonly validationService = inject(Validation);
+  private readonly validationService = inject(ValidationService);
   private readonly inSyncApi = inject(InSyncApi);
   private readonly router = inject(Router);
 

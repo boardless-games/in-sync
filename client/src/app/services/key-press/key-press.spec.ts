@@ -1,13 +1,13 @@
 import { TestBed } from "@angular/core/testing";
 
-import { KeyPress } from "./key-press";
+import { KeyPressService } from "./key-press";
 
-describe("KeyPress", () => {
-  let service: KeyPress;
+describe("KeyPressService", () => {
+  let service: KeyPressService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({});
-    service = TestBed.inject(KeyPress);
+    service = TestBed.inject(KeyPressService);
   });
 
   it("should be created", () => {
