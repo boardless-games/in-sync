@@ -105,6 +105,8 @@
 </div>
 
 <div class="hr"></div>
+<button (click)="pianoC4Quarter()">Piano C4 Quarter</button>
+<button (click)="pianoC4Half()">Piano C4 Half</button>
 <div id="sound-board" class="flex-column overflow full-size">
   @for (soundBoardRow of lobbySoundBoardSounds(); track $index) {
     <div class="flex-row sound-board-row">

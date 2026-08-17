@@ -221,4 +221,11 @@ export class Lobby implements OnDestroy {
     this.previousTimeStamp = timeStamp;
     this.currentAnimationFrame = requestAnimationFrame(this.animationFrame);
   };
+
+  pianoC4Quarter() {
+    this.audioService.playAudioFile(SOUND.PIANO_C4);
+  }
+  pianoC4Half() {
+    this.audioService.playAudioFile(SOUND.PIANO_C4, { playbackRate: 2 });
+  }
 }

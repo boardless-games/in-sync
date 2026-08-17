@@ -19,6 +19,7 @@ public class Song {
   private final SongType type;
   private final SongTempo tempo;
   private final SongDuration duration;
+  private final boolean metronome;
   private final boolean randomPlayerOrder;
   private final ArrayList<Note> notes = new ArrayList<>();
 
@@ -27,6 +28,7 @@ public class Song {
     this.type = settings.songType();
     this.tempo = settings.songTempo();
     this.duration = settings.songDuration();
+    this.metronome = settings.metronome();
     this.randomPlayerOrder = settings.randomPlayerOrder();
 
     if (this.type == SongType.RANDOM) {
@@ -46,6 +48,10 @@ public class Song {
 
   public SongDuration getDuration() {
     return this.duration;
+  }
+
+  public boolean hasMetronome() {
+    return this.metronome;
   }
 
   public boolean isRandomPlayerOrder() {

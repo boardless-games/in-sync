@@ -5,11 +5,15 @@ export enum SOUND {
   LOBBY_RHYTHM_4 = "lobby_rhythm_4.wav",
   LOBBY_RHYTHM_5 = "lobby_rhythm_5.wav",
 
+  // PERCUSSION
   KICK = "kick.wav",
   BASSDRUM = "bassdrum.wav",
   SNARE_ACOUSTIC = "snare_acoustic.wav",
   SNARE_ELECTRIC = "snare_electric.wav",
   HIHAT_CLOSED = "hihat_closed.wav",
   HIHAT_OPENED = "hihat_opened.wav",
-  CLAP = "clap.wav"
+  CLAP = "clap.wav",
+
+  // PIANO
+  PIANO_C4 = "piano_c4.wav"
 }
