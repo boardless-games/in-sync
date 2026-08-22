@@ -1,8 +1,7 @@
 package games.boardless.in_sync_server.models;
 
-import games.boardless.in_sync_server.constants.NoteFrequency;
+import games.boardless.in_sync_server.constants.NoteLength;
 import games.boardless.in_sync_server.constants.NoteSound;
-import games.boardless.in_sync_server.constants.NoteType;
 import games.boardless.in_sync_server.constants.SongDuration;
 import games.boardless.in_sync_server.constants.SongTempo;
 import games.boardless.in_sync_server.constants.SongType;
@@ -66,11 +65,11 @@ public class Song {
     return new ArrayList<>(Arrays.asList(array));
   }
 
-  private Map<NoteType, Integer> getMillisPerNoteType() {
+  private Map<NoteLength, Integer> getMillisPerNoteType() {
     final int millisPerBeat = this.tempo.getMillisPerBeat();
 
-    final Map<NoteType, Integer> millisPerNote = new HashMap<>();
-    for (final NoteType noteType : NoteType.values()) {
+    final Map<NoteLength, Integer> millisPerNote = new HashMap<>();
+    for (final NoteLength noteType : NoteLength.values()) {
       millisPerNote.put(noteType, (int) (millisPerBeat * noteType.getBeats()));
     }
 
@@ -78,7 +77,7 @@ public class Song {
   }
 
   private void createRandomSong(final String[] playerNames) {
-    final Map<NoteType, Integer> millisPerNoteType = this.getMillisPerNoteType();
+    final Map<NoteLength, Integer> millisPerNoteType = this.getMillisPerNoteType();
     final Random rand = new Random();
     final int songDuration = this.duration.getDuration();
 
@@ -86,9 +85,8 @@ public class Song {
     ArrayList<String> playersAvailable = this.toArrayList(playerNames);
 
     for (int currentDuration = 0; currentDuration < songDuration; ) {
-      final NoteType noteType = NoteType.values()[rand.nextInt(NoteType.values().length)];
-      final NoteSound noteSound = NoteSound.MAIN;
-      final NoteFrequency noteFrequency = NoteFrequency.C4;
+      final NoteLength noteLength = NoteLength.values()[rand.nextInt(NoteLength.values().length)];
+      final NoteSound noteSound = SongType.RANDOM.getAvailableSounds() 
 
       String playerAssignment;
       if (this.randomPlayerOrder) {
@@ -103,10 +101,9 @@ public class Song {
         playerAssignment = playersAvailable.get(playerIndex++);
       }
 
-      this.notes.add(
-          new Note(noteType, noteSound, noteFrequency, currentDuration, playerAssignment));
+      this.notes.add(new Note(noteSound, null, noteLength, currentDuration, playerAssignment));
 
-      currentDuration += millisPerNoteType.get(noteType);
+      currentDuration += millisPerNoteType.get(noteLength);
     }
   }
 }

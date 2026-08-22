@@ -1,6 +1,5 @@
 package games.boardless.in_sync_server.constants;
 
-import com.fasterxml.jackson.annotation.JsonValue;
 import java.util.stream.Stream;
 
 public enum SongDuration {
@@ -16,7 +15,6 @@ public enum SongDuration {
     this.duration = duration;
   }
 
-  @JsonValue
   public int getDuration() {
     return this.duration;
   }

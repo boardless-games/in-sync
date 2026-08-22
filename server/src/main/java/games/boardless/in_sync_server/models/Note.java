@@ -1,23 +1,23 @@
 package games.boardless.in_sync_server.models;
 
 import games.boardless.in_sync_server.constants.NoteFrequency;
+import games.boardless.in_sync_server.constants.NoteLength;
 import games.boardless.in_sync_server.constants.NoteSound;
-import games.boardless.in_sync_server.constants.NoteType;
 
 public class Note {
-  private final NoteType type;
+  private final NoteLength length;
   private final NoteSound sound;
   private final NoteFrequency frequency;
   private final int schedule;
   private String playerAssignment;
 
   public Note(
-      final NoteType type,
       final NoteSound sound,
       final NoteFrequency frequency,
+      final NoteLength length,
       final int schedule,
       final String playerAssignment) {
-    this.type = type;
+    this.length = length;
     this.sound = sound;
     this.frequency = frequency;
     this.schedule = schedule;
@@ -28,8 +28,8 @@ public class Note {
     return this.sound;
   }
 
-  public NoteType getType() {
-    return this.type;
+  public NoteLength getLength() {
+    return this.length;
   }
 
   public NoteFrequency getFrequency() {
@@ -52,7 +52,7 @@ public class Note {
   public int hashCode() {
     final int prime = 31;
     int result = 1;
-    result = prime * result + ((type == null) ? 0 : type.hashCode());
+    result = prime * result + ((length == null) ? 0 : length.hashCode());
     result = prime * result + ((sound == null) ? 0 : sound.hashCode());
     result = prime * result + ((frequency == null) ? 0 : frequency.hashCode());
     result = prime * result + ((playerAssignment == null) ? 0 : playerAssignment.hashCode());
@@ -65,7 +65,7 @@ public class Note {
     if (obj == null) return false;
     if (getClass() != obj.getClass()) return false;
     Note other = (Note) obj;
-    if (type != other.type) return false;
+    if (length != other.length) return false;
     if (sound != other.sound) return false;
     if (frequency != other.frequency) return false;
     if (playerAssignment == null) {
@@ -76,8 +76,8 @@ public class Note {
 
   @Override
   public String toString() {
-    return "Note [type="
-        + type
+    return "Note [length="
+        + length
         + ", sound="
         + sound
         + ", frequency="
