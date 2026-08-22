@@ -5,9 +5,10 @@ import games.boardless.in_sync_server.constants.NoteLength;
 import games.boardless.in_sync_server.constants.NoteSound;
 
 public class Note {
-  private final NoteLength length;
   private final NoteSound sound;
   private final NoteFrequency frequency;
+  private final NoteLength length;
+  private final float volume;
   private final int schedule;
   private String playerAssignment;
 
@@ -15,11 +16,13 @@ public class Note {
       final NoteSound sound,
       final NoteFrequency frequency,
       final NoteLength length,
+      final float volume,
       final int schedule,
       final String playerAssignment) {
-    this.length = length;
     this.sound = sound;
     this.frequency = frequency;
+    this.length = length;
+    this.volume = volume;
     this.schedule = schedule;
     this.playerAssignment = playerAssignment;
   }
@@ -34,6 +37,10 @@ public class Note {
 
   public NoteFrequency getFrequency() {
     return this.frequency;
+  }
+
+  public float getVolumne() {
+    return this.volume;
   }
 
   public int getSchedule() {

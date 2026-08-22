@@ -20,6 +20,7 @@ public class Song {
   private final SongDuration duration;
   private final boolean metronome;
   private final boolean randomPlayerOrder;
+  private final ArrayList<SoundBoardButton> buttons = new ArrayList<>();
   private final ArrayList<Note> notes = new ArrayList<>();
 
   public Song(final SongSettingsDto settings, final String[] playerNames)
@@ -57,6 +58,10 @@ public class Song {
     return this.randomPlayerOrder;
   }
 
+  public List<NoteSound> getNoteSounds() {
+    return List.copyOf(this.uniqueSounds);
+  }
+
   public List<Note> getNotes() {
     return List.copyOf(this.notes);
   }
@@ -86,7 +91,7 @@ public class Song {
 
     for (int currentDuration = 0; currentDuration < songDuration; ) {
       final NoteLength noteLength = NoteLength.values()[rand.nextInt(NoteLength.values().length)];
-      final NoteSound noteSound = SongType.RANDOM.getAvailableSounds() 
+      // final NoteSound noteSound = SongType.RANDOM.getAvailableSounds()
 
       String playerAssignment;
       if (this.randomPlayerOrder) {
@@ -101,7 +106,7 @@ public class Song {
         playerAssignment = playersAvailable.get(playerIndex++);
       }
 
-      this.notes.add(new Note(noteSound, null, noteLength, currentDuration, playerAssignment));
+      // this.notes.add(new Note(noteSound, null, noteLength, currentDuration, playerAssignment));
 
       currentDuration += millisPerNoteType.get(noteLength);
     }

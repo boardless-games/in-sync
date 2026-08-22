@@ -1,15 +1,23 @@
 package games.boardless.in_sync_server.constants;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import games.boardless.in_sync_server.models.Note;
+import games.boardless.in_sync_server.models.SoundBoardButton;
+
 public enum SongType {
-  RANDOM(new NoteSound[]{NoteSound.HIHAT_CLOSED, NoteSound.CLAP, NoteSound.KICK, NoteSound.SNARE_ELECTRIC});
+  RANDOM(new ArrayList<SoundBoardButton>(), null);
 
-  private final NoteSound[] availableSounds;
+  private final ArrayList<SoundBoardButton> buttons;
+  private final ArrayList<Note> notes;
 
-  private SongType(final NoteSound[] availableSounds) {
-    this.availableSounds = availableSounds;
+  private SongType(final ArrayList<SoundBoardButton> buttons, final ArrayList<Note> notes) {
+    this.buttons = buttons;
+    this.notes = notes;
   }
 
-  public NoteSound[] getAvailableSounds() {
-    return this.availableSounds;
+  public List<SoundBoardButton> getButtons() {
+    return List.copyOf(this.buttons);
   }
 }
