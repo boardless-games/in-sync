@@ -38,22 +38,15 @@ public class SoundBoardButton {
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj)
-      return true;
-    if (obj == null)
-      return false;
-    if (getClass() != obj.getClass())
-      return false;
+    if (this == obj) return true;
+    if (obj == null) return false;
+    if (getClass() != obj.getClass()) return false;
     SoundBoardButton other = (SoundBoardButton) obj;
-    if (sound != other.sound)
-      return false;
-    if (color != other.color)
-      return false;
+    if (sound != other.sound) return false;
+    if (color != other.color) return false;
     if (label == null) {
-      if (other.label != null)
-        return false;
-    } else if (!label.equals(other.label))
-      return false;
+      if (other.label != null) return false;
+    } else if (!label.equals(other.label)) return false;
     return true;
   }
 

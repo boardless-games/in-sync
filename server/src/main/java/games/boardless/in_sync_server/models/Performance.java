@@ -3,18 +3,20 @@ package games.boardless.in_sync_server.models;
 import games.boardless.in_sync_server.dtos.PerformanceDto;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 public class Performance {
   private final String playerName;
   private final boolean status;
   private final ArrayList<PerformanceNote> notes = new ArrayList<>();
 
-  public Performance(final String playerName, final Song song, final PerformanceDto performance) {
+  public Performance(
+      final String playerName, final AssignedSong song, final PerformanceDto performance) {
     this.playerName = playerName;
 
     final long performanceSchedule = performance.schedule();
     final long[] targets =
-        song.getNotes().stream()
+        Stream.of(song.getNotes())
             .filter(note -> note.getPlayerAssignment().equals(playerName))
             .mapToLong(note -> note.getSchedule())
             .toArray();

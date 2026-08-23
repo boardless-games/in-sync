@@ -3,7 +3,6 @@ package games.boardless.in_sync_server.models;
 import games.boardless.in_sync_server.constants.GameStatus;
 import games.boardless.in_sync_server.constants.MessageTopic;
 import games.boardless.in_sync_server.constants.ScheduleType;
-import games.boardless.in_sync_server.constants.SongDuration;
 import games.boardless.in_sync_server.dtos.ErrorDto;
 import games.boardless.in_sync_server.dtos.MessageDto;
 import games.boardless.in_sync_server.dtos.PerformanceDto;
@@ -76,7 +75,7 @@ public class Game {
   private final int playerWaitTime;
   private final int scheduleOffsetTime;
   private GameStatus status;
-  private Song song = null;
+  private AssignedSong song = null;
   private long schedule = 0l;
   private final Map<String, Player> players;
   private final Map<String, Performance> performances;
@@ -317,7 +316,7 @@ public class Game {
     logger.info("Starting game {}.", this.gameCode);
     this.status = GameStatus.IN_GAME;
 
-    this.song = new Song(songSettings, this.getPlayers());
+    this.song = new AssignedSong(songSettings, this.getPlayers());
 
     this.messagePlayers(MessageTopic.SONG, this.song);
   }
