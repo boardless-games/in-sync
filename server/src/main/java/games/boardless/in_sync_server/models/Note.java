@@ -8,7 +8,7 @@ public class Note {
   private final NoteSound sound;
   private final NoteFrequency frequency;
   private final NoteLength length;
-  private final float volume;
+  private final Float volume;
   private final int schedule;
   private String playerAssignment;
 
@@ -16,7 +16,16 @@ public class Note {
       final NoteSound sound,
       final NoteFrequency frequency,
       final NoteLength length,
-      final float volume,
+      final Float volume,
+      final int schedule) {
+    this(sound, frequency, length, volume, schedule, null);
+  }
+
+  public Note(
+      final NoteSound sound,
+      final NoteFrequency frequency,
+      final NoteLength length,
+      final Float volume,
       final int schedule,
       final String playerAssignment) {
     this.sound = sound;
@@ -39,7 +48,7 @@ public class Note {
     return this.frequency;
   }
 
-  public float getVolumne() {
+  public Float getVolumne() {
     return this.volume;
   }
 
@@ -59,38 +68,50 @@ public class Note {
   public int hashCode() {
     final int prime = 31;
     int result = 1;
-    result = prime * result + ((length == null) ? 0 : length.hashCode());
     result = prime * result + ((sound == null) ? 0 : sound.hashCode());
     result = prime * result + ((frequency == null) ? 0 : frequency.hashCode());
+    result = prime * result + ((length == null) ? 0 : length.hashCode());
+    result = prime * result + ((volume == null) ? 0 : volume.hashCode());
+    result = prime * result + schedule;
     result = prime * result + ((playerAssignment == null) ? 0 : playerAssignment.hashCode());
     return result;
   }
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj) return true;
-    if (obj == null) return false;
-    if (getClass() != obj.getClass()) return false;
+    if (this == obj)
+      return true;
+    if (obj == null)
+      return false;
+    if (getClass() != obj.getClass())
+      return false;
     Note other = (Note) obj;
-    if (length != other.length) return false;
-    if (sound != other.sound) return false;
-    if (frequency != other.frequency) return false;
+    if (sound != other.sound)
+      return false;
+    if (frequency != other.frequency)
+      return false;
+    if (length != other.length)
+      return false;
+    if (volume == null) {
+      if (other.volume != null)
+        return false;
+    } else if (!volume.equals(other.volume))
+      return false;
+    if (schedule != other.schedule)
+      return false;
     if (playerAssignment == null) {
-      if (other.playerAssignment != null) return false;
-    } else if (!playerAssignment.equals(other.playerAssignment)) return false;
+      if (other.playerAssignment != null)
+        return false;
+    } else if (!playerAssignment.equals(other.playerAssignment))
+      return false;
     return true;
   }
 
   @Override
   public String toString() {
-    return "Note [length="
-        + length
-        + ", sound="
-        + sound
-        + ", frequency="
-        + frequency
-        + ", playerAssignment="
-        + playerAssignment
-        + "]";
+    return "Note [sound=" + sound + ", frequency=" + frequency + ", length=" + length + ", volume=" + volume
+        + ", schedule=" + schedule + ", playerAssignment=" + playerAssignment + "]";
   }
+
+  
 }
