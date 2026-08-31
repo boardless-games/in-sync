@@ -1,0 +1,11 @@
+{
+  "title": "A Random Song",
+  "buttons": [
+    [
+      {
+        "sound": "HIHAT_CLOSED",
+        "color": "PINK"
+      }
+    ]
+  ]
+}
